@@ -1,0 +1,198 @@
+Original prompt: えっとゲームプレイ画面におけるマップなんですが、まず大前提として、そのエピソードにおけるスポット、回るスポットっていうところを順繰り順繰りで、要はUIとして次どこに行くのか。あーっていうか、まそもそも開始に関してはまずどのスポットから開始するのかというところをまずマップベースで見せた上で、自分がどこの位置にいるのか、で、どうやって、そこに付近に近づいてきたら、例えば、UI上でえー近づいてきたのでゲーム開始しますみたいなボタンを押せるようになってて、押したらゲームが始まると。で、ゲーム始まったら一旦マップベースからそういう、なんでしょう、キャラクターのシナリオベースのUIに変わって、物語進めて、例えば、なんだろう、ミッションとかなんか色々あって、じゃあ次のスポット行こうってなったら、またマップベースに戻って、で、次のスポットの場所が表示されて、その道に向かうためのルートが表示されるみたいな。で、どんどんとシナリオを進めていくみたいなゲームプレイのUIを実装したいですと。
+
+- 2026-03-11: 初期調査。GamePlayScreen には travel/puzzle/story の遷移は既に存在。
+- 2026-03-11: 追加実装方針を決定。
+  - location_gate でもマップ背景を表示して開始スポットを可視化。
+  - スポット巡回順を見せる水平ステップUIを追加。
+  - 現在スポット -> 次スポットの補助ルートを地図に追加。
+- 2026-03-11: GamePlayScreen を更新。
+  - `location_gate` でもマップ背景を表示するように変更（開始前に開始スポットを可視化）。
+  - スポット巡回順を示す `SpotRouteStrip` を追加し、開始前モーダルと移動カードに表示。
+  - 地図上に現在スポット→次スポットの補助ルート（点線）と `NEXT` マーカー表示を追加。
+  - 近接状態の案内文 `travelStatusText` を追加し、開始可能タイミングを明示。
+- 2026-03-11: `npm run typecheck` 実行。
+  - 既存の別ファイル起因エラーにより失敗（mastra配下と `src/lib/react-native-maps-web-mock.tsx`）。
+  - 今回変更した `GamePlayScreen.tsx` 由来の新規エラーは確認されず。
+- 2026-03-11: UI修正（ユーザー指定の視認性改善）を実施。
+  - 位置情報許可カードを白背景へ変更し、テキスト色をダークトーンへ変更。
+  - 開始スポットカードを白背景へ変更（ルートストリップをライトテーマ化）。
+  - START POINT時の移動カードを白背景化し、全テキスト色を可読性重視で調整。
+  - ナレーション/会話画面で重なっていた左下のシリーズ名バッジを削除。
+  - 非選択式ミッションUIを下部カード型から全画面切替型へ変更。
+- 2026-03-11: 背景画像ロジックを強化。
+  - `spots.image_url` があれば優先利用（列未存在時は自動フォールバック）。
+  - スポット画像がない場合はクエストの `cover_image_url` を優先して利用。
+- 2026-03-11: スポット座標が表示されない原因対策を追加。
+  - `AddEpisodeScreen` の生成本文に `座標: lat,lng` を埋め込むよう変更（取得できる場合）。
+  - `EpisodeGenerationResultScreen` の保存本文にも舞台・座標メタデータを付与。
+  - `RootStack` の `EpisodeGenerationResult` パラメータに `stageLocation` / `stageCoords` を追加。
+  - `fetchGameplayQuest` のフォールバック（quest_episodes由来）で本文から `舞台:` / `座標:` を抽出し、スポット名・座標に反映。
+- 2026-03-11: これにより spotsテーブル未整備でも、エピソード本文に座標があればマップ上のスポットアイコンと距離計算が可能に。
+- 2026-03-11: 実行検証（簡易）
+  - 生成本文に `座標:` が入ること、フォールバックパーサで緯度経度が抽出できることを Node スクリプトで確認。
+  - 実機/Expo UI 上でのE2E確認は、この環境ではセッション付き操作（ログイン・画面操作）ができず未実施。
+- 2026-03-11: 各スポット座標対応を拡張（要求対応）。
+  - `EpisodeGenerationResultScreen` で runtime spots をスポット名ベースで順次ジオコーディング。
+  - 保存時に `saveRuntimeEpisodeSpots` を呼び、`spots` / `spot_details` / `spot_story_messages` へ書き込み。
+  - 座標が解決できない場合はステージ座標をフォールバック利用。
+  - これにより「開始地点だけでなく、エピソード内の各スポット」をマップ上に順番表示できるようにした。
+- 2026-03-11: 実データ検証（Mastra API）
+  - `/api/series/episode/jobs` で試験生成を実行し、4スポット出力を確認。
+    - 赤レンガパーク
+    - 赤レンガ倉庫 イベント広場
+    - 旧横浜港駅プラットホーム
+    - 横浜赤レンガ倉庫2号館 バルコニー
+  - 各スポットを Google Geocoding で解決し、全件で緯度経度が取得できることを確認。
+- 2026-03-14: 会話中キャラの背景透過対応を実装。
+  - `mastra/src/server.ts` に `/api/series/image?cutout=1` の処理を追加。
+  - `purpose=character_portrait` かつ `cutout=1` の場合に背景除去を実行し、透過PNGで返却。
+  - 背景除去失敗時は通常画像へ自動フォールバック（生成自体は失敗させない）。
+- 2026-03-14: rembgモデル取得失敗対策を追加。
+  - `rembg-node` が Google Drive 取得で失敗するため、`u2net.onnx` を GitHub Release URL から先に取得するロジックを追加。
+  - モデルURLは `SERIES_IMAGE_CUTOUT_MODEL_URL` / `SERIES_IMAGE_CUTOUT_MODEL_URLS` で上書き可能。
+- 2026-03-14: GamePlay 向けURL変換を追加。
+  - `src/services/gameplay.ts` でキャラ画像URLが `/api/series/image` の場合に `cutout=1` を自動付与。
+  - 既存データ（透過未設定URL）でもゲームプレイ画面のみ透過版を利用可能に。
+- 2026-03-14: 会話オーバーレイの人物表示を調整。
+  - `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx` の中央キャラ表示を `cover` + 四角枠から `contain` + シルエット表示へ変更。
+  - 透過PNGの輪郭が背景に馴染む表示へ更新。
+- 2026-03-14: 検証ログ。
+  - `npm run typecheck` 成功。
+  - `npm --prefix ./mastra run build` 成功。
+  - 手動検証: `rembg-node` + `sharp` で人物画像を透過化し `/tmp/tomoshibi_cutout_test.png` を出力確認。
+- 2026-03-14: 到着後の `opening_prologue` 待機UIを自動遷移化。
+  - `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx` で `opening_prologue` 時に 1.8 秒後自動でプロローグ開始。
+  - 下部の「▼ タップで開始」を削除し「まもなく開始…」表示へ変更。
+  - 目的: 到着後のカバー画像待機で不要タップをなくし、物語導入までをシームレス化。
+  - 検証: `npm run typecheck` / `npm --prefix ./mastra run build` 成功。
+- 2026-03-14: ナレーション分割を緩和し、1表示あたりの情報量を増加。
+  - `splitDialogueText` を「文ごと固定分割」から「最大文字数まで文を連結」へ変更。
+  - `maxChars` を 84 -> 66 に調整し、カード内で2〜3行目安に収まりやすくした。
+  - 対象: `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx`。
+- 2026-03-14: ナラティブ画面の上部黒スクリーン高さを縮小。
+  - 非マップ時の上部スクリーンを `h-56` -> `h-40` に変更（下部は据え置き）。
+  - 目的: 上側の暗がりを減らし、背景の見え方を改善。
+- 2026-03-14: 検証
+  - `npm run typecheck` 成功。
+  - `npm --prefix ./mastra run build` 成功。
+- 2026-03-14: 1行ずつタップになる問題の追加対策。
+  - `toDialogues` 生成後に、同一話者の連続行を自動で結合する `compactDialogueLines` を追加。
+  - 上限: 3行相当（推定）かつ 66文字以内に収まる範囲で結合。
+  - `splitToNarrationLines` も同じ分割ロジック（`splitDialogueText`）を利用するよう統一。
+  - 対象: `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx`。
+  - 検証: `npm run typecheck` / `npm --prefix ./mastra run build` 成功。
+- 2026-03-15: `opening_prologue` の待機テキスト配置を調整（依頼対応）。
+  - 対象: `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx`。
+  - `まもなく開始…` を下部表示から画面中央の絶対配置へ変更。
+  - フォントサイズを `text-[11px]` から `text-[32px]` へ拡大し、背景上でも読めるようテキストシャドウを追加。
+  - 上部の戻る/閉じるボタンは維持（オーバーレイ上で操作可能）。
+  - 検証: `npm run typecheck` 成功。Playwrightクライアントでローカル画面のスクリーンショット取得は成功（`/tmp/tomoshibi_opening_check/shot-0.png`）だが、取得画面はホームで `opening_prologue` 自体の遷移確認は未実施。
+- 2026-03-16: SeriesDetail のCTA配置を最新話基準へ変更（依頼対応）。
+  - 対象: `src/screens/SeriesDetailScreen.tsx`。
+  - 下部固定CTAを「エピソード追加」から「第N話をプレイする」に変更（`episodeNo` 最大の最新話を対象）。
+  - `nextEpisode` 参照（先頭固定）を廃止し、`latestEpisode` 算出へ置換。
+  - 「物語の歩み」見出し直下に管理者向け `エピソードを追加` ボタンを移設（最新話の上に配置）。
+  - 旧モーダル導線（次エピソード確認モーダル）を削除し、最新エピソードカードは直接遷移に変更。
+  - 検証: `npm run typecheck` 成功。
+- 2026-03-15: プロローグ演出を通常シナリオUIから分離（依頼対応）。
+  - `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx` に `PrologueCinematicOverlay` を追加。
+  - `mode === "prologue"` では全画面黒背景 + 中央テキスト逐次表示（タップで次行）に変更。
+  - `prologue` 中は HUD と上下シェードを非表示化し、背景画像を使わない構成へ変更。
+  - `story_pre` / `story_post` / `epilogue` は既存 `TypewriterDialogueOverlay` のまま維持。
+  - Native 側の prologue ダイアログ生成から `ensureCharacterPresence` を外し、ナレーション行固定に変更。
+- 2026-03-15: 検証。
+  - `npm run typecheck` 成功。
+- 2026-03-15: プロローグ演出をさらに調整（依頼対応）。
+  - `PrologueCinematicOverlay` をタイプ表示から「1行ごとのゆっくりフェードイン（opacity + translateY）」へ変更。
+  - プロローグ本文フォントを縮小（ナレーション近いサイズ）し、中央表示の圧を調整。
+  - 上部に `PROLOGUE` と「この章でわかること: ...」要約を追加。
+  - タップ時はフェード完了前なら即表示、完了後は次行へ進む挙動に統一。
+  - 対象: `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx`。
+- 2026-03-15: 検証。
+  - `npm run typecheck` 成功。
+- 2026-03-15: 「画面が表示されない」報告への緊急対処。
+  - プロローグのフェード実装を安定化: `Animated.Text` を `Animated.View + Text` へ変更。
+  - フェードアニメーションの `useNativeDriver` を `false` に切替（環境差異による描画不全回避）。
+  - プロローグ上部ガイドの余白計算を固定値へ簡素化（`top: 18`）。
+  - 対象: `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx`。
+- 2026-03-15: 検証。
+  - `npm run typecheck` 成功。
+  - `npx expo export --platform web` 成功。
+- 2026-03-15: 「ゲームプレイ画面に移行しない」不具合の原因修正。
+  - Web版 `GamePlayScreen.web.tsx` で `if (loading) return` の後に `useMemo` を置いてしまっていたため、Hook順不整合で遷移が止まる構成になっていた。
+  - `prologueSummaryText` を Hook 依存なしの通常計算へ変更（native/web 両方で統一）。
+  - 検証: `npm run typecheck` / `npx expo export --platform web` 成功。
+- 2026-03-15: プロローグ上部の補助文「この章でわかること: ...」を削除。
+  - `PrologueCinematicOverlay` から `summaryText` プロップと表示テキストを削除（native/web）。
+  - 呼び出し側の `prologueSummaryText` 計算と prop 渡しも削除。
+  - 検証: `npm run typecheck` 成功。
+- 2026-03-15: 会話中キャラクター画像をカード表示に変更（依頼対応）。
+  - `TypewriterDialogueOverlay` の立ち絵表示を、黒背景シェード直置きから「明るいカード（角丸・枠・軽い影）」へ変更。
+  - 旧 `bg-black/76` の下段シェードを削除し、画像をカード内 `contain` で表示。
+  - 対象: `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx`。
+  - 検証: `npm run typecheck` 成功。
+- 2026-03-15: 画像反映遅延の改善を追加。
+  - `GamePlayScreen.tsx` / `GamePlayScreen.web.tsx` に画像先読み（cover / characters / spot backgrounds / dialogue avatars）を追加。
+  - `src/services/gameplay.ts` でゲームプレイ用キャラ画像URLに `cutout=0` を付与（`/api/series/image?purpose=character_portrait` の重い背景除去を回避）。
+  - `mastra/src/server.ts` で `cutout=0|false|off|no` を解釈し、portrait cutout を明示的に無効化できるよう変更。
+  - 検証: `npm run typecheck` / `npm --prefix ./mastra run build` 成功。
+- 2026-03-15: ユーザー依頼でサーバー再起動を実施。
+  - 既存の Expo/Mastra プロセスを停止。
+  - Mastra: `npm --prefix ./mastra run dev` をバックグラウンド再起動（`.tmp_mastra.log`）。
+  - Expo: `CI=1 npm run start:expo -- --clear` をバックグラウンド再起動（`.tmp_expo.log`）。
+  - 起動確認: `localhost:4111`（Mastra）/ `localhost:8081`（Expo Metro）で LISTEN を確認。
+- 2026-03-15: 「サーバーにアクセスできない」対応。
+  - 稼働プロセスが落ちていたため、`npm run dev` を常駐セッションで再起動。
+  - 実機向けに `.env` の `EXPO_PUBLIC_MASTRA_BASE_URL` を `http://192.168.1.3:4111` へ更新。
+  - 疎通確認: `curl http://localhost:4111/` と `curl http://192.168.1.3:4111/` ともに `TOMOSHIBI Mastra API` を返却。
+  - Expo Metro も `http://localhost:8081` で 200 応答を確認。
+- 2026-03-15: SeriesDetail で登場人物画像が表示されない問題を修正。
+  - `src/services/quests.ts` の `normalizeEpisodeCoverUrl` を強化し、`localhost/127.0.0.1` と `/api/series/image` URLを `EXPO_PUBLIC_MASTRA_BASE_URL` ホストへ自動寄せ。
+  - `fetchSeriesDetail` / `fetchSeriesEpisodeRuntimeContext` の `avatarImageUrl` を `clean(...)` 直返しから `normalizeEpisodeCoverUrl(...)` へ変更。
+  - これにより SeriesDetail でも実機から到達可能な画像URLに統一。
+  - 検証: `npm run typecheck` 成功。Expoバンドル再読込済み。
+- 2026-03-15: SeriesDetail の人物画像未表示を追加修正。
+  - `normalizeEpisodeCoverUrl` で `/api/series/image?purpose=character_portrait` に `cutout=0` を付与（一覧サムネイル可視性を優先）。
+  - `SeriesDetailScreen` の人物アバター表示を `resizeMode='cover'` から `contain` に変更（透過PNGの切り抜き見えない問題を回避）。
+  - 検証: `npm run typecheck` 成功、Expo リロード済み。
+- 2026-03-16: シリーズ生成の多候補探索を停止し、単一路線へ固定。
+  - `mastra/src/workflows/series-workflow.ts` で quality pipeline を強制無効化し、series生成は常に single-path の legacy flow を通すよう変更。
+  - `assembleSeriesBlueprint` に `workflowVersion` を渡せるようにし、単一路線は `series-workflow-v9-single-path` を返すよう整理。
+  - `docs/business/DECISION_LOG.md` に単一路線固定の判断を追記し、最終更新日を更新。
+- 2026-03-16: シリーズカバー画像の多候補生成を停止。
+  - `mastra/src/workflows/series-workflow.ts` の `buildCoverWithConsistency` を単発化し、カバー画像は `1枚生成 -> 1回評価 -> そのまま採用` へ変更。
+  - `generate_series_cover_candidates_*` の進捗文言を、多候補前提から単一カバー生成前提へ更新。
+  - `docs/business/DECISION_LOG.md` にカバー画像単発生成の判断を追記。
+- 2026-03-16: シリーズ生成を「現実拡張型・外出周遊ミステリー」へ再定義し、差分制御を追加。
+  - `mastra/src/lib/agents/seriesConceptAgent.ts` / `seriesCharacterAgent.ts` / `seriesEpisodePlannerAgent.ts` / `seriesConsistencyAgent.ts` の system prompt・runtime prompt を全面改修。
+  - `mastra/src/schemas/series.ts` に `mystery_profile` / `recent_generation_context` を追加し、`seriesCharacter` / `checkpoint` / `first_episode_seed` の出力粒度を拡張。
+  - `mastra/src/workflows/series-workflow.ts` で `mystery_profile` と `recent_generation_context` を全工程へ受け渡し、`series.mystery_profile` を最終出力に含めるよう変更。
+  - `mastra/src/schemas/series-runtime-vnext.ts` / `mastra/src/lib/runtime/seriesRuntimeVNext.ts` / `src/services/seriesAi.ts` を更新し、vNext adapter とクライアント request/normalize でも `recent_*` と `mysteryProfile` を保持。
+  - `docs/business/TOMOSHIBI_COMMON_UNDERSTANDING.md` を「街歩き」固定から「外出周遊」中心の定義へ更新し、`docs/business/DECISION_LOG.md` に判断を追記。
+- 2026-03-16: シリーズ生成の hard fail を fallback 継続型へ修正。
+  - `mastra/src/lib/agents/seriesConceptAgent.ts` は全試行失敗時に throw せず `buildFallbackConcept` を返すよう変更し、timeout も env 化して既定90秒へ延長。
+  - `mastra/src/lib/agents/seriesCharacterAgent.ts` は API キー未設定時と全試行失敗時に fallback characters を返すよう変更。
+  - `mastra/src/lib/agents/seriesConsistencyAgent.ts` も全試行失敗時に fallback consistency を返すよう変更。
+  - 検証: `npm run typecheck` / `npm --prefix ./mastra run build` 成功。
+- 2026-03-16: Mastra サーバーのシリーズ生成ログを詳細化。
+  - `mastra/src/server.ts` に request summary / recent context 件数 / progress phase / result summary を出す console logging を追加。
+  - `SERIES_VERBOSE_CONSOLE=off` を入れない限り、`/api/series/generate`、`/api/series/generate/jobs`、`/api/series/jobs`、`/api/series` で進行ログが出る。
+  - 検証: `npm run typecheck` / `npm --prefix ./mastra run build` 成功。
+- 2026-03-16: シリーズ文面からエピソード層の導線制約とメタ語の漏れを遮断。
+  - `mastra/src/lib/agents/seriesConsistencyAgent.ts` の fallback / normalize / prompt を修正し、`overview_refined` と `ai_rule_points` に「外出周遊」「複数スポット」「移動手段」等を出さないよう変更。
+  - `mastra/src/workflows/series-workflow.ts` の `buildFallbackConceptFromSeed` を抽象化し、シリーズ fallback が地理ロックや導線実装語を含まないよう変更。
+  - `src/services/seriesAi.ts` の `ensureWalkAiRules` を表示用の高レベル規則へ変更し、`genre / overview / premise / seasonGoal / world.setting / continuity` をメタ語・導線語検知時に抽象化して正規化するよう変更。
+  - `docs/business/DECISION_LOG.md` に「シリーズ生成のユーザー向け文面にエピソード導線制約を露出しない」判断を追記。
+  - 検証: `npm run typecheck` / `npm --prefix ./mastra run build` 成功。
+- 2026-03-16: シリーズ生成結果の登場人物ハッシュタグが途中で切れる問題を修正。
+  - `src/screens/SeriesGenerationResultScreen.tsx` の `buildCharacterTags` でタグ文字列の `slice(0, 10)` を削除し、全文を保持するよう変更。
+  - タグチップに `maxWidth: 100%` とテキスト折り返し前提のスタイルを追加し、長いハッシュタグでもカード内で見切れにくい表示へ変更。
+  - 検証: `npm run typecheck` 成功。
+- 2026-03-16: シリーズ画像promptを「Rendering Bible + Narrative Visual Brief」へ改修。
+  - `mastra/src/lib/seriesVisuals.ts` に `buildSeriesRenderingBible` / `buildSeriesNarrativeVisualBrief` を追加し、cover/character prompt が「統一ルール」と「事件差分」を分離して受け取る構造へ変更。
+  - カバーpromptを `world concept poster` から `grounded mystery key art` に変更し、`clue_objects` / `human_traces` / `material_anchors` / `cover_composition_family` を明示必須化。
+  - キャラpromptへ `investigation_function` / `relationship_temperature` / `signature_prop` / `environment_residue` を差し込み、汎用立ち絵化を抑制。
+  - `mastra/src/workflows/series-workflow.ts` で `mystery_profile` を cover/character prompt へ渡し、検証文言もキーアート前提に更新。
+  - `mastra/src/lib/agents/seriesCharacterAgent.ts` と `mastra/src/schemas/series.ts` を拡張し、`relationship_temperature` / `signature_prop` / `environment_residue` / `posture_grammar` を扱えるようにした。
+  - `src/services/seriesAi.ts` で新キャラ項目を正規化して受け取るよう更新。
+  - 検証: `npm run typecheck` / `npm --prefix ./mastra run build` 成功。

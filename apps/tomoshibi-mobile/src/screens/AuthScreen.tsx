@@ -1,0 +1,653 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, Platform, Pressable, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { FontAwesome } from "@expo/vector-icons";
+import Constants, { ExecutionEnvironment } from "expo-constants";
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import type { RootStackParamList } from "@/navigation/types";
+import { getFirebaseClientAuth } from "@/lib/firebase";
+import { fonts } from "@/theme/fonts";
+import { shouldShowOnboarding } from "@/lib/authOnboarding";
+import { normalizeProfileHandle } from "@/lib/profileHandle";
+import { getSupabaseOrThrow, isSupabaseConfigured } from "@/lib/supabase";
+import { isProfileHandleTaken, syncProfileBasicsFromAuth } from "@/services/social";
+import { useSessionUserId } from "@/hooks/useSessionUser";
+
+WebBrowser.maybeCompleteAuthSession();
+
+type Props = NativeStackScreenProps<RootStackParamList, "Auth">;
+
+const GOOGLE_REDIRECT_SCHEME = "com.tomoshibi.mobile";
+const trimEnv = (value: string | undefined) => value?.trim() ?? "";
+const GOOGLE_OAUTH_WEB_CLIENT_ID = trimEnv(process.env.EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID);
+const GOOGLE_OAUTH_IOS_CLIENT_ID = trimEnv(process.env.EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID);
+const GOOGLE_OAUTH_ANDROID_CLIENT_ID = trimEnv(process.env.EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID);
+
+type GoogleSignInAttemptResult =
+  | { status: "success" }
+  | { status: "cancelled" }
+  | { status: "skipped"; reason: string }
+  | { status: "failed"; reason: string };
+
+type ProfileHandleAvailability = "idle" | "checking" | "available" | "taken" | "error";
+
+const getSignUpErrorMessage = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return "新規登録に失敗しました。";
+  }
+
+  const status = "status" in error ? error.status : undefined;
+  const message = "message" in error && typeof error.message === "string" ? error.message : "";
+
+  if (status === 429) {
+    return [
+      "新規登録が一時的に制限されています。",
+      "Firebase Auth の確認メール送信レート制限に到達した可能性が高いです。",
+      "少し時間を空けて再試行するか、開発用では Auth のメール確認を無効化するか、独自 SMTP を設定してください。",
+    ].join("\n");
+  }
+
+  return message || "新規登録に失敗しました。";
+};
+
+const getReadableErrorMessage = (error: unknown) => {
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return "Googleログインに失敗しました。";
+};
+
+const isMissingInitialStateError = (error: unknown) => {
+  const code =
+    error && typeof error === "object" && "code" in error && typeof error.code === "string"
+      ? error.code.toLowerCase()
+      : "";
+  const message = getReadableErrorMessage(error).toLowerCase();
+  const joined = `${code} ${message}`;
+  return (
+    joined.includes("missing initial state") ||
+    joined.includes("sessionstorage") ||
+    joined.includes("storage-partitioned") ||
+    joined.includes("idp-initiated")
+  );
+};
+
+const clearFirebaseWebOAuthTransientState = () => {
+  if (Platform.OS !== "web" || typeof window === "undefined") {
+    return;
+  }
+
+  const shouldRemoveKey = (key: string) => {
+    // Firebase Auth の popup/redirect 復元で使う一時キーを掃除する。
+    return (
+      key.includes("firebase:authEvent") ||
+      key.includes("firebase:redirectEventId") ||
+      key.includes("firebase:persistence")
+    );
+  };
+
+  const clearStore = (store: Storage | null) => {
+    if (!store) return;
+    const keys: string[] = [];
+    for (let index = 0; index < store.length; index += 1) {
+      const key = store.key(index);
+      if (!key) continue;
+      if (shouldRemoveKey(key)) {
+        keys.push(key);
+      }
+    }
+    for (const key of keys) {
+      store.removeItem(key);
+    }
+  };
+
+  try {
+    clearStore(window.sessionStorage ?? null);
+  } catch {
+    // noop
+  }
+  try {
+    clearStore(window.localStorage ?? null);
+  } catch {
+    // noop
+  }
+};
+
+export const AuthScreen = ({ navigation }: Props) => {
+  const { userId } = useSessionUserId();
+  const routedDestinationKeyRef = useRef<string | null>(null);
+  const handleCheckRequestIdRef = useRef(0);
+
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState("");
+  const [profileHandle, setProfileHandle] = useState("");
+  const [profileHandleAvailability, setProfileHandleAvailability] = useState<ProfileHandleAvailability>("idle");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loadingMode, setLoadingMode] = useState<"email" | "google" | null>(null);
+  const loading = loadingMode !== null;
+  const normalizedProfileHandle = normalizeProfileHandle(profileHandle);
+  const appScheme = typeof Constants.expoConfig?.scheme === "string" ? Constants.expoConfig.scheme : GOOGLE_REDIRECT_SCHEME;
+  const isNativeBuild =
+    Constants.executionEnvironment === ExecutionEnvironment.Bare ||
+    Constants.executionEnvironment === ExecutionEnvironment.Standalone;
+  const canUseDirectGoogleOAuth = Platform.OS === "web" || isNativeBuild;
+  const hasGoogleConsoleOAuthClientId =
+    Platform.OS === "ios"
+      ? Boolean(GOOGLE_OAUTH_IOS_CLIENT_ID)
+      : Platform.OS === "android"
+        ? Boolean(GOOGLE_OAUTH_ANDROID_CLIENT_ID)
+        : Boolean(GOOGLE_OAUTH_WEB_CLIENT_ID);
+  const isGoogleConsoleOAuthConfigured = canUseDirectGoogleOAuth && hasGoogleConsoleOAuthClientId;
+  const [googleAuthRequest, , promptGoogleAuth] = Google.useIdTokenAuthRequest(
+    {
+      webClientId: GOOGLE_OAUTH_WEB_CLIENT_ID || undefined,
+      iosClientId: GOOGLE_OAUTH_IOS_CLIENT_ID || undefined,
+      androidClientId: GOOGLE_OAUTH_ANDROID_CLIENT_ID || undefined,
+      selectAccount: true,
+      scopes: ["openid", "profile", "email"],
+    },
+    {
+      native: `${appScheme}:/oauthredirect`,
+    }
+  );
+
+  const routeAuthenticatedUser = useCallback(async () => {
+    if (!isSupabaseConfigured) return false;
+
+    const supabase = getSupabaseOrThrow();
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.warn("AuthScreen: failed to read authenticated user", error);
+      return false;
+    }
+    if (!data.user) return false;
+
+    try {
+      const metadata = (data.user.user_metadata || {}) as Record<string, unknown>;
+      await syncProfileBasicsFromAuth({
+        userId: data.user.id,
+        name: typeof metadata.name === "string" ? metadata.name : null,
+        handle: typeof metadata.handle === "string" ? metadata.handle : null,
+      });
+    } catch (syncError) {
+      console.warn("AuthScreen: failed to sync profile basics", syncError);
+    }
+
+    const needsOnboarding = shouldShowOnboarding(data.user);
+    const destinationKey = `${data.user.id}:${needsOnboarding ? "onboarding" : "home"}`;
+    if (routedDestinationKeyRef.current === destinationKey) {
+      return true;
+    }
+
+    routedDestinationKeyRef.current = destinationKey;
+    if (needsOnboarding) {
+      navigation.replace("OnboardingSurvey");
+      return true;
+    }
+
+    navigation.replace("MainTabs", { screen: "Home" });
+    return true;
+  }, [navigation]);
+
+  useEffect(() => {
+    if (!userId) {
+      routedDestinationKeyRef.current = null;
+      return;
+    }
+
+    void routeAuthenticatedUser();
+  }, [routeAuthenticatedUser, userId]);
+
+  useEffect(() => {
+    if (!isSignUp) {
+      setProfileHandleAvailability("idle");
+      return;
+    }
+
+    if (!profileHandle.trim() || !normalizedProfileHandle) {
+      setProfileHandleAvailability("idle");
+      return;
+    }
+
+    const requestId = handleCheckRequestIdRef.current + 1;
+    handleCheckRequestIdRef.current = requestId;
+    setProfileHandleAvailability("checking");
+
+    const timeoutId = setTimeout(() => {
+      void (async () => {
+        try {
+          const taken = await isProfileHandleTaken(normalizedProfileHandle);
+          if (handleCheckRequestIdRef.current !== requestId) return;
+          setProfileHandleAvailability(taken ? "taken" : "available");
+        } catch (error) {
+          if (handleCheckRequestIdRef.current !== requestId) return;
+          console.warn("AuthScreen: failed to precheck profile handle", error);
+          setProfileHandleAvailability("error");
+        }
+      })();
+    }, 350);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isSignUp, normalizedProfileHandle, profileHandle]);
+
+  const validate = () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert("入力エラー", "メールアドレスとパスワードを入力してください。");
+      return false;
+    }
+    if (password.length < 6) {
+      Alert.alert("入力エラー", "パスワードは6文字以上で入力してください。");
+      return false;
+    }
+    if (isSignUp && !name.trim()) {
+      Alert.alert("入力エラー", "ユーザー名を入力してください。");
+      return false;
+    }
+    if (isSignUp && !normalizeProfileHandle(profileHandle)) {
+      Alert.alert("入力エラー", "プロフィールIDを入力してください。");
+      return false;
+    }
+    if (isSignUp && profileHandleAvailability === "taken") {
+      Alert.alert("入力エラー", `@${normalizedProfileHandle} は既に使用されています。別のIDを入力してください。`);
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!isSupabaseConfigured) {
+      Alert.alert("設定が必要です", "Firebase設定が未完了です。");
+      return;
+    }
+    if (!validate()) return;
+
+    setLoadingMode("email");
+    try {
+      const supabase = getSupabaseOrThrow();
+
+      if (isSignUp) {
+        const trimmedName = name.trim();
+        const normalizedHandle = normalizeProfileHandle(profileHandle);
+
+        if (await isProfileHandleTaken(normalizedHandle)) {
+          Alert.alert("プロフィールIDが重複しています", `@${normalizedHandle} は既に使用されています。別のIDを入力してください。`);
+          return;
+        }
+
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              name: trimmedName,
+              handle: normalizedHandle,
+              onboarding_required: true,
+            },
+          },
+        });
+
+        if (error) {
+          Alert.alert("登録エラー", getSignUpErrorMessage(error));
+          return;
+        }
+
+        if (data.session?.user) {
+          await syncProfileBasicsFromAuth({
+            userId: data.session.user.id,
+            name: trimmedName,
+            handle: normalizedHandle,
+          });
+          await routeAuthenticatedUser();
+          return;
+        }
+
+        Alert.alert("登録完了", "確認メールをご確認ください。確認後の初回ログイン時に好みの設定を行います。");
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        Alert.alert("ログインエラー", "メールアドレスまたはパスワードが正しくありません。");
+        return;
+      }
+
+      await routeAuthenticatedUser();
+    } catch (error) {
+      console.error("AuthScreen: submit failed", error);
+      Alert.alert("エラー", "通信に失敗しました。時間をおいて再度お試しください。");
+    } finally {
+      setLoadingMode(null);
+    }
+  };
+
+  const profileHandleHelperText =
+    profileHandleAvailability === "checking"
+      ? "プロフィールIDを確認中です"
+      : profileHandleAvailability === "taken"
+        ? `@${normalizedProfileHandle} は既に使用されています`
+        : profileHandleAvailability === "available"
+          ? `@${normalizedProfileHandle} は使用できます`
+          : profileHandleAvailability === "error"
+            ? "プロフィールIDの確認に失敗しました"
+            : null;
+
+  const handleGoogleSignIn = async () => {
+    if (!isSupabaseConfigured) {
+      Alert.alert("設定が必要です", "Firebase設定が未完了です。");
+      return;
+    }
+
+    if (Platform.OS !== "web" && !isNativeBuild) {
+      Alert.alert(
+        "Googleログインを利用できません",
+        "Expo Go ではこの構成の Google ログインを利用できません。開発ビルドまたは本番ビルドでお試しください。"
+      );
+      return;
+    }
+
+    if (Platform.OS !== "web" && !isGoogleConsoleOAuthConfigured) {
+      const requiredKey =
+        Platform.OS === "ios"
+          ? "EXPO_PUBLIC_GOOGLE_OAUTH_IOS_CLIENT_ID"
+          : Platform.OS === "android"
+            ? "EXPO_PUBLIC_GOOGLE_OAUTH_ANDROID_CLIENT_ID"
+            : "EXPO_PUBLIC_GOOGLE_OAUTH_WEB_CLIENT_ID";
+      Alert.alert(
+        "Google OAuth設定が不足しています",
+        `${requiredKey} を .env に設定してください。Firebase Console > Authentication > Sign-in method > Google で表示される各プラットフォーム用クライアントIDを利用してください。`
+      );
+      return;
+    }
+
+    setLoadingMode("google");
+    try {
+      const supabase = getSupabaseOrThrow();
+
+      // Web は admin-console と同じ Firebase popup ログインだけを使う。
+      if (Platform.OS === "web") {
+        const auth = getFirebaseClientAuth();
+        if (!auth) {
+          Alert.alert("設定が必要です", "Firebase Auth クライアントを初期化できませんでした。");
+          return;
+        }
+
+        try {
+          const provider = new GoogleAuthProvider();
+          provider.setCustomParameters({ prompt: "select_account" });
+          await signInWithPopup(auth, provider);
+          await routeAuthenticatedUser();
+          return;
+        } catch (error) {
+          const message = getReadableErrorMessage(error);
+          if (isMissingInitialStateError(error)) {
+            clearFirebaseWebOAuthTransientState();
+
+            // 一時状態を掃除した直後に 1 回だけ再試行する。
+            try {
+              const provider = new GoogleAuthProvider();
+              provider.setCustomParameters({ prompt: "select_account" });
+              await signInWithPopup(auth, provider);
+              await routeAuthenticatedUser();
+              return;
+            } catch (retryError) {
+              const retryMessage = getReadableErrorMessage(retryError);
+              Alert.alert(
+                "Googleログインエラー",
+                [
+                  retryMessage,
+                  "ブラウザの sessionStorage / localStorage が制限されている可能性があります。プライベートブラウズや強い追跡防止をOFFにして、http://localhost:8081 で再試行してください。",
+                ].join("\n")
+              );
+              return;
+            }
+          }
+          Alert.alert(
+            "Googleログインエラー",
+            [
+              message,
+              "Firebase Console の Authentication > Settings > 承認済みドメインに現在のドメイン（localhost など）を追加してください。",
+            ].join("\n")
+          );
+          return;
+        }
+      }
+
+      const tryGoogleConsoleOAuth = async (): Promise<GoogleSignInAttemptResult> => {
+        if (!canUseDirectGoogleOAuth) {
+          return {
+            status: "skipped",
+            reason: "Expo Go環境ではGoogle Consoleの直接OAuthを利用できないため、フォールバックに切り替えます。",
+          };
+        }
+        if (!isGoogleConsoleOAuthConfigured) {
+          return { status: "skipped", reason: "Google Console OAuthのクライアントIDが未設定です。" };
+        }
+        if (!googleAuthRequest) {
+          return { status: "failed", reason: "Google認証の準備が完了していません。再度お試しください。" };
+        }
+
+        const authResult = await promptGoogleAuth();
+        if (authResult.type === "cancel" || authResult.type === "dismiss") {
+          return { status: "cancelled" };
+        }
+        if (authResult.type !== "success") {
+          const params = "params" in authResult ? authResult.params : {};
+          const authErrorMessage =
+            "error" in authResult && authResult.error?.message ? authResult.error.message : undefined;
+          const errorMessage =
+            params.error_description ??
+            params.error ??
+            authErrorMessage ??
+            "Google認証が完了しませんでした。";
+          return { status: "failed", reason: errorMessage };
+        }
+
+        const idToken = authResult.params.id_token || authResult.authentication?.idToken;
+        const accessToken = authResult.params.access_token || authResult.authentication?.accessToken;
+        if (!idToken) {
+          return { status: "failed", reason: "GoogleのIDトークンを取得できませんでした。" };
+        }
+
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: idToken,
+          access_token: accessToken,
+          nonce: googleAuthRequest.nonce,
+        });
+
+        if (error) {
+          return { status: "failed", reason: error.message || "IDトークンでのログインに失敗しました。" };
+        }
+
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session) {
+          return {
+            status: "failed",
+            reason: sessionError?.message || "Googleログイン後のセッション取得に失敗しました。",
+          };
+        }
+
+        return { status: "success" };
+      };
+
+      const googleConsoleResult = await tryGoogleConsoleOAuth();
+      if (googleConsoleResult.status === "success") {
+        await routeAuthenticatedUser();
+        return;
+      }
+      if (googleConsoleResult.status === "cancelled") {
+        return;
+      }
+
+      Alert.alert(
+        "Googleログインエラー",
+        [
+          googleConsoleResult.reason,
+          "Google Cloud Console の OAuth クライアントID（iOS/Android）とアプリの bundleId/packageName/署名(SHA-1) を一致させてください。",
+        ].join("\n")
+      );
+    } catch (error) {
+      console.error("AuthScreen: google sign in failed", error);
+      Alert.alert("エラー", "通信に失敗しました。時間をおいて再度お試しください。");
+    } finally {
+      setLoadingMode(null);
+    }
+  };
+
+  return (
+    <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
+      <View className="flex-1 justify-center px-4">
+        <View className="rounded-2xl border border-[#EBDFCF] bg-white px-4 py-5">
+          <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
+            {isSignUp ? "新規登録" : "ログイン"}
+          </Text>
+          <Text className="text-sm text-[#6C5647] mt-1" style={{ fontFamily: fonts.bodyRegular }}>
+            {isSignUp ? "アカウントを作成して冒険を始めましょう" : "アカウントにログインしてください"}
+          </Text>
+
+          <View className="mt-4 gap-3">
+            {isSignUp && (
+              <View>
+                <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+                  ユーザー名
+                </Text>
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="表示する名前"
+                  placeholderTextColor="#A39A90"
+                  className="h-11 rounded-xl border border-[#E5DDD3] bg-[#F1ECE6] px-3 text-sm text-[#221910]"
+                  style={{ fontFamily: fonts.bodyRegular }}
+                />
+              </View>
+            )}
+
+            {isSignUp && (
+              <View>
+                <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+                  プロフィールID
+                </Text>
+                <TextInput
+                  value={profileHandle}
+                  onChangeText={setProfileHandle}
+                  autoCapitalize="none"
+                  placeholder="@traveler"
+                  placeholderTextColor="#A39A90"
+                  className="h-11 rounded-xl border border-[#E5DDD3] bg-[#F1ECE6] px-3 text-sm text-[#221910]"
+                  style={[
+                    { fontFamily: fonts.bodyRegular },
+                    profileHandleAvailability === "taken" ? { borderColor: "#D83A2E" } : null,
+                    profileHandleAvailability === "available" ? { borderColor: "#2F855A" } : null,
+                  ]}
+                />
+                {profileHandleHelperText ? (
+                  <Text
+                    className="mt-1 text-xs"
+                    style={{
+                      fontFamily: fonts.bodyRegular,
+                      color:
+                        profileHandleAvailability === "taken"
+                          ? "#D83A2E"
+                          : profileHandleAvailability === "available"
+                            ? "#2F855A"
+                            : "#6C5647",
+                    }}
+                  >
+                    {profileHandleHelperText}
+                  </Text>
+                ) : null}
+              </View>
+            )}
+
+            <View>
+              <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+                メールアドレス
+              </Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                placeholder="name@example.com"
+                placeholderTextColor="#A39A90"
+                className="h-11 rounded-xl border border-[#E5DDD3] bg-[#F1ECE6] px-3 text-sm text-[#221910]"
+                style={{ fontFamily: fonts.bodyRegular }}
+              />
+            </View>
+
+            <View>
+              <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+                パスワード
+              </Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+                placeholder="••••••••"
+                placeholderTextColor="#A39A90"
+                className="h-11 rounded-xl border border-[#E5DDD3] bg-[#F1ECE6] px-3 text-sm text-[#221910]"
+                style={{ fontFamily: fonts.bodyRegular }}
+              />
+            </View>
+          </View>
+
+          <Pressable
+            className="h-11 rounded-xl bg-[#EE8C2B] items-center justify-center mt-4"
+            onPress={() => {
+              void handleSubmit();
+            }}
+            disabled={loading}
+          >
+            {loadingMode === "email" ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text className="text-sm text-white" style={{ fontFamily: fonts.displayBold }}>
+                {isSignUp ? "登録する" : "ログイン"}
+              </Text>
+            )}
+          </Pressable>
+
+          <View className="mt-4 flex-row items-center">
+            <View className="h-px flex-1 bg-[#E5DDD3]" />
+            <Text className="mx-3 text-xs text-[#8B7C70]" style={{ fontFamily: fonts.bodyRegular }}>
+              または
+            </Text>
+            <View className="h-px flex-1 bg-[#E5DDD3]" />
+          </View>
+
+          <Pressable
+            className="h-11 rounded-xl border border-[#E5DDD3] bg-white items-center justify-center mt-4 flex-row"
+            onPress={() => {
+              void handleGoogleSignIn();
+            }}
+            disabled={loading}
+          >
+            {loadingMode === "google" ? (
+              <ActivityIndicator color="#221910" />
+            ) : (
+              <>
+                <FontAwesome name="google" size={16} color="#221910" />
+                <Text className="text-sm text-[#221910] ml-2" style={{ fontFamily: fonts.bodyMedium }}>
+                  Googleでログイン
+                </Text>
+              </>
+            )}
+          </Pressable>
+
+          <Pressable className="items-center mt-4" onPress={() => setIsSignUp((prev) => !prev)} disabled={loading}>
+            <Text className="text-sm text-[#EE8C2B]" style={{ fontFamily: fonts.bodyMedium }}>
+              {isSignUp ? "既にアカウントをお持ちですか？ログイン" : "アカウントをお持ちでない方は新規登録"}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </SafeAreaView>
+  );
+};
