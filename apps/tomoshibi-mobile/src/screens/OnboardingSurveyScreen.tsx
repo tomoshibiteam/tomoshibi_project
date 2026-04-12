@@ -294,7 +294,7 @@ export const OnboardingSurveyScreen = ({ navigation }: Props) => {
   const worldCardWidth = Math.floor((contentWidth - gridGap) / 2);
   const isCompactGrid = currentStep.options.length > 4;
   const gridRowCount = Math.ceil(currentStep.options.length / 2);
-  const fallbackViewportHeight = Math.max(360, height - 292);
+  const fallbackViewportHeight = Math.max(360, height - 240);
   const resolvedViewportHeight = contentViewportHeight || fallbackViewportHeight;
   const worldCardHeight = isCompactGrid
     ? Math.max(78, Math.min(128, Math.floor((resolvedViewportHeight - gridGap * (gridRowCount - 1)) / gridRowCount)))
@@ -658,9 +658,9 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     paddingTop: 8,
-    paddingBottom: 8,
+    paddingBottom: 0,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   listWrap: {
     gap: 12,
@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    alignContent: "stretch",
+    alignContent: "flex-start",
   },
   worldCard: {
     borderRadius: 8,
@@ -790,7 +790,7 @@ const styles = StyleSheet.create({
   footerSafeArea: {
     paddingHorizontal: 16,
     paddingTop: 4,
-    paddingBottom: 18,
+    paddingBottom: 4,
   },
   footerHintText: {
     alignSelf: "center",
