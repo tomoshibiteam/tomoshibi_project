@@ -24,7 +24,7 @@ import {
 import type { ProfileRow } from "@/types/social";
 import { ProfileAvatar } from "@/components/common/ProfileAvatar";
 import { getSupabaseOrThrow, isSupabaseConfigured } from "@/lib/supabase";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { deleteSeriesDraft, fetchMySeriesOptions, type SeriesOption } from "@/services/quests";
@@ -76,8 +76,11 @@ const formatDuration = (seconds: number | null | undefined) => {
   return `${hour}時間${remain}分`;
 };
 
-export const ProfileScreen = ({}: Props) => {
-  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+export const ProfileScreen = ({ navigation }: Props) => {
+  // getParent() は ProfileScreen が常に MainTabs (BottomTab) の中から
+  // RootStack 配下に配置されるため必ず値が返る。
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const rootNavigation = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>()!;
   const { userId, loading: authLoading } = useSessionUserId();
 
   const [loading, setLoading] = useState(true);

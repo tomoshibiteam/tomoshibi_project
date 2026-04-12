@@ -1136,6 +1136,8 @@ class FirebaseAuthFacade {
   }
 }
 
+type RpcParams = Record<string, unknown>;
+
 class FirebaseSupabaseFacade {
   readonly auth: FirebaseAuthFacade;
 
@@ -1148,6 +1150,31 @@ class FirebaseSupabaseFacade {
 
   from(table: string) {
     return new FirestoreQueryBuilder(this.db, table);
+  }
+
+  async rpc(fn: "is_handle_taken", params: { p_handle: string; p_exclude_user_id?: string }): Promise<SupabaseLikeResponse<boolean>>;
+  async rpc(fn: string, params?: RpcParams): Promise<SupabaseLikeResponse<unknown>>;
+  async rpc(fn: string, params?: RpcParams): Promise<SupabaseLikeResponse<unknown>> {
+    try {
+      if (fn === "is_handle_taken") {
+        const pHandle = params?.["p_handle"];
+        const pExcludeUserId = params?.["p_exclude_user_id"];
+        if (typeof pHandle !== "string" || !pHandle) {
+          return { data: false, error: null };
+        }
+        const snapshot = await getDocs(collection(this.db, "profiles"));
+        const found = snapshot.docs.some((docSnap) => {
+          const row = mapDocToRow(docSnap.id, docSnap.data());
+          if (normalizeString(row["handle"]) !== pHandle) return false;
+          if (typeof pExcludeUserId === "string" && pExcludeUserId && normalizeString(row["id"]) === pExcludeUserId) return false;
+          return true;
+        });
+        return { data: found, error: null };
+      }
+      return { data: null, error: makeError(`RPC "${fn}" is not implemented`, "NOT_IMPLEMENTED") };
+    } catch (error) {
+      return { data: null, error: toError(error) };
+    }
   }
 
   channel(name: string) {

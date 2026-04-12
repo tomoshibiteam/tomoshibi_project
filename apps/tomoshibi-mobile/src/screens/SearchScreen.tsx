@@ -404,13 +404,22 @@ export const SearchScreen = ({}: Props) => {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
       <View className="bg-[#F8F7F6] border-b border-[#ECE6DF]">
-        <View className="px-5 pt-4 pb-2">
-          <Text className="text-2xl text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
-            探索
-          </Text>
-          <Text className="text-xs text-[#9A938B] mt-0.5" style={{ fontFamily: fonts.bodyRegular }}>
-            物語の世界へ踏み出す
-          </Text>
+        <View className="px-5 pt-4 pb-2 flex-row items-start justify-between">
+          <View>
+            <Text className="text-2xl text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
+              探索
+            </Text>
+            <Text className="text-xs text-[#9A938B] mt-0.5" style={{ fontFamily: fonts.bodyRegular }}>
+              物語の世界へ踏み出す
+            </Text>
+          </View>
+          <Pressable
+            className="w-9 h-9 rounded-full bg-white/80 items-center justify-center mt-0.5"
+            onPress={() => rootNavigation.navigate("MainTabs", { screen: "Home" })}
+            style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+          >
+            <Ionicons name="close" size={20} color="#221910" />
+          </Pressable>
         </View>
         <View className="flex-row items-center gap-3 px-4 pt-2 pb-3">
           <View className="flex-1 relative">

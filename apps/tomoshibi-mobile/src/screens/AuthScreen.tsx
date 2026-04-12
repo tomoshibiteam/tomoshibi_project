@@ -142,11 +142,16 @@ export const AuthScreen = ({ navigation }: Props) => {
         ? Boolean(GOOGLE_OAUTH_ANDROID_CLIENT_ID)
         : Boolean(GOOGLE_OAUTH_WEB_CLIENT_ID);
   const isGoogleConsoleOAuthConfigured = canUseDirectGoogleOAuth && hasGoogleConsoleOAuthClientId;
+  // NOTE: `|| undefined` を使わず空文字列のままにする。
+  // expo-auth-session の invariantClientId は `typeof value === 'undefined'` のみを
+  // チェックするため、空文字列を渡すと throw しない。
+  // `|| undefined` に変換すると環境変数未設定時に invariantClientId が throw して
+  // コンポーネント全体がクラッシュ（ホワイトアウト）する原因になる。
   const [googleAuthRequest, , promptGoogleAuth] = Google.useIdTokenAuthRequest(
     {
-      webClientId: GOOGLE_OAUTH_WEB_CLIENT_ID || undefined,
-      iosClientId: GOOGLE_OAUTH_IOS_CLIENT_ID || undefined,
-      androidClientId: GOOGLE_OAUTH_ANDROID_CLIENT_ID || undefined,
+      webClientId: GOOGLE_OAUTH_WEB_CLIENT_ID || "",
+      iosClientId: GOOGLE_OAUTH_IOS_CLIENT_ID || "",
+      androidClientId: GOOGLE_OAUTH_ANDROID_CLIENT_ID || "",
       selectAccount: true,
       scopes: ["openid", "profile", "email"],
     },

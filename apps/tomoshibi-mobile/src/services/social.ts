@@ -60,14 +60,12 @@ export const isProfileHandleTaken = async (handle: string, excludeUserId?: strin
   if (!normalizedHandle) return false;
 
   const supabase = getSupabaseOrThrow();
-  let query = supabase.from("profiles").select("id").eq("handle", normalizedHandle).limit(1);
-  if (excludeUserId) {
-    query = query.neq("id", excludeUserId);
-  }
-
-  const { data, error } = await query.maybeSingle();
+  const { data, error } = await supabase.rpc("is_handle_taken", {
+    p_handle: normalizedHandle,
+    ...(excludeUserId ? { p_exclude_user_id: excludeUserId } : {}),
+  });
   if (error) throw error;
-  return Boolean(data?.id);
+  return Boolean(data);
 };
 
 export const syncProfileBasicsFromAuth = async (params: {
