@@ -723,7 +723,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
         >
           <View className="items-center">
             <View
-              className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-[#E6E1DB]"
+              className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-md bg-[#E6E1DB]"
               style={{
                 shadowColor: "#000000",
                 shadowOffset: { width: 0, height: 4 },
@@ -735,7 +735,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
               <ProfileAvatar
                 name="ゲスト"
                 imageUrl={null}
-                size={112}
+                size={80}
                 showBorder={false}
               />
             </View>
@@ -811,7 +811,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
             style={{ borderWidth: 2, borderColor: 'rgba(238,140,43,0.35)' }}
           >
             <View
-              className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-[#E6E1DB]"
+              className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-md bg-[#E6E1DB]"
               style={{
                 shadowColor: "#000000",
                 shadowOffset: { width: 0, height: 4 },
@@ -823,7 +823,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
               <ProfileAvatar
                 name={displayName}
                 imageUrl={profile?.profile_picture_url || null}
-                size={112}
+                size={80}
                 showBorder={false}
               />
             </View>
