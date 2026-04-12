@@ -865,7 +865,7 @@ export const EpisodeGenerationResultScreen = ({ navigation, route }: Props) => {
   }, [navigation]);
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
+    <View className="flex-1 bg-[#faf5ef]">
       <View className="flex-1">
         <View className="relative h-[300px]">
           <ImageBackground
@@ -962,7 +962,7 @@ export const EpisodeGenerationResultScreen = ({ navigation, route }: Props) => {
           </View>
         </View>
 
-        <View className="flex-row border-b border-[#EFE6DD] bg-[#F8F7F6] px-2">
+        <View className="flex-row border-b border-[#DBC1B9]/30 bg-[#faf5ef] px-2">
           {TABS.map((tab) => (
             <Pressable
               key={tab.key}
@@ -989,7 +989,7 @@ export const EpisodeGenerationResultScreen = ({ navigation, route }: Props) => {
         </View>
 
         {activeTab === "route" ? (
-          <View className="flex-1 bg-[#EFE6DD]/30">
+          <View className="flex-1 bg-[#f3ede3]/50">
             <RouteTab
               routePoints={routePoints}
               routeSpotPins={routeSpotPins}
@@ -1006,7 +1006,7 @@ export const EpisodeGenerationResultScreen = ({ navigation, route }: Props) => {
           </View>
         ) : (
           <ScrollView
-            className="flex-1 bg-[#EFE6DD]/30"
+            className="flex-1 bg-[#f3ede3]/50"
             contentContainerStyle={{ paddingBottom: 132 }}
             showsVerticalScrollIndicator={false}
           >
@@ -1024,15 +1024,15 @@ export const EpisodeGenerationResultScreen = ({ navigation, route }: Props) => {
       </View>
 
       <View
-        className="absolute bottom-0 left-0 right-0 border-t border-[#ECE6DF] bg-[#F8F7F6] px-4 pt-3"
+        className="absolute bottom-0 left-0 right-0 border-t border-[#DBC1B9]/30 bg-[#faf5ef] px-4 pt-3"
         style={{ paddingBottom: Math.max(12, insets.bottom + 10) }}
       >
         <View className="flex-row items-center gap-3">
           <Pressable
             onPress={handleBack}
-            className="w-12 h-12 rounded-2xl border border-[#E5DDD5] bg-white items-center justify-center"
+            className="w-12 h-12 rounded-2xl border border-[#DBC1B9]/40 bg-white/85 items-center justify-center"
           >
-            <Ionicons name="arrow-back" size={20} color="#9A734C" />
+            <Ionicons name="arrow-back" size={20} color="#9A938B" />
           </Pressable>
 
           <Pressable
@@ -1536,7 +1536,7 @@ function OverviewTab({
 }) {
   return (
     <View className="p-5">
-      <View className="bg-white p-4 rounded-r-xl border-l-4 border-[#EE8C2B]/50 border border-[#ECE6DF] mb-4">
+      <View className="bg-white/85 p-4 rounded-r-xl border-l-4 border-[#EE8C2B]/60 border border-[#DBC1B9]/40 mb-4">
         <Text
           className="text-[10px] text-[#EE8C2B] mb-1"
           style={{ fontFamily: fonts.displayBold }}
@@ -1551,9 +1551,9 @@ function OverviewTab({
         </Text>
       </View>
 
-      <View className="bg-white rounded-xl border border-[#ECE6DF] p-5 mb-4">
+      <View className="bg-white/85 rounded-xl border border-[#DBC1B9]/40 p-5 mb-4">
         <Text
-          className="text-base text-[#221910] mb-3 pb-2 border-b border-[#EFE6DD]"
+          className="text-base text-[#221910] mb-3 pb-2 border-b border-[#DBC1B9]/30"
           style={{ fontFamily: fonts.displayBold }}
         >
           第{episodeNo || 1}話のあらすじ
@@ -1565,9 +1565,9 @@ function OverviewTab({
           {runtimeEpisode.summary}
         </Text>
         {runtimeEpisode.carryOverHook ? (
-          <View className="bg-[#F8F7F6] p-3 rounded-lg border border-[#EFE6DD]">
+          <View className="bg-[#f3ede3] p-3 rounded-lg border border-[#DBC1B9]/30">
             <Text
-              className="text-xs text-[#9A734C]"
+              className="text-xs text-[#9A938B]"
               style={{ fontFamily: fonts.bodyRegular }}
             >
               <Text style={{ fontFamily: fonts.displayBold }}>次回への伏線: </Text>
@@ -1597,7 +1597,7 @@ function CharactersTab({
           登場人物
         </Text>
         <Text
-          className="text-xs text-[#9A734C] mt-0.5"
+          className="text-xs text-[#9A938B] mt-0.5"
           style={{ fontFamily: fonts.bodyRegular }}
         >
           シリーズ固定 {seriesFixedCount}人 / エピソード固有 {Math.max(0, cards.length - seriesFixedCount)}人
@@ -1608,7 +1608,7 @@ function CharactersTab({
         {cards.map((card) => (
           <View
             key={card.id}
-            className="bg-white rounded-xl overflow-hidden border border-[#ECE6DF] flex-row min-h-[104px]"
+            className="bg-white/85 rounded-xl overflow-hidden border border-[#DBC1B9]/40 flex-row min-h-[104px]"
           >
             <View className="w-24 bg-[#E5DFD7] items-center justify-center overflow-hidden">
               <Image source={{ uri: card.avatarUrl }} className="w-full h-full" resizeMode="cover" />
@@ -1641,7 +1641,7 @@ function CharactersTab({
 
               {card.personality ? (
                 <Text
-                  className="text-xs text-[#9A734C] mt-1"
+                  className="text-xs text-[#9A938B] mt-1"
                   style={{ fontFamily: fonts.bodyRegular }}
                   numberOfLines={2}
                 >

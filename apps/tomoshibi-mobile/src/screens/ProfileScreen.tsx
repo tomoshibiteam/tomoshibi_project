@@ -435,7 +435,7 @@ export const ProfileScreen = ({}: Props) => {
 
     if (seriesItems.length === 0) {
       return (
-        <View className="rounded-2xl border border-dashed border-[#E2DBD3] bg-white px-5 py-8 items-center">
+        <View className="rounded-2xl border border-dashed border-[#DBC1B9]/50 bg-white/70 px-5 py-8 items-center">
           <Text className="text-sm text-[#6B6762] mb-3" style={{ fontFamily: fonts.bodyRegular }}>
             {isPublicView ? "公開しているシリーズはありません" : "非公開のシリーズはありません"}
           </Text>
@@ -565,7 +565,7 @@ export const ProfileScreen = ({}: Props) => {
   const renderTimeline = () => {
     if (timelineRows.length === 0) {
       return (
-        <View className="rounded-2xl border border-dashed border-[#E2DBD3] bg-white px-5 py-8 items-center">
+        <View className="rounded-2xl border border-dashed border-[#DBC1B9]/50 bg-white/70 px-5 py-8 items-center">
           <Text className="text-sm text-[#6B6762] mb-2" style={{ fontFamily: fonts.bodyRegular }}>
             まだタイムラインはありません
           </Text>
@@ -579,7 +579,7 @@ export const ProfileScreen = ({}: Props) => {
     return (
       <View className="gap-3">
         {timelineRows.map((session) => (
-          <View key={session.id} className="rounded-2xl border border-[#ECE6DF] bg-white px-4 py-3">
+          <View key={session.id} className="rounded-2xl border border-[#DBC1B9]/40 bg-white/85 px-4 py-3">
             <View className="flex-row items-start justify-between gap-3">
               <View className="flex-1 min-w-0">
                 <Text className="text-sm text-[#221910]" numberOfLines={1} style={{ fontFamily: fonts.displayBold }}>
@@ -615,7 +615,7 @@ export const ProfileScreen = ({}: Props) => {
   const renderLikes = () => {
     if (likedQuests.length === 0) {
       return (
-        <View className="rounded-2xl border border-dashed border-[#E2DBD3] bg-white px-5 py-8 items-center">
+        <View className="rounded-2xl border border-dashed border-[#DBC1B9]/50 bg-white/70 px-5 py-8 items-center">
           <Text className="text-sm text-[#6B6762] mb-2" style={{ fontFamily: fonts.bodyRegular }}>
             まだ「いいね」した作品はありません
           </Text>
@@ -631,7 +631,7 @@ export const ProfileScreen = ({}: Props) => {
         {likedQuests.map((quest) => (
           <Pressable
             key={quest.questId}
-            className="rounded-2xl border border-[#ECE6DF] bg-white px-4 py-3"
+            className="rounded-2xl border border-[#DBC1B9]/40 bg-white/85 px-4 py-3"
             onPress={() => rootNavigation.navigate("SeriesDetail", { questId: quest.questId })}
           >
             <View className="flex-row items-center justify-between gap-3">
@@ -665,12 +665,12 @@ export const ProfileScreen = ({}: Props) => {
 
   if (!isSupabaseConfigured) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
         <View className="px-6 pt-10">
           <Text className="text-lg text-[#221910] mb-2" style={{ fontFamily: fonts.displayBold }}>
             Firebase設定が必要です
           </Text>
-          <Text className="text-sm text-[#6C5647]" style={{ fontFamily: fonts.bodyRegular }}>
+          <Text className="text-sm text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular }}>
             `.env` に EXPO_PUBLIC_FIREBASE_API_KEY などの EXPO_PUBLIC_FIREBASE_* を設定してください。
           </Text>
         </View>
@@ -680,7 +680,7 @@ export const ProfileScreen = ({}: Props) => {
 
   if (authLoading || loading) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#EE8C2B" />
         </View>
@@ -690,8 +690,8 @@ export const ProfileScreen = ({}: Props) => {
 
   if (!userId) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
-        <View className="h-14 px-4 border-b border-[#ECE6DF] flex-row items-center justify-center">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
+        <View className="h-14 px-4 border-b border-[#DBC1B9]/30 flex-row items-center justify-center">
           <Text className="text-base text-[#3D2E1F]" style={{ fontFamily: fonts.displayBold }}>
             プロフィール
           </Text>
@@ -764,9 +764,9 @@ export const ProfileScreen = ({}: Props) => {
   }
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
-      <SafeAreaView edges={["top"]} className="bg-[#F8F7F6]">
-        <View className="h-14 px-4 border-b border-[#ECE6DF] flex-row items-center justify-between">
+    <View className="flex-1 bg-[#faf5ef]">
+      <SafeAreaView edges={["top"]} className="bg-[#faf5ef]">
+        <View className="h-14 px-4 border-b border-[#DBC1B9]/30 flex-row items-center justify-between">
           <Pressable
             className="w-9 h-9 rounded-full items-center justify-center"
             onPress={() => Alert.alert("準備中", "QR機能は近日追加予定です")}
@@ -883,7 +883,7 @@ export const ProfileScreen = ({}: Props) => {
           </View>
         </View>
 
-        <View className="mt-4 pt-2 bg-[#F8F7F6]">
+        <View className="mt-4 pt-2 bg-[#faf5ef]">
           <View className="flex-row border-b border-[#E7D9C7]">
             {tabs.map((tab) => {
               const active = activeTab === tab.key;

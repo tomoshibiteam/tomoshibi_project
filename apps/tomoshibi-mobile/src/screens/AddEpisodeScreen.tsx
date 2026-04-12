@@ -1721,9 +1721,9 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
   };
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
-      <SafeAreaView edges={["top"]} className="bg-[#F8F7F6]">
-        <View className="h-14 px-4 border-b border-[#ECE6DF] flex-row items-center justify-between">
+    <View className="flex-1 bg-[#faf5ef]">
+      <SafeAreaView edges={["top"]} className="bg-[#faf5ef]">
+        <View className="h-14 px-4 border-b border-[#DBC1B9]/30 flex-row items-center justify-between">
           <Pressable
             onPress={() => (step === 2 ? setStep(1) : navigation.goBack())}
             className="w-9 h-9 rounded-full items-center justify-center"
@@ -1752,7 +1752,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                 </Text>
 
                 <Pressable
-                  className="h-12 rounded-xl border border-[#ECE6DF] bg-white px-4 flex-row items-center justify-between"
+                  className="h-12 rounded-xl border border-[#DBC1B9]/40 bg-white/85 px-4 flex-row items-center justify-between"
                   onPress={() => setSeriesSelectorOpen(true)}
                 >
                   <Text className="text-sm text-[#2B1E16] flex-1 pr-4" numberOfLines={1} style={{ fontFamily: fonts.bodyMedium }}>
@@ -1765,9 +1765,9 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                   )}
                 </Pressable>
 
-                <View className="mt-4 rounded-xl border border-[#ECE6DF] bg-white p-4">
+                <View className="mt-4 rounded-xl border border-[#DBC1B9]/40 bg-white/85 p-4">
                   <View className="flex-row gap-3">
-                    <View className="w-16 h-16 rounded-lg bg-[#E5DFD7] items-center justify-center overflow-hidden">
+                    <View className="w-16 h-16 rounded-lg bg-[#f3ede3] items-center justify-center overflow-hidden">
                       {selectedSeries?.coverImageUrl ? (
                         <Image source={{ uri: selectedSeries.coverImageUrl }} className="w-full h-full" resizeMode="cover" />
                       ) : (
@@ -1844,7 +1844,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                 </View>
               </View>
 
-              <View className="px-5 py-4 border-t border-[#EFE9E3]">
+              <View className="px-5 py-4 border-t border-[#DBC1B9]/30">
                 <View className="flex-row items-center gap-2 mb-3">
                   <Ionicons name="map-outline" size={16} color="#EE8C2B" />
                   <Text className="text-sm text-[#5E554C]" style={{ fontFamily: fonts.displayBold }}>
@@ -1853,7 +1853,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                 </View>
 
                 <View className="flex-row gap-2 mb-3">
-                  <View className="flex-1 h-12 rounded-xl border border-[#ECE6DF] bg-white px-3 flex-row items-center">
+                  <View className="flex-1 h-12 rounded-xl border border-[#DBC1B9]/40 bg-white/85 px-3 flex-row items-center">
                     <Ionicons name="search" size={16} color="#9B8B7B" />
                     <TextInput
                       value={stageLocation}
@@ -1868,7 +1868,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                   <Pressable
                     onPress={handleUseCurrentLocation}
                     disabled={isLocating}
-                    className="w-12 h-12 rounded-xl border border-[#ECE6DF] bg-white items-center justify-center"
+                    className="w-12 h-12 rounded-xl border border-[#DBC1B9]/40 bg-white/85 items-center justify-center"
                   >
                     {isLocating ? (
                       <ActivityIndicator size="small" color="#EE8C2B" />
@@ -1878,7 +1878,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                   </Pressable>
                 </View>
 
-                <View className="rounded-xl border border-[#ECE6DF] overflow-hidden bg-white" style={{ height: 180 }}>
+                <View className="rounded-xl border border-[#DBC1B9]/40 overflow-hidden bg-white/85" style={{ height: 180 }}>
                   <AddEpisodeMapView
                     stageLocation={stageLocation}
                     mapCoords={mapCoords}
@@ -1904,8 +1904,8 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                               paddingBottom: 6,
                               borderRadius: 20,
                               borderWidth: 1,
-                              borderColor: stageLocation === spot ? "#EE8C2B" : "#E3D6C9",
-                              backgroundColor: stageLocation === spot ? "#FFF6EC" : "#FFFFFF",
+                              borderColor: stageLocation === spot ? "#EE8C2B" : "rgba(219,193,185,0.5)",
+                              backgroundColor: stageLocation === spot ? "#FFF6EC" : "rgba(250,245,239,0.9)",
                             }}
                           >
                             <Text
@@ -1928,7 +1928,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
           ) : (
             <>
               <View className="px-5 pt-6 pb-4">
-                <View className="rounded-xl border border-[#ECE6DF] bg-white p-4">
+                <View className="rounded-xl border border-[#DBC1B9]/40 bg-white/85 p-4">
                   <Text className="text-xs text-[#8A7B6C] mb-1" style={{ fontFamily: fonts.bodyRegular }}>
                     舞台
                   </Text>
@@ -1944,7 +1944,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                 </View>
               </View>
 
-              <View className="px-5 py-4 border-t border-[#EFE9E3]">
+              <View className="px-5 py-4 border-t border-[#DBC1B9]/30">
                 <View className="flex-row items-center gap-2 mb-3">
                   <Ionicons name="compass-outline" size={16} color="#EE8C2B" />
                   <Text className="text-sm text-[#5E554C]" style={{ fontFamily: fonts.displayBold }}>
@@ -1960,7 +1960,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                         key={item}
                         onPress={() => setPurpose(item)}
                         className={`px-4 py-2.5 rounded-full border ${
-                          active ? "border-[#EE8C2B] bg-[#EE8C2B]" : "border-[#E3D6C9] bg-white"
+                          active ? "border-[#EE8C2B] bg-[#EE8C2B]" : "border-[#DBC1B9]/40 bg-white/85"
                         }`}
                       >
                         <Text
@@ -1975,7 +1975,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                 </View>
               </View>
 
-              <View className="px-5 py-4 border-t border-[#EFE9E3]">
+              <View className="px-5 py-4 border-t border-[#DBC1B9]/30">
                 <View className="flex-row items-center gap-2 mb-1">
                   <Ionicons name="trail-sign-outline" size={16} color="#EE8C2B" />
                   <Text className="text-sm text-[#5E554C]" style={{ fontFamily: fonts.displayBold }}>
@@ -1993,7 +1993,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                         key={value}
                         onPress={() => setDesiredSpotCount(value as 5 | 6 | 7)}
                         className={`flex-1 h-11 rounded-xl border items-center justify-center ${
-                          active ? "border-[#EE8C2B] bg-[#EE8C2B]" : "border-[#E3D6C9] bg-white"
+                          active ? "border-[#EE8C2B] bg-[#EE8C2B]" : "border-[#DBC1B9]/40 bg-white/85"
                         }`}
                       >
                         <Text
@@ -2008,7 +2008,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                 </View>
               </View>
 
-              <View className="px-5 py-4 border-t border-[#EFE9E3]">
+              <View className="px-5 py-4 border-t border-[#DBC1B9]/30">
                 <View className="flex-row items-center gap-2 mb-1">
                   <Ionicons name="heart-outline" size={16} color="#EE8C2B" />
                   <Text className="text-sm text-[#5E554C]" style={{ fontFamily: fonts.displayBold }}>
@@ -2019,7 +2019,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                   反映したいこと・展開の希望を自由に書いてください
                 </Text>
 
-                <View className="rounded-xl border border-[#ECE6DF] bg-white p-3">
+                <View className="rounded-xl border border-[#DBC1B9]/40 bg-white/85 p-3">
                   <TextInput
                     value={userWishes}
                     onChangeText={setUserWishes}
@@ -2036,7 +2036,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
           )}
         </ScrollView>
 
-        <SafeAreaView edges={["bottom"]} className="bg-[#F8F7F6] border-t border-[#ECE6DF]">
+        <SafeAreaView edges={["bottom"]} className="bg-[#faf5ef] border-t border-[#DBC1B9]/30">
           <View className="px-5 pt-3 pb-2">
             {step === 1 ? (
               <Pressable
@@ -2095,7 +2095,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
         <View className="flex-1 justify-end bg-black/45">
           <Pressable className="absolute inset-0" onPress={() => setSeriesSelectorOpen(false)} />
           <Animated.View
-            className="rounded-t-3xl bg-white px-5 pt-4 pb-8 max-h-[80%]"
+            className="rounded-t-3xl bg-[#faf5ef] px-5 pt-4 pb-8 max-h-[80%]"
             style={{ transform: [{ translateY: seriesSheetTranslateY }] }}
           >
             <View className="w-12 h-1.5 rounded-full bg-[#E7DDD2] self-center mb-5" />
@@ -2124,14 +2124,14 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                     <Pressable
                       key={item.key}
                       className={`rounded-xl border px-4 py-3 ${
-                        active ? "border-[#EE8C2B] bg-[#FFF6EC]" : "border-[#ECE6DF] bg-[#FCFAF8]"
+                        active ? "border-[#EE8C2B] bg-[#FFF6EC]" : "border-[#DBC1B9]/40 bg-[#faf5ef]"
                       }`}
                       onPress={() => {
                         void handleSelectSeries(item);
                       }}
                     >
                       <View className="flex-row items-start justify-between gap-3">
-                        <View className="w-11 h-11 rounded-md bg-[#E5DFD7] overflow-hidden items-center justify-center">
+                        <View className="w-11 h-11 rounded-md bg-[#f3ede3] overflow-hidden items-center justify-center">
                           {item.coverImageUrl ? (
                             <Image source={{ uri: item.coverImageUrl }} className="w-full h-full" resizeMode="cover" />
                           ) : (
@@ -2183,7 +2183,7 @@ export const AddEpisodeScreen = ({ navigation, route }: Props) => {
                 })}
 
                 <Pressable
-                  className="rounded-xl border border-dashed border-[#E3D6C9] bg-white px-4 py-3 flex-row items-center justify-center gap-2"
+                  className="rounded-xl border border-dashed border-[#DBC1B9]/40 bg-white/85 px-4 py-3 flex-row items-center justify-center gap-2"
                   onPress={() => {
                     setSeriesSelectorOpen(false);
                     navigation.navigate("CreateSeries");

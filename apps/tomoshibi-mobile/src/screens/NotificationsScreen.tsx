@@ -506,7 +506,7 @@ export const NotificationsScreen = () => {
 
   if (!isSupabaseConfigured) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
         <View className="px-6 pt-10">
           <Text className="text-lg text-[#221910] mb-2" style={{ fontFamily: fonts.displayBold }}>
             Firebase設定が必要です
@@ -521,7 +521,7 @@ export const NotificationsScreen = () => {
 
   if (authLoading || loading) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color="#EE8C2B" />
         </View>
@@ -531,7 +531,7 @@ export const NotificationsScreen = () => {
 
   if (!userId) {
     return (
-      <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6] px-6">
+      <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef] px-6">
         <View className="flex-1 items-center justify-center">
           <View className="w-20 h-20 rounded-full bg-white border border-[#E3D6C9] items-center justify-center mb-4">
             <Ionicons name="trophy" size={34} color="#EE8C2B" />
@@ -556,8 +556,8 @@ export const NotificationsScreen = () => {
   }
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
-      <View className="px-4 py-3 border-b border-[#EFE6DD] bg-[#F8F7F6] flex-row items-center justify-between">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
+      <View className="px-4 py-3 border-b border-[#DBC1B9]/30 bg-[#faf5ef] flex-row items-center justify-between">
         <View className="flex-row items-center gap-2">
           <Ionicons name="trophy" size={24} color="#EE8C2B" />
           <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
@@ -572,7 +572,7 @@ export const NotificationsScreen = () => {
         </Pressable>
       </View>
 
-      <View className="bg-[#F8F7F6] border-b border-[#EFE6DD]">
+      <View className="bg-[#faf5ef] border-b border-[#DBC1B9]/30">
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -608,7 +608,7 @@ export const NotificationsScreen = () => {
       >
         {activeTab === "summary" ? (
           <View className="p-4 gap-4">
-            <View className="bg-white rounded-2xl p-5 border border-[#EFE6DD]">
+            <View className="bg-white/85 rounded-2xl p-5 border border-[#DBC1B9]/40">
               <View className="flex-row items-center gap-4 mb-4">
                 <View className="w-16 h-16 rounded-2xl bg-[#FDF2E4] items-center justify-center">
                   <Ionicons name="stats-chart" size={32} color="#EE8C2B" />
@@ -624,7 +624,7 @@ export const NotificationsScreen = () => {
               </View>
 
               <View className="flex-row flex-wrap justify-between">
-                <View className="w-[48%] rounded-xl border border-[#EFE6DD] bg-[#F8F7F6] p-3 mb-3">
+                <View className="w-[48%] rounded-xl border border-[#DBC1B9]/30 bg-[#f3ede3] p-3 mb-3">
                   <Text className="text-[10px] text-[#62584E]" style={{ fontFamily: fonts.bodyRegular }}>
                     合計プレイ
                   </Text>
@@ -632,7 +632,7 @@ export const NotificationsScreen = () => {
                     {summaryStats.totalPlayCount} <Text className="text-[10px]">回</Text>
                   </Text>
                 </View>
-                <View className="w-[48%] rounded-xl border border-[#EFE6DD] bg-[#F8F7F6] p-3 mb-3">
+                <View className="w-[48%] rounded-xl border border-[#DBC1B9]/30 bg-[#f3ede3] p-3 mb-3">
                   <Text className="text-[10px] text-[#62584E]" style={{ fontFamily: fonts.bodyRegular }}>
                     合計時間
                   </Text>
@@ -640,7 +640,7 @@ export const NotificationsScreen = () => {
                     {formatDurationTotal(summaryStats.totalDurationSec)}
                   </Text>
                 </View>
-                <View className="w-[48%] rounded-xl border border-[#EFE6DD] bg-[#F8F7F6] p-3">
+                <View className="w-[48%] rounded-xl border border-[#DBC1B9]/30 bg-[#f3ede3] p-3">
                   <Text className="text-[10px] text-[#62584E]" style={{ fontFamily: fonts.bodyRegular }}>
                     参加シリーズ
                   </Text>
@@ -648,7 +648,7 @@ export const NotificationsScreen = () => {
                     {summaryStats.seriesCount} <Text className="text-[10px]">作品</Text>
                   </Text>
                 </View>
-                <View className="w-[48%] rounded-xl border border-[#EFE6DD] bg-[#F8F7F6] p-3">
+                <View className="w-[48%] rounded-xl border border-[#DBC1B9]/30 bg-[#f3ede3] p-3">
                   <Text className="text-[10px] text-[#62584E]" style={{ fontFamily: fonts.bodyRegular }}>
                     継続日数(7日)
                   </Text>
@@ -659,7 +659,7 @@ export const NotificationsScreen = () => {
               </View>
             </View>
 
-            <View className="bg-white rounded-2xl p-5 border border-[#EFE6DD]">
+            <View className="bg-white/85 rounded-2xl p-5 border border-[#DBC1B9]/40">
               <View className="flex-row items-center gap-2 mb-4">
                 <Ionicons name="share-social" size={20} color="#EE8C2B" />
                 <Text className="text-sm text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
@@ -667,7 +667,7 @@ export const NotificationsScreen = () => {
                 </Text>
               </View>
 
-              <View className="flex-row items-center justify-around border-b border-[#EFE6DD] pb-5 mb-5">
+              <View className="flex-row items-center justify-around border-b border-[#DBC1B9]/30 pb-5 mb-5">
                 <View className="items-center">
                   <Text className="text-xl text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                     {socialStats.followers}
@@ -676,7 +676,7 @@ export const NotificationsScreen = () => {
                     フォロワー
                   </Text>
                 </View>
-                <View className="h-6 w-px bg-[#EFE6DD]" />
+                <View className="h-6 w-px bg-[#DBC1B9]/40" />
                 <View className="items-center">
                   <Text className="text-xl text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                     {socialStats.following}
@@ -685,7 +685,7 @@ export const NotificationsScreen = () => {
                     フォロー
                   </Text>
                 </View>
-                <View className="h-6 w-px bg-[#EFE6DD]" />
+                <View className="h-6 w-px bg-[#DBC1B9]/40" />
                 <View className="items-center">
                   <Text className="text-xl text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                     {socialStats.mutualFollowers}
@@ -741,7 +741,7 @@ export const NotificationsScreen = () => {
               フレンドランキング
             </Text>
 
-            <View className="bg-white rounded-2xl overflow-hidden border border-[#EFE6DD]">
+            <View className="bg-white/85 rounded-2xl overflow-hidden border border-[#DBC1B9]/40">
               {myRank ? (
                 <View className="bg-[#FFF6EC] p-4 flex-row items-center gap-3 border-b border-[#F4DEC4]">
                   <Text className="text-lg text-[#EE8C2B] w-7" style={{ fontFamily: fonts.displayBold }}>
@@ -776,7 +776,7 @@ export const NotificationsScreen = () => {
                   {friendRankRows.map((row, index) => (
                     <View
                       key={row.userId}
-                      className={`p-3 flex-row items-center gap-3 ${index > 0 ? "border-t border-[#EFE6DD]" : ""}`}
+                      className={`p-3 flex-row items-center gap-3 ${index > 0 ? "border-t border-[#DBC1B9]/30" : ""}`}
                     >
                       <Text
                         className="w-6 text-base text-center"
@@ -796,7 +796,7 @@ export const NotificationsScreen = () => {
                 </View>
               )}
 
-              <View className="p-2 bg-[#F8F7F6]">
+              <View className="p-2 bg-[#faf5ef]">
                 <Text className="text-[9px] text-[#62584E] text-center" style={{ fontFamily: fonts.bodyRegular }}>
                   計算式: プレイ数×10 + 投稿シェア×25 + 獲得メダル×50
                 </Text>
@@ -812,7 +812,7 @@ export const NotificationsScreen = () => {
             </Text>
 
             {historyRows.length === 0 ? (
-              <View className="bg-white rounded-2xl border border-dashed border-[#E5DDD3] p-6 items-center">
+              <View className="bg-white/70 rounded-2xl border border-dashed border-[#DBC1B9]/50 p-6 items-center">
                 <Ionicons name="map-outline" size={28} color="#94A3B8" />
                 <Text className="text-sm text-[#62584E] mt-2" style={{ fontFamily: fonts.bodyRegular }}>
                   まだプレイ履歴がありません
@@ -823,7 +823,7 @@ export const NotificationsScreen = () => {
                 {historyRows.map((row) => (
                   <View
                     key={row.id}
-                    className="bg-white p-4 rounded-xl border border-[#EFE6DD]"
+                    className="bg-white/85 p-4 rounded-xl border border-[#DBC1B9]/40"
                   >
                     <View className="flex-row items-start justify-between">
                       <View className="flex-1 pr-3">
@@ -834,7 +834,7 @@ export const NotificationsScreen = () => {
                           {formatHistoryDateTime(row.endedAt)}
                         </Text>
                       </View>
-                      <View className="px-2 py-0.5 rounded-full bg-[#22C55E]">
+                      <View className="px-2 py-0.5 rounded-full bg-[#7a3520]">
                         <Text className="text-[10px] text-white" style={{ fontFamily: fonts.displayBold }}>
                           クリア
                         </Text>

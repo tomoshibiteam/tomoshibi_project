@@ -16,9 +16,9 @@ import { fonts } from "@/theme/fonts";
 
 /* ───────── constants ───────── */
 
-const PRIMARY = "#934529";
-const SURFACE = "rgba(252,249,242,0.7)";
-const SCAN_LINE_COLOR = "rgba(255,181,156,0.5)";
+const PRIMARY = "#EE8C2B";
+const SURFACE = "rgba(250,245,239,0.75)";
+const SCAN_LINE_COLOR = "rgba(238,140,43,0.45)";
 
 /* ───────── component ───────── */
 
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     top: 16,
     height: 1,
     backgroundColor: SCAN_LINE_COLOR,
-    shadowColor: "#ffb59c",
+    shadowColor: "#EE8C2B",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.7,
     shadowRadius: 12,

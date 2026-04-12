@@ -147,7 +147,7 @@ export const UserConnectionsScreen = ({ navigation, route }: Props) => {
 
   if (!loading && !targetProfile) {
     return (
-      <View className="flex-1 bg-[#F8F7F6]">
+      <View className="flex-1 bg-[#faf5ef]">
         <TopBar title={handle} />
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-lg text-[#221910] mb-2" style={{ fontFamily: fonts.displayBold }}>
@@ -157,7 +157,7 @@ export const UserConnectionsScreen = ({ navigation, route }: Props) => {
             URLが正しいか確認してください。
           </Text>
           <Pressable
-            className="h-11 rounded-full px-6 bg-[#2B1E16] items-center justify-center"
+            className="h-11 rounded-full px-6 bg-[#7a3520] items-center justify-center"
             onPress={() => navigation.goBack()}
           >
             <Text className="text-sm text-white" style={{ fontFamily: fonts.displayBold }}>
@@ -170,10 +170,10 @@ export const UserConnectionsScreen = ({ navigation, route }: Props) => {
   }
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
+    <View className="flex-1 bg-[#faf5ef]">
       <TopBar title={handle} />
 
-      <View className="border-b border-[#E7D9C7] bg-[#F8F7F6]">
+      <View className="border-b border-[#DBC1B9]/30 bg-[#faf5ef]">
         <View className="flex-row">
           <Pressable
             className={`flex-1 py-3 items-center border-b-2 ${
@@ -205,7 +205,7 @@ export const UserConnectionsScreen = ({ navigation, route }: Props) => {
         </View>
 
         <View className="px-5 py-4">
-          <View className="flex-row items-center rounded-xl border border-[#E5DDD3] bg-[#F1ECE6] px-3 py-2.5">
+          <View className="flex-row items-center rounded-xl border border-[#DBC1B9]/40 bg-[#f3ede3] px-3 py-2.5">
             <Ionicons name="search" size={18} color="#9A938B" />
             <TextInput
               value={keyword}
@@ -228,12 +228,12 @@ export const UserConnectionsScreen = ({ navigation, route }: Props) => {
         <View className="flex-1 px-5 py-4">
           {Array.from({ length: 7 }).map((_, index) => (
             <View key={`skeleton-${index}`} className="flex-row items-center gap-3 mb-4">
-              <View className="w-12 h-12 rounded-full bg-[#E8E1D8]" />
+              <View className="w-12 h-12 rounded-full bg-[#DBC1B9]/30" />
               <View className="flex-1 gap-2">
-                <View className="h-4 w-32 rounded-md bg-[#E8E1D8]" />
-                <View className="h-3 w-44 rounded-md bg-[#E8E1D8]" />
+                <View className="h-4 w-32 rounded-md bg-[#DBC1B9]/30" />
+                <View className="h-3 w-44 rounded-md bg-[#DBC1B9]/30" />
               </View>
-              <View className="h-8 w-20 rounded-lg bg-[#E8E1D8]" />
+              <View className="h-8 w-20 rounded-lg bg-[#DBC1B9]/30" />
             </View>
           ))}
         </View>
@@ -256,7 +256,7 @@ export const UserConnectionsScreen = ({ navigation, route }: Props) => {
             />
           )}
           ListEmptyComponent={
-            <View className="rounded-2xl border border-dashed border-[#E6DED5] bg-white/80 px-4 py-10 mt-2">
+            <View className="rounded-2xl border border-dashed border-[#DBC1B9]/50 bg-white/70 px-4 py-10 mt-2">
               <Text className="text-sm text-[#3D2E1F] text-center" style={{ fontFamily: fonts.displayBold }}>
                 {activeTab === "followers"
                   ? "フォロワーが見つかりません"

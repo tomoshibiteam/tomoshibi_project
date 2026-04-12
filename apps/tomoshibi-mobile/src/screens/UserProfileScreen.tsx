@@ -167,7 +167,7 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
   };
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
+    <View className="flex-1 bg-[#faf5ef]">
       <TopBar title={handle} right={<Ionicons name="ellipsis-horizontal" size={18} color="#6C5647" />} />
 
       {loading ? (
@@ -237,7 +237,7 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
                 </Text>
               </Pressable>
 
-              <View className="w-px h-8 bg-[#E7D9C7]" />
+              <View className="w-px h-8 bg-[#DBC1B9]/50" />
 
               <Pressable
                 className="items-center px-4"
@@ -251,7 +251,7 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
                 </Text>
               </Pressable>
 
-              <View className="w-px h-8 bg-[#E7D9C7]" />
+              <View className="w-px h-8 bg-[#DBC1B9]/50" />
 
               <View className="items-center px-4">
                 <Text className="text-xl text-[#221910]" style={{ fontFamily: fonts.displayExtraBold }}>
@@ -291,7 +291,7 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
               </Pressable>
 
               <Pressable
-                className="h-11 w-11 rounded-xl border border-[#E3D6C9] bg-white items-center justify-center"
+                className="h-11 w-11 rounded-xl border border-[#DBC1B9]/40 bg-white/85 items-center justify-center"
                 onPress={handleMessage}
               >
                 <Ionicons name="mail-outline" size={18} color="#6C5647" />
@@ -299,7 +299,7 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
             </View>
           </View>
 
-          <View className="mt-4 pb-6 border-b border-[#EFE2D6]">
+          <View className="mt-4 pb-6 border-b border-[#DBC1B9]/30">
             <View className="px-5 mb-3 flex-row items-center justify-between">
               <Text className="text-sm text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                 獲得称号
@@ -346,8 +346,8 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
             </ScrollView>
           </View>
 
-          <View className="pt-2 bg-[#F8F7F6]">
-            <View className="flex-row border-b border-[#E7D9C7]">
+          <View className="pt-2 bg-[#faf5ef]">
+            <View className="flex-row border-b border-[#DBC1B9]/30">
               {PROFILE_TABS.map((tab) => {
                 const active = activeTab === tab.key;
                 return (
@@ -381,7 +381,7 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
                 </View>
 
                 {series.length === 0 ? (
-                  <View className="rounded-3xl border border-dashed border-[#E7D9C7] bg-white/70 px-5 py-8">
+                  <View className="rounded-3xl border border-dashed border-[#DBC1B9]/50 bg-white/70 px-5 py-8">
                     <Text className="text-sm text-[#6C5647] text-center" style={{ fontFamily: fonts.bodyRegular }}>
                       まだ公開中のシリーズはありません。
                     </Text>
@@ -469,8 +469,8 @@ export const UserProfileScreen = ({ navigation, route }: Props) => {
                 )}
               </>
             ) : (
-              <View className="rounded-3xl border border-[#EADFCF] bg-white/80 px-5 py-8 items-center">
-                <View className="w-14 h-14 rounded-full bg-[#F6EBDD] border border-[#EADFCF] items-center justify-center mb-3">
+              <View className="rounded-3xl border border-[#DBC1B9]/40 bg-white/80 px-5 py-8 items-center">
+                <View className="w-14 h-14 rounded-full bg-[#f3ede3] border border-[#DBC1B9]/40 items-center justify-center mb-3">
                   <Ionicons
                     name={activeTab === "timeline" ? "time-outline" : "heart-outline"}
                     size={24}
