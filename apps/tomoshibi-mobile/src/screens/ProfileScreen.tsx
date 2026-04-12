@@ -740,11 +740,11 @@ export const ProfileScreen = ({ navigation }: Props) => {
               />
             </View>
 
-            <Text className="text-[28px] text-[#221910] mt-4" style={{ fontFamily: fonts.displayExtraBold }}>
+            <Text className="text-[22px] text-[#221910] mt-4" style={{ fontFamily: fonts.displayExtraBold }}>
               ゲスト
             </Text>
             <Text
-              className="text-sm text-[#6C5647] mt-2 text-center leading-6 max-w-[320px]"
+              className="text-xs text-[#6C5647] mt-2 text-center leading-5 max-w-[320px]"
               style={{ fontFamily: fonts.bodyRegular }}
             >
               ホームや検索はそのまま使えます。ログインすると、プロフィール保存、作品管理、フォロー、プレイ履歴が使えるようになります。
@@ -829,11 +829,11 @@ export const ProfileScreen = ({ navigation }: Props) => {
             </View>
           </View>
 
-          <Text className="text-[28px] text-[#221910] mt-4" style={{ fontFamily: fonts.displayExtraBold }}>
+          <Text className="text-[22px] text-[#221910] mt-4" style={{ fontFamily: fonts.displayExtraBold }}>
             {displayName}
           </Text>
           <Text
-            className="text-sm text-[#6C5647] mt-2 text-center leading-6 px-4 max-w-[300px]"
+            className="text-xs text-[#6C5647] mt-2 text-center leading-5 px-4 max-w-[300px]"
             style={{ fontFamily: fonts.bodyRegular }}
           >
             {displayBio}
@@ -880,6 +880,9 @@ export const ProfileScreen = ({ navigation }: Props) => {
               </Text>
               <Text className="text-xs text-[#6C5647]" style={{ fontFamily: fonts.bodyRegular }}>
                 作品数
+              </Text>
+              <Text className="text-[9px] text-[#B8AFA4] mt-0.5" style={{ fontFamily: fonts.bodyRegular, letterSpacing: 1.2 }}>
+                WORKS
               </Text>
             </View>
           </View>

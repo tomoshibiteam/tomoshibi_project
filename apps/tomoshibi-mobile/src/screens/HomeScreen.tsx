@@ -424,7 +424,10 @@ export const HomeScreen = () => {
               transform: [{ translateY: heroTranslateY }],
             }}
           >
-            <View style={styles.heroCard}>
+            <Pressable
+              onPress={() => navigation.navigate("FeaturedCampaign", { campaignId: featuredCampaign.id })}
+              style={({ pressed }) => [styles.heroCard, pressed && styles.pressed]}
+            >
               <Image
                 source={{ uri: featuredCampaign.heroImageUrl || HERO_FALLBACK }}
                 style={styles.heroImage}
@@ -470,7 +473,7 @@ export const HomeScreen = () => {
                   <Ionicons name="play" size={14} color="#934529" />
                 </Pressable>
               </View>
-            </View>
+            </Pressable>
           </Animated.View>
 
           <Animated.View
