@@ -552,10 +552,10 @@ export const ProfileScreen = ({ navigation }: Props) => {
           style={{ width: "48%", marginBottom: 16 }}
           onPress={() => rootNavigation.navigate("MainTabs", { screen: "Search" })}
         >
-          <View className="rounded-xl border-2 border-dashed border-[#CFC8C0] bg-[#F6F2EE]" style={{ aspectRatio: 3 / 4 }}>
+          <View className="rounded-xl border-2 border-dashed border-[#EE8C2B]/50 bg-[#FDF5EC]" style={{ aspectRatio: 3 / 4 }}>
             <View className="flex-1 items-center justify-center">
-              <Ionicons name="add-circle-outline" size={28} color="#9B938B" />
-              <Text className="text-xs text-[#8C847B] mt-2" style={{ fontFamily: fonts.displayBold }}>
+              <Ionicons name="add-circle-outline" size={28} color="#EE8C2B" />
+              <Text className="text-xs text-[#C4710F] mt-2" style={{ fontFamily: fonts.displayBold }}>
                 新しいシリーズ
               </Text>
             </View>
@@ -593,11 +593,21 @@ export const ProfileScreen = ({ navigation }: Props) => {
                 </Text>
               </View>
 
-              <View className="rounded-full bg-[#F1ECE6] px-2 py-1 flex-row items-center gap-1">
-                <Ionicons name="time-outline" size={11} color="#6B6762" />
-                <Text className="text-[10px] text-[#6B6762]" style={{ fontFamily: fonts.displayBold }}>
-                  {formatDuration(session.durationSec)}
-                </Text>
+              <View className="flex-row items-center gap-1">
+                <View className="rounded-full bg-[#F1ECE6] px-2 py-1 flex-row items-center gap-1">
+                  <Ionicons name="time-outline" size={11} color="#6B6762" />
+                  <Text className="text-[10px] text-[#6B6762]" style={{ fontFamily: fonts.displayBold }}>
+                    {formatDuration(session.durationSec)}
+                  </Text>
+                </View>
+                {typeof session.wrongAnswers === 'number' && (
+                  <View className="rounded-full bg-[#F1ECE6] px-2 py-1 flex-row items-center gap-1 ml-1">
+                    <Ionicons name="checkmark-circle-outline" size={11} color="#6B6762" />
+                    <Text className="text-[10px] text-[#6B6762]" style={{ fontFamily: fonts.displayBold }}>
+                      {session.wrongAnswers === 0 ? 'パーフェクト' : `${session.wrongAnswers}ミス`}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
 
@@ -740,6 +750,15 @@ export const ProfileScreen = ({ navigation }: Props) => {
               ホームや検索はそのまま使えます。ログインすると、プロフィール保存、作品管理、フォロー、プレイ履歴が使えるようになります。
             </Text>
 
+            <View className="items-center mb-4 mt-2">
+              <View className="flex-row items-center gap-2 bg-[#f3ede3] px-4 py-2 rounded-full">
+                <Ionicons name="book-outline" size={14} color="#EE8C2B" />
+                <Text className="text-sm text-[#7a3520]" style={{ fontFamily: fonts.displayBold }}>
+                  冒険を記録しよう
+                </Text>
+              </View>
+            </View>
+
             <View className="flex-row gap-3 w-full mt-6">
               <Pressable
                 className="flex-1 h-12 rounded-xl bg-[#EE8C2B] items-center justify-center"
@@ -770,12 +789,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
     <View className="flex-1 bg-[#faf5ef]">
       <SafeAreaView edges={["top"]} className="bg-[#faf5ef]">
         <View className="h-14 px-4 border-b border-[#DBC1B9]/30 flex-row items-center justify-between">
-          <Pressable
-            className="w-9 h-9 rounded-full items-center justify-center"
-            onPress={() => Alert.alert("準備中", "QR機能は近日追加予定です")}
-          >
-            <Ionicons name="qr-code-outline" size={20} color="#6B6762" />
-          </Pressable>
+          <View className="w-9 h-9" />
 
           <Text className="text-base text-[#3D2E1F]" style={{ fontFamily: fonts.displayBold }}>
             {handle}
@@ -793,21 +807,26 @@ export const ProfileScreen = ({ navigation }: Props) => {
       >
         <View className="px-5 pt-6 pb-2 items-center">
           <View
-            className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-[#E6E1DB]"
-            style={{
-              shadowColor: "#000000",
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.12,
-              shadowRadius: 10,
-              elevation: 3,
-            }}
+            className="rounded-full p-0.5"
+            style={{ borderWidth: 2, borderColor: 'rgba(238,140,43,0.35)' }}
           >
-            <ProfileAvatar
-              name={displayName}
-              imageUrl={profile?.profile_picture_url || null}
-              size={112}
-              showBorder={false}
-            />
+            <View
+              className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-[#E6E1DB]"
+              style={{
+                shadowColor: "#000000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.12,
+                shadowRadius: 10,
+                elevation: 3,
+              }}
+            >
+              <ProfileAvatar
+                name={displayName}
+                imageUrl={profile?.profile_picture_url || null}
+                size={112}
+                showBorder={false}
+              />
+            </View>
           </View>
 
           <Text className="text-[28px] text-[#221910] mt-4" style={{ fontFamily: fonts.displayExtraBold }}>
@@ -831,6 +850,9 @@ export const ProfileScreen = ({ navigation }: Props) => {
               <Text className="text-xs text-[#6C5647]" style={{ fontFamily: fonts.bodyRegular }}>
                 フォロワー
               </Text>
+              <Text className="text-[9px] text-[#B8AFA4] mt-0.5" style={{ fontFamily: fonts.bodyRegular, letterSpacing: 1.2 }}>
+                FOLLOWERS
+              </Text>
             </Pressable>
 
             <View className="w-px h-8 bg-[#E7D9C7]" />
@@ -844,6 +866,9 @@ export const ProfileScreen = ({ navigation }: Props) => {
               </Text>
               <Text className="text-xs text-[#6C5647]" style={{ fontFamily: fonts.bodyRegular }}>
                 フォロー中
+              </Text>
+              <Text className="text-[9px] text-[#B8AFA4] mt-0.5" style={{ fontFamily: fonts.bodyRegular, letterSpacing: 1.2 }}>
+                FOLLOWING
               </Text>
             </Pressable>
 
@@ -887,23 +912,21 @@ export const ProfileScreen = ({ navigation }: Props) => {
         </View>
 
         <View className="mt-4 pt-2 bg-[#faf5ef]">
-          <View className="flex-row border-b border-[#E7D9C7]">
+          <View className="flex-row border-b border-[#E7D9C7] px-2 pb-2">
             {tabs.map((tab) => {
               const active = activeTab === tab.key;
               return (
                 <Pressable
                   key={tab.key}
-                  className={`flex-1 pb-3 items-center border-b-2 ${active ? "border-[#EE8C2B]" : "border-transparent"}`}
+                  className={`flex-1 items-center ${active ? "bg-[#EE8C2B] rounded-full px-4 py-1.5" : "px-4 py-1.5"}`}
                   onPress={() => setActiveTab(tab.key)}
                 >
-                  <View className="flex-row items-center gap-1">
-                    <Text
-                      className={`text-sm ${active ? "text-[#EE8C2B]" : "text-[#6C5647]"}`}
-                      style={{ fontFamily: active ? fonts.displayBold : fonts.bodyMedium }}
-                    >
-                      {tab.label}
-                    </Text>
-                  </View>
+                  <Text
+                    className={`text-sm ${active ? "text-white" : "text-[#9A938B]"}`}
+                    style={{ fontFamily: active ? fonts.displayBold : fonts.bodyMedium }}
+                  >
+                    {tab.label}
+                  </Text>
                 </Pressable>
               );
             })}
