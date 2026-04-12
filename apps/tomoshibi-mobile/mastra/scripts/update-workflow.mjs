@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const rootDir = path.resolve(new URL(".", import.meta.url).pathname, "..");
+const rootDir = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const workflowPath = path.resolve(rootDir, "src", "workflows", "quest-workflow.ts");
 const outputPath = path.resolve(rootDir, "WORKFLOW.md");
 

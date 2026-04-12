@@ -256,7 +256,7 @@ export const SeriesDetailScreen = ({ navigation, route }: Props) => {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F8F7F6] items-center justify-center">
+      <View className="flex-1 bg-[#faf5ef] items-center justify-center">
         <ActivityIndicator color="#EE8C2B" />
       </View>
     );
@@ -264,9 +264,9 @@ export const SeriesDetailScreen = ({ navigation, route }: Props) => {
 
   if (!series) {
     return (
-      <View className="flex-1 bg-[#F8F7F6]">
-        <SafeAreaView edges={["top"]} className="bg-[#F8F7F6]">
-          <View className="h-14 px-4 border-b border-[#ECE6DF] flex-row items-center justify-between">
+      <View className="flex-1 bg-[#faf5ef]">
+        <SafeAreaView edges={["top"]} className="bg-[#faf5ef]">
+          <View className="h-14 px-4 border-b border-[#DBC1B9]/30 flex-row items-center justify-between">
             <Pressable onPress={() => navigation.goBack()} className="w-9 h-9 items-center justify-center">
               <Ionicons name="arrow-back" size={20} color="#6C5647" />
             </Pressable>
@@ -290,7 +290,7 @@ export const SeriesDetailScreen = ({ navigation, route }: Props) => {
   }
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
+    <View className="flex-1 bg-[#faf5ef]">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
         <View className="h-64 relative overflow-hidden">
           <Image source={{ uri: coverImageUrl }} className="absolute inset-0 w-full h-full" resizeMode="cover" />
@@ -656,7 +656,7 @@ export const SeriesDetailScreen = ({ navigation, route }: Props) => {
       {latestEpisode ? (
         <SafeAreaView
           edges={["bottom"]}
-          className="absolute left-0 right-0 bottom-0 bg-[#F8F7F6] border-t border-[#ECE6DF]"
+          className="absolute left-0 right-0 bottom-0 bg-[#faf5ef] border-t border-[#DBC1B9]/30"
         >
           <View className="px-4 pt-3 pb-2">
             <Pressable

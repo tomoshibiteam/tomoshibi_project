@@ -404,7 +404,15 @@ export const SearchScreen = ({}: Props) => {
   return (
     <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
       <View className="bg-[#F8F7F6] border-b border-[#ECE6DF]">
-        <View className="flex-row items-center gap-3 px-4 pt-3 pb-3">
+        <View className="px-5 pt-4 pb-2">
+          <Text className="text-2xl text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
+            探索
+          </Text>
+          <Text className="text-xs text-[#9A938B] mt-0.5" style={{ fontFamily: fonts.bodyRegular }}>
+            物語の世界へ踏み出す
+          </Text>
+        </View>
+        <View className="flex-row items-center gap-3 px-4 pt-2 pb-3">
           <View className="flex-1 relative">
             <Ionicons name="search" size={16} color="#A39A90" style={{ position: "absolute", left: 12, top: 13 }} />
             <TextInput
@@ -651,11 +659,16 @@ export const SearchScreen = ({}: Props) => {
           ) : (
             <>
               <View className="px-5 pt-6 pb-4">
-                <View className="flex-row items-center gap-2 mb-4">
-                  <Ionicons name="trending-up-outline" size={18} color="#EE8C2B" />
-                  <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
-                    人気のキーワード
-                  </Text>
+                <View className="flex-row items-center justify-between mb-4">
+                  <View>
+                    <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
+                      人気のキーワード
+                    </Text>
+                    <Text className="text-[10px] text-[#9A938B] mt-0.5" style={{ fontFamily: fonts.bodyRegular }}>
+                      TRENDING STORIES
+                    </Text>
+                  </View>
+                  <Ionicons name="flame-outline" size={18} color="#EE8C2B" />
                 </View>
 
                 <View className="flex-row flex-wrap gap-2">
@@ -663,14 +676,19 @@ export const SearchScreen = ({}: Props) => {
                     <Pressable
                       key={tag}
                       onPress={() => setKeyword(tag)}
-                      className={`px-4 py-2 rounded-full border ${
-                        index < 4
-                          ? "border-[#EE8C2B]/30 bg-[#FDECD8]"
+                      className={`flex-row items-center gap-1 px-4 py-2 rounded-full border ${
+                        index < 3
+                          ? "border-[#EE8C2B]/40 bg-[#FDECD8]"
                           : "border-[#E6DED5] bg-white"
                       }`}
                     >
+                      {index < 3 && (
+                        <Text className="text-[10px] text-[#EE8C2B] font-bold" style={{ fontFamily: fonts.displayBold }}>
+                          {index + 1}
+                        </Text>
+                      )}
                       <Text
-                        className={`text-sm ${index < 4 ? "text-[#EE8C2B]" : "text-[#6E6963]"}`}
+                        className={`text-sm ${index < 3 ? "text-[#C4710F]" : "text-[#6E6963]"}`}
                         style={{ fontFamily: fonts.bodyMedium }}
                       >
                         #{tag}
@@ -682,13 +700,22 @@ export const SearchScreen = ({}: Props) => {
 
               <View className="pb-6 border-b border-[#EFE9E3]">
                 <View className="px-5 mb-4 flex-row items-center justify-between">
-                  <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
-                    人気のクリエイター
-                  </Text>
-                  <Pressable onPress={() => rootNavigation.navigate("MainTabs", { screen: "Notifications" })}>
+                  <View>
+                    <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
+                      人気のクリエイター
+                    </Text>
+                    <Text className="text-[10px] text-[#9A938B] mt-0.5" style={{ fontFamily: fonts.bodyRegular }}>
+                      STORY MAKERS
+                    </Text>
+                  </View>
+                  <Pressable
+                    className="flex-row items-center gap-1"
+                    onPress={() => rootNavigation.navigate("MainTabs", { screen: "Notifications" })}
+                  >
                     <Text className="text-xs text-[#EE8C2B]" style={{ fontFamily: fonts.displayBold }}>
                       すべて見る
                     </Text>
+                    <Ionicons name="chevron-forward" size={12} color="#EE8C2B" />
                   </Pressable>
                 </View>
 
@@ -744,11 +771,22 @@ export const SearchScreen = ({}: Props) => {
 
               <View className="p-5">
                 <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
-                    おすすめのスポット
-                  </Text>
-                  <Pressable onPress={() => setKeyword("スポット")}>
-                    <Ionicons name="map-outline" size={16} color="#8E8984" />
+                  <View>
+                    <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
+                      おすすめの物語
+                    </Text>
+                    <Text className="text-[10px] text-[#9A938B] mt-0.5" style={{ fontFamily: fonts.bodyRegular }}>
+                      FEATURED SERIES
+                    </Text>
+                  </View>
+                  <Pressable
+                    className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-[#F1ECE6]"
+                    onPress={() => setKeyword("スポット")}
+                  >
+                    <Ionicons name="map-outline" size={13} color="#7A746D" />
+                    <Text className="text-[11px] text-[#7A746D]" style={{ fontFamily: fonts.displayBold }}>
+                      地図で見る
+                    </Text>
                   </Pressable>
                 </View>
 
@@ -781,10 +819,17 @@ export const SearchScreen = ({}: Props) => {
                         style={{ width: "48%" }}
                         onPress={() => setSelectedQuestId(quest.id)}
                       >
-                        <View className="relative rounded-xl overflow-hidden mb-2 bg-[#DFDAD4]" style={{ aspectRatio: 3 / 4 }}>
+                        <View className="relative rounded-2xl overflow-hidden mb-2 bg-[#DFDAD4]" style={{ aspectRatio: 3 / 4 }}>
                           <Image source={{ uri: quest.coverImageUrl || PLACEHOLDER_IMAGE }} className="w-full h-full" resizeMode="cover" />
 
-                          <View className="absolute top-2 right-2 bg-black/60 rounded-full px-2 py-0.5 flex-row items-center gap-1">
+                          {/* 下からのグラデーションオーバーレイ */}
+                          <View
+                            className="absolute bottom-0 left-0 right-0 h-24"
+                            style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65), transparent)" }}
+                            pointerEvents="none"
+                          />
+
+                          <View className="absolute top-2 right-2 bg-black/50 rounded-full px-2 py-0.5 flex-row items-center gap-1">
                             <Ionicons name="navigate-outline" size={10} color="#FFFFFF" />
                             <Text className="text-[10px] text-white" style={{ fontFamily: fonts.displayBold }}>
                               {formatDistance(userLocation, quest.startLocation)}
@@ -792,9 +837,9 @@ export const SearchScreen = ({}: Props) => {
                           </View>
 
                           {purchasedQuestIds.has(quest.id) && (
-                            <View className="absolute bottom-2 left-2 bg-white/90 rounded-full px-2 py-0.5">
-                              <Text className="text-[10px] text-[#7A746D]" style={{ fontFamily: fonts.displayBold }}>
-                                保存済み
+                            <View className="absolute bottom-2 left-2 bg-[#EE8C2B]/90 rounded-full px-2 py-0.5">
+                              <Text className="text-[10px] text-white" style={{ fontFamily: fonts.displayBold }}>
+                                ✓ 保存済み
                               </Text>
                             </View>
                           )}
@@ -805,8 +850,8 @@ export const SearchScreen = ({}: Props) => {
                         </Text>
 
                         <View className="flex-row items-center gap-1 mt-1">
-                          <Ionicons name="location-outline" size={11} color="#7A746D" />
-                          <Text className="text-xs text-[#7A746D]" numberOfLines={1} style={{ fontFamily: fonts.bodyRegular }}>
+                          <Ionicons name="location-outline" size={11} color="#B8AFA4" />
+                          <Text className="text-xs text-[#9A938B]" numberOfLines={1} style={{ fontFamily: fonts.bodyRegular }}>
                             {quest.areaName || "エリア未設定"}
                           </Text>
                         </View>

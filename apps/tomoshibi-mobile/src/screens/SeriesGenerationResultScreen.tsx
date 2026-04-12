@@ -424,7 +424,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
               <View className="w-8 h-8 rounded-lg bg-[#EEF4FF] items-center justify-center mb-3">
                 <Ionicons name="film-outline" size={18} color="#3B82F6" />
               </View>
-              <Text className="text-[10px] text-[#8B8177] tracking-[0.8px] mb-1" style={{ fontFamily: fonts.displayBold }}>
+              <Text className="text-[10px] text-[#9A938B] tracking-[0.8px] mb-1" style={{ fontFamily: fonts.displayBold }}>
                 ジャンル
               </Text>
               <Text className="text-sm text-[#221910] leading-5" style={{ fontFamily: fonts.displayBold }}>
@@ -437,7 +437,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
               <View className="w-8 h-8 rounded-lg bg-[#FFF6E8] items-center justify-center mb-3">
                 <Ionicons name="color-palette-outline" size={18} color="#D97706" />
               </View>
-              <Text className="text-[10px] text-[#8B8177] tracking-[0.8px] mb-1" style={{ fontFamily: fonts.displayBold }}>
+              <Text className="text-[10px] text-[#9A938B] tracking-[0.8px] mb-1" style={{ fontFamily: fonts.displayBold }}>
                 トーン
               </Text>
               <Text className="text-sm text-[#221910] leading-5" style={{ fontFamily: fonts.displayBold }}>
@@ -453,7 +453,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
                 <Ionicons name="flag-outline" size={22} color="#EE8C2B" />
               </View>
               <View className="flex-1">
-                <Text className="text-[10px] text-[#8B8177] tracking-[0.8px] mb-0.5" style={{ fontFamily: fonts.displayBold }}>
+                <Text className="text-[10px] text-[#9A938B] tracking-[0.8px] mb-0.5" style={{ fontFamily: fonts.displayBold }}>
                   シーズンゴール
                 </Text>
                 <Text className="text-base text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
@@ -477,7 +477,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
           </Text>
           <View className="gap-4">
             {storyParagraphs.slice(0, 2).map((paragraph, index) => (
-              <Text key={`overview-story-${index}`} className="text-sm text-[#62584E] leading-7" style={{ fontFamily: fonts.bodyMedium }}>
+              <Text key={`overview-story-${index}`} className="text-sm text-[#9A938B] leading-7" style={{ fontFamily: fonts.bodyMedium }}>
                 {paragraph}
               </Text>
             ))}
@@ -509,7 +509,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
     <View className="pt-4 pb-6 gap-4">
       {orderedCharacters.length === 0 ? (
         <View className="mx-4 rounded-2xl border border-[#EFE6DD] bg-white p-5">
-          <Text className="text-sm text-[#62584E]" style={{ fontFamily: fonts.bodyRegular }}>
+          <Text className="text-sm text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular }}>
             登場人物はまだ生成されていません。
           </Text>
         </View>
@@ -522,7 +522,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
                 登場人物
               </Text>
             </View>
-            <Text className="text-xs text-[#62584E]" style={{ fontFamily: fonts.bodyRegular }}>
+            <Text className="text-xs text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular }}>
               役割と関係性を中心に、物語の主要人物を確認できます。
             </Text>
             {companionCharacter ? (
@@ -636,7 +636,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
                               style={{ maxWidth: "100%" }}
                             >
                               <Text
-                                className="text-xs text-[#62584E] leading-4 text-center"
+                                className="text-xs text-[#9A938B] leading-4 text-center"
                                 style={{ fontFamily: fonts.bodyMedium, flexShrink: 1 }}
                               >
                                 {tag}
@@ -653,7 +653,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
                             <Text className="text-[11px] text-[#221910] mb-0.5" style={{ fontFamily: fonts.displayBold }}>
                               役割
                             </Text>
-                            <Text className="text-xs text-[#62584E] leading-5" style={{ fontFamily: fonts.bodyRegular }}>
+                            <Text className="text-xs text-[#9A938B] leading-5" style={{ fontFamily: fonts.bodyRegular }}>
                               {role}
                             </Text>
                           </View>
@@ -665,7 +665,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
                             <Text className="text-[11px] text-[#221910] mb-0.5" style={{ fontFamily: fonts.displayBold }}>
                               関係性
                             </Text>
-                            <Text className="text-xs text-[#62584E] leading-5" style={{ fontFamily: fonts.bodyRegular }}>
+                            <Text className="text-xs text-[#9A938B] leading-5" style={{ fontFamily: fonts.bodyRegular }}>
                               {relation}
                             </Text>
                           </View>
@@ -791,7 +791,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
   }
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
+    <View className="flex-1 bg-[#faf5ef]">
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 104 + insets.bottom }}
@@ -807,7 +807,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
               onError={() => setHeroImageFailed(true)}
             />
           ) : (
-            <View className="absolute inset-0 bg-[#CFC6BD]" />
+            <View className="absolute inset-0 bg-[#DBC1B9]" />
           )}
 
           <SafeAreaView edges={["top"]} className="absolute top-0 left-0 right-0">
@@ -849,7 +849,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
           </View>
         </View>
 
-        <View className="bg-[#F8F7F6] border-b border-[#EFE6DD]">
+        <View className="bg-[#faf5ef] border-b border-[#EFE6DD]">
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -865,7 +865,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
                   className={`mx-1.5 px-6 py-3 border-b-2 ${active ? "border-[#EE8C2B]" : "border-transparent"}`}
                 >
                   <Text
-                    className={`text-sm ${active ? "text-[#EE8C2B]" : "text-[#62584E]"}`}
+                    className={`text-sm ${active ? "text-[#EE8C2B]" : "text-[#9A938B]"}`}
                     style={{ fontFamily: active ? fonts.displayBold : fonts.bodyMedium }}
                   >
                     {tab.label}
@@ -884,7 +884,7 @@ export const SeriesGenerationResultScreen = ({ navigation, route }: Props) => {
 
       <SafeAreaView
         edges={[]}
-        className="absolute left-4 right-4 rounded-2xl bg-[#F8F7F6] px-3 pt-3 pb-2"
+        className="absolute left-4 right-4 rounded-2xl bg-[#faf5ef] px-3 pt-3 pb-2"
         style={{
           bottom: Math.max(10, insets.bottom + 6),
           shadowColor: "#000000",

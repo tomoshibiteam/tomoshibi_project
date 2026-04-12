@@ -501,20 +501,20 @@ export const AuthScreen = ({ navigation }: Props) => {
   };
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
       <View className="flex-1 justify-center px-4">
-        <View className="rounded-2xl border border-[#EBDFCF] bg-white px-4 py-5">
+        <View className="rounded-2xl border border-[#DBC1B9]/40 bg-white px-4 py-5">
           <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
             {isSignUp ? "新規登録" : "ログイン"}
           </Text>
-          <Text className="text-sm text-[#6C5647] mt-1" style={{ fontFamily: fonts.bodyRegular }}>
+          <Text className="text-sm text-[#9A938B] mt-1" style={{ fontFamily: fonts.bodyRegular }}>
             {isSignUp ? "アカウントを作成して冒険を始めましょう" : "アカウントにログインしてください"}
           </Text>
 
           <View className="mt-4 gap-3">
             {isSignUp && (
               <View>
-                <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+                <Text className="text-xs text-[#9A938B] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
                   ユーザー名
                 </Text>
                 <TextInput
@@ -530,7 +530,7 @@ export const AuthScreen = ({ navigation }: Props) => {
 
             {isSignUp && (
               <View>
-                <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+                <Text className="text-xs text-[#9A938B] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
                   プロフィールID
                 </Text>
                 <TextInput
@@ -566,7 +566,7 @@ export const AuthScreen = ({ navigation }: Props) => {
             )}
 
             <View>
-              <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+              <Text className="text-xs text-[#9A938B] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
                 メールアドレス
               </Text>
               <TextInput
@@ -582,7 +582,7 @@ export const AuthScreen = ({ navigation }: Props) => {
             </View>
 
             <View>
-              <Text className="text-xs text-[#6C5647] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
+              <Text className="text-xs text-[#9A938B] mb-1" style={{ fontFamily: fonts.bodyMedium }}>
                 パスワード
               </Text>
               <TextInput

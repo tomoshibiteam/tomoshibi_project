@@ -792,7 +792,7 @@ const AssistantBubble = ({
         導き手
       </Text>
       <Text
-        className="text-[15px] text-[#2B1E16] leading-7"
+        className="text-[15px] text-[#221910] leading-7"
         style={{ fontFamily: fonts.bodyRegular, letterSpacing: 0.3 }}
       >
         {visibleText}
@@ -1672,24 +1672,24 @@ export const CreateSeriesScreen = ({ route }: Props) => {
   }, [currentSelectionCount, currentStep, seriesChatInput]);
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
-      <SafeAreaView edges={["top"]} className="bg-[#F8F7F6]">
+    <View className="flex-1 bg-[#faf5ef]">
+      <SafeAreaView edges={["top"]} className="bg-[#faf5ef]">
         <View className="px-4 pt-2 pb-3">
           <View className="flex-row items-center">
             <View className="w-[108px]">
               <Pressable
                 onPress={() => navigation.goBack()}
-                className="w-10 h-10 rounded-full items-center justify-center border border-[#ECE6DF] bg-white"
+                className="w-10 h-10 rounded-full items-center justify-center border border-[#DBC1B9]/35 bg-white"
               >
-                <Ionicons name="arrow-back" size={18} color="#6C5647" />
+                <Ionicons name="arrow-back" size={18} color="#9A938B" />
               </Pressable>
             </View>
 
             <View className="flex-1 items-center px-2">
-              <Text className="text-[12px] text-[#8D745F]" style={{ fontFamily: fonts.bodyMedium, letterSpacing: 1.1 }}>
+              <Text className="text-[12px] text-[#9A938B]" style={{ fontFamily: fonts.bodyMedium, letterSpacing: 1.1 }}>
                 シリーズ新規作成
               </Text>
-              <Text className="text-[20px] text-[#2B1E16]" style={{ fontFamily: fonts.displayBold, letterSpacing: 0.8 }}>
+              <Text className="text-[20px] text-[#221910]" style={{ fontFamily: fonts.displayBold, letterSpacing: 0.8 }}>
                 物語の種を集める
               </Text>
             </View>
@@ -1775,7 +1775,7 @@ export const CreateSeriesScreen = ({ route }: Props) => {
               </View>
             </ScrollView>
 
-            <SafeAreaView edges={["bottom"]} className="bg-[#F8F7F6]">
+            <SafeAreaView edges={["bottom"]} className="bg-[#faf5ef]">
               <View className="px-4 pt-2 pb-3">
                 {isInterviewComplete ? (
                   <View className="w-full">
@@ -1914,7 +1914,7 @@ export const CreateSeriesScreen = ({ route }: Props) => {
               </View>
             </View>
 
-            <SafeAreaView edges={["bottom"]} className="bg-[#F8F7F6]">
+            <SafeAreaView edges={["bottom"]} className="bg-[#faf5ef]">
               <View className="px-4 pt-2 pb-3">
                 <View className="rounded-3xl border border-[#E6DED5] bg-white px-2 py-1.5 flex-row items-center gap-2">
                   <TextInput

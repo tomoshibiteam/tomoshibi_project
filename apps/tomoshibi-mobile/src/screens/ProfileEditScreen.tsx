@@ -213,15 +213,15 @@ export const ProfileEditScreen = () => {
 
   if (!isSupabaseConfigured) {
     return (
-      <View className="flex-1 bg-[#F8F7F6]">
-        <SafeAreaView edges={["top"]} className="bg-[#F8F7F6]">
-          <View className="h-14 px-4 border-b border-[#ECE6DF] flex-row items-center justify-between">
+      <View className="flex-1 bg-[#faf5ef]">
+        <SafeAreaView edges={["top"]} className="bg-[#faf5ef]">
+          <View className="h-14 px-4 border-b border-[#DBC1B9]/30 flex-row items-center justify-between">
             <Pressable onPress={() => navigation.goBack()}>
-              <Text className="text-sm text-[#6C5647]" style={{ fontFamily: fonts.bodyMedium }}>
+              <Text className="text-sm text-[#9A938B]" style={{ fontFamily: fonts.bodyMedium }}>
                 キャンセル
               </Text>
             </Pressable>
-            <Text className="text-base text-[#1F2937]" style={{ fontFamily: fonts.displayBold }}>
+            <Text className="text-base text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
               プロフィール編集
             </Text>
             <View className="w-16" />
@@ -237,16 +237,16 @@ export const ProfileEditScreen = () => {
   }
 
   return (
-    <View className="flex-1 bg-[#F8F7F6]">
-      <SafeAreaView edges={["top"]} className="bg-[#F8F7F6]">
-        <View className="h-14 px-4 border-b border-[#EE8C2B]/10 flex-row items-center justify-between">
+    <View className="flex-1 bg-[#faf5ef]">
+      <SafeAreaView edges={["top"]} className="bg-[#faf5ef]">
+        <View className="h-14 px-4 border-b border-[#DBC1B9]/30 flex-row items-center justify-between">
           <Pressable onPress={() => navigation.goBack()}>
-            <Text className="text-sm text-slate-500" style={{ fontFamily: fonts.bodyMedium }}>
+            <Text className="text-sm text-[#9A938B]" style={{ fontFamily: fonts.bodyMedium }}>
               キャンセル
             </Text>
           </Pressable>
 
-          <Text className="text-base text-[#1F2937]" style={{ fontFamily: fonts.displayBold }}>
+          <Text className="text-base text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
             プロフィール編集
           </Text>
 
@@ -283,14 +283,14 @@ export const ProfileEditScreen = () => {
             <View className="px-4 mb-8">
               <View className="flex-row items-center mb-4">
                 <View className="w-1 h-5 rounded-full bg-[#EE8C2B] mr-2" />
-                <Text className="text-lg text-[#111827]" style={{ fontFamily: fonts.displayBold }}>
+                <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                   基本情報
                 </Text>
               </View>
 
               <View className="gap-4">
                 <View>
-                  <Text className="text-sm text-slate-600 mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
+                  <Text className="text-sm text-[#9A938B] mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
                     ユーザー名
                   </Text>
                   <TextInput
@@ -299,7 +299,7 @@ export const ProfileEditScreen = () => {
                     placeholder="名前を入力"
                     placeholderTextColor="#9CA3AF"
                     maxLength={50}
-                    className="rounded-lg bg-white border border-slate-200 py-3 px-4 text-[#1F2937]"
+                    className="rounded-lg bg-white border border-[#DBC1B9]/35 py-3 px-4 text-[#221910]"
                     style={{ fontFamily: fonts.bodyRegular }}
                   />
                   {errors.name ? (
@@ -310,7 +310,7 @@ export const ProfileEditScreen = () => {
                 </View>
 
                 <View>
-                  <Text className="text-sm text-slate-600 mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
+                  <Text className="text-sm text-[#9A938B] mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
                     プロフィールID
                   </Text>
                   <TextInput
@@ -320,7 +320,7 @@ export const ProfileEditScreen = () => {
                     placeholderTextColor="#9CA3AF"
                     autoCapitalize="none"
                     maxLength={30}
-                    className="rounded-lg bg-white border border-slate-200 py-3 px-4 text-[#1F2937]"
+                    className="rounded-lg bg-white border border-[#DBC1B9]/35 py-3 px-4 text-[#221910]"
                     style={{ fontFamily: fonts.bodyRegular }}
                   />
                   {errors.handle ? (
@@ -331,7 +331,7 @@ export const ProfileEditScreen = () => {
                 </View>
 
                 <View>
-                  <Text className="text-sm text-slate-600 mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
+                  <Text className="text-sm text-[#9A938B] mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
                     自己紹介
                   </Text>
                   <TextInput
@@ -342,10 +342,10 @@ export const ProfileEditScreen = () => {
                     maxLength={BIO_MAX}
                     multiline
                     textAlignVertical="top"
-                    className="rounded-lg bg-white border border-slate-200 py-3 px-4 min-h-[110px] text-[#1F2937]"
+                    className="rounded-lg bg-white border border-[#DBC1B9]/35 py-3 px-4 min-h-[110px] text-[#221910]"
                     style={{ fontFamily: fonts.bodyRegular }}
                   />
-                  <Text className="mt-1 text-xs text-right text-slate-400" style={{ fontFamily: fonts.bodyRegular }}>
+                  <Text className="mt-1 text-xs text-right text-[#B8AFA4]" style={{ fontFamily: fonts.bodyRegular }}>
                     {bio.length} / {BIO_MAX}
                   </Text>
                   {errors.bio ? (
@@ -356,7 +356,7 @@ export const ProfileEditScreen = () => {
                 </View>
 
                 <View>
-                  <Text className="text-sm text-slate-600 mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
+                  <Text className="text-sm text-[#9A938B] mb-1.5" style={{ fontFamily: fonts.bodyMedium }}>
                     プロフィール画像URL
                   </Text>
                   <TextInput
@@ -365,7 +365,7 @@ export const ProfileEditScreen = () => {
                     placeholder="https://..."
                     placeholderTextColor="#9CA3AF"
                     autoCapitalize="none"
-                    className="rounded-lg bg-white border border-slate-200 py-3 px-4 text-[#1F2937]"
+                    className="rounded-lg bg-white border border-[#DBC1B9]/35 py-3 px-4 text-[#221910]"
                     style={{ fontFamily: fonts.bodyRegular }}
                   />
                 </View>
@@ -375,14 +375,14 @@ export const ProfileEditScreen = () => {
             <View className="px-4 mb-8">
               <View className="flex-row items-center mb-4">
                 <View className="w-1 h-5 rounded-full bg-[#EE8C2B] mr-2" />
-                <Text className="text-lg text-[#111827]" style={{ fontFamily: fonts.displayBold }}>
+                <Text className="text-lg text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                   リンク・SNS
                 </Text>
               </View>
 
               <View className="gap-3">
                 <View>
-                  <View className="rounded-lg bg-white border border-slate-200 py-3 px-3 flex-row items-center">
+                  <View className="rounded-lg bg-white border border-[#DBC1B9]/35 py-3 px-3 flex-row items-center">
                     <Ionicons name="link-outline" size={16} color="#9CA3AF" />
                     <TextInput
                       value={websiteUrl}
@@ -391,7 +391,7 @@ export const ProfileEditScreen = () => {
                       placeholderTextColor="#9CA3AF"
                       autoCapitalize="none"
                       keyboardType="url"
-                      className="flex-1 ml-2 text-[#1F2937]"
+                      className="flex-1 ml-2 text-[#221910]"
                       style={{ fontFamily: fonts.bodyRegular }}
                     />
                   </View>
@@ -403,7 +403,7 @@ export const ProfileEditScreen = () => {
                 </View>
 
                 <View>
-                  <View className="rounded-lg bg-white border border-slate-200 py-3 px-3 flex-row items-center">
+                  <View className="rounded-lg bg-white border border-[#DBC1B9]/35 py-3 px-3 flex-row items-center">
                     <Ionicons name="at-outline" size={16} color="#9CA3AF" />
                     <TextInput
                       value={xId}
@@ -411,7 +411,7 @@ export const ProfileEditScreen = () => {
                       placeholder="@username"
                       placeholderTextColor="#9CA3AF"
                       autoCapitalize="none"
-                      className="flex-1 ml-2 text-[#1F2937]"
+                      className="flex-1 ml-2 text-[#221910]"
                       style={{ fontFamily: fonts.bodyRegular }}
                     />
                   </View>
@@ -423,7 +423,7 @@ export const ProfileEditScreen = () => {
                 </View>
 
                 <View>
-                  <View className="rounded-lg bg-white border border-slate-200 py-3 px-3 flex-row items-center">
+                  <View className="rounded-lg bg-white border border-[#DBC1B9]/35 py-3 px-3 flex-row items-center">
                     <Ionicons name="logo-instagram" size={16} color="#9CA3AF" />
                     <TextInput
                       value={instagramId}
@@ -431,7 +431,7 @@ export const ProfileEditScreen = () => {
                       placeholder="Instagram ID"
                       placeholderTextColor="#9CA3AF"
                       autoCapitalize="none"
-                      className="flex-1 ml-2 text-[#1F2937]"
+                      className="flex-1 ml-2 text-[#221910]"
                       style={{ fontFamily: fonts.bodyRegular }}
                     />
                   </View>
@@ -446,7 +446,7 @@ export const ProfileEditScreen = () => {
 
           </ScrollView>
 
-          <SafeAreaView edges={["bottom"]} className="absolute left-0 right-0 bottom-0 bg-[#F8F7F6]/95 border-t border-slate-200">
+          <SafeAreaView edges={["bottom"]} className="absolute left-0 right-0 bottom-0 bg-[#faf5ef]/95 border-t border-[#DBC1B9]/30">
             <View className="px-4 pt-4 pb-2">
               <Pressable
                 onPress={() => {

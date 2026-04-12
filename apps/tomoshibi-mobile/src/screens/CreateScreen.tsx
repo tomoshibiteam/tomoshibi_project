@@ -38,12 +38,12 @@ export const CreateScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-[#F8F7F6]">
+    <SafeAreaView edges={["top"]} className="flex-1 bg-[#faf5ef]">
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <View className="items-center mb-6">
           <View className="w-12 h-1.5 bg-[#E8E0D8] rounded-full mb-6" />
           <View className="w-full flex-row justify-between items-center">
-            <Text className="text-xl text-[#2B1E16]" style={{ fontFamily: fonts.displayBold }}>
+            <Text className="text-xl text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
               作成する
             </Text>
             <Pressable

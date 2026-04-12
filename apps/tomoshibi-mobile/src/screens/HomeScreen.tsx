@@ -515,7 +515,10 @@ export const HomeScreen = () => {
           >
             <View style={styles.sectionBlock}>
               <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { fontFamily: fonts.roundedBold }]}>今日のおすすめ</Text>
+                <View>
+                    <Text style={[styles.sectionTitle, { fontFamily: fonts.roundedBold }]}>今日のおすすめ</Text>
+                    <Text style={[styles.sectionMiniLabel, { fontFamily: fonts.displayBold }]}>TODAY'S PICKS</Text>
+                  </View>
                 <Pressable
                   onPress={() => navigation.navigate("MainTabs", { screen: "Search" })}
                   style={({ pressed }) => [styles.seeAllButton, pressed && styles.pressed]}
@@ -692,34 +695,47 @@ const styles = StyleSheet.create({
   heroBadge: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     fontSize: 10,
-    letterSpacing: 1.2,
+    letterSpacing: 1.6,
     textTransform: "uppercase",
     color: "#291800",
     backgroundColor: "#f2be73",
-    marginBottom: 10,
+    marginBottom: 12,
+    shadowColor: "#934529",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
   },
   heroTitle: {
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 26,
+    lineHeight: 33,
     color: "#ffffff",
-    marginBottom: 16,
+    marginBottom: 20,
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   heroButton: {
     alignSelf: "flex-start",
-    height: 44,
+    height: 46,
     borderRadius: 999,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     backgroundColor: "#ffffff",
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 5,
   },
   heroButtonText: {
     color: "#934529",
     fontSize: 13,
+    letterSpacing: 0.3,
   },
   sectionBlock: {
     marginBottom: 26,
@@ -732,13 +748,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 22,
-    color: "#934529",
+    color: "#221910",
   },
   sectionMiniLabel: {
     fontSize: 10,
-    letterSpacing: 1.2,
-    color: "#88726c",
+    letterSpacing: 1.4,
+    color: "#B8AFA4",
     textTransform: "uppercase",
+    marginTop: 1,
   },
   statsRow: {
     flexDirection: "row",
@@ -749,21 +766,29 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 24,
     backgroundColor: "#f6f3ec",
-    paddingVertical: 14,
+    paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(147,69,41,0.07)",
   },
   statCardMiddle: {
-    borderWidth: 2,
-    borderColor: "rgba(147,69,41,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(147,69,41,0.1)",
+    backgroundColor: "#f3ede3",
   },
   statCardHighlight: {
     flex: 1,
     borderRadius: 24,
-    backgroundColor: "#934529",
-    paddingVertical: 14,
+    backgroundColor: "#7a3520",
+    paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#7a3520",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.28,
+    shadowRadius: 8,
+    elevation: 5,
   },
   statIcon: {
     marginBottom: 7,
@@ -810,10 +835,15 @@ const styles = StyleSheet.create({
   recommendCard: {
     flexDirection: "row",
     borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.72)",
+    backgroundColor: "rgba(255,255,255,0.85)",
     borderWidth: 1,
-    borderColor: "rgba(219,193,185,0.34)",
-    padding: 10,
+    borderColor: "rgba(219,193,185,0.4)",
+    padding: 12,
+    shadowColor: "#934529",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 8,
+    elevation: 2,
   },
   recommendImageWrap: {
     width: 96,

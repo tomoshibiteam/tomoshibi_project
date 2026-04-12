@@ -452,7 +452,7 @@ export const OnboardingSurveyScreen = ({ navigation }: Props) => {
                   </ImageBackground>
                   {isSelected ? (
                     <View style={styles.selectionBadge}>
-                      <MaterialCommunityIcons name="check" size={14} color="#5B2F00" />
+                      <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
                     </View>
                   ) : null}
                 </Pressable>
@@ -470,7 +470,7 @@ export const OnboardingSurveyScreen = ({ navigation }: Props) => {
     return (
       <View style={styles.screen}>
         <SafeAreaView edges={["top", "bottom"]} style={styles.loadingState}>
-          <ActivityIndicator color="#904D00" />
+          <ActivityIndicator color="#EE8C2B" />
         </SafeAreaView>
       </View>
     );
@@ -556,7 +556,7 @@ export const OnboardingSurveyScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFF8F4",
+    backgroundColor: "#faf5ef",
   },
   safeTop: {
     flex: 1,
@@ -575,7 +575,7 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: "rgba(238,140,43,0.12)",
+    backgroundColor: "rgba(238,140,43,0.13)",
   },
   backgroundOrbSecondary: {
     position: "absolute",
@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: "rgba(163,111,82,0.10)",
+    backgroundColor: "rgba(122,53,32,0.09)",
   },
   textureOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -626,17 +626,17 @@ const styles = StyleSheet.create({
     width: 128,
     height: 4,
     borderRadius: 999,
-    backgroundColor: "#F2DFD0",
+    backgroundColor: "rgba(219,193,185,0.4)",
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
     borderRadius: 999,
-    backgroundColor: "#904D00",
+    backgroundColor: "#EE8C2B",
   },
   progressLabel: {
     marginTop: 6,
-    color: "rgba(35,26,17,0.38)",
+    color: "#B8AFA4",
     fontSize: 9,
     letterSpacing: 2.2,
     textTransform: "uppercase",
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   headerTitle: {
-    color: "#231A11",
+    color: "#221910",
     fontSize: 23,
     lineHeight: 28,
     textAlign: "center",
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     minHeight: 92,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#E7D9C7",
+    borderColor: "rgba(219,193,185,0.4)",
     backgroundColor: "rgba(255,255,255,0.88)",
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
   },
   choiceCardSelected: {
     borderColor: "#EE8C2B",
-    backgroundColor: "#FFF2E7",
+    backgroundColor: "rgba(238,140,43,0.08)",
   },
   choiceIconShell: {
     width: 44,
@@ -693,14 +693,14 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   choiceTitle: {
-    color: "#231A11",
+    color: "#221910",
     fontSize: 17,
     lineHeight: 22,
     fontFamily: fonts.storySerifSemiBold,
   },
   choiceDescription: {
     marginTop: 4,
-    color: "#6C5647",
+    color: "#9A938B",
     fontSize: 12,
     lineHeight: 18,
     fontFamily: fonts.bodyRegular,
@@ -710,14 +710,14 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#D8C6B5",
+    borderColor: "rgba(184,175,164,0.5)",
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
   },
   choiceCheckSelected: {
-    borderColor: "#F0B27A",
-    backgroundColor: "#FFDCC2",
+    borderColor: "#EE8C2B",
+    backgroundColor: "rgba(238,140,43,0.18)",
   },
   gridWrap: {
     flexDirection: "row",
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   worldCardSelected: {
-    borderColor: "#FFDCC2",
+    borderColor: "#EE8C2B",
     borderWidth: 2,
   },
   worldCardShade: {
@@ -783,7 +783,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#FFDCC2",
+    backgroundColor: "#EE8C2B",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
   footerHintText: {
     alignSelf: "center",
     marginBottom: 10,
-    color: "#8A7566",
+    color: "#9A938B",
     fontSize: 11,
     lineHeight: 16,
     fontFamily: fonts.bodyMedium,
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
   footerHintTextSelected: {
     alignSelf: "center",
     marginBottom: 10,
-    color: "#904D00",
+    color: "#EE8C2B",
     fontSize: 11,
     lineHeight: 16,
     fontFamily: fonts.bodyMedium,
@@ -813,8 +813,8 @@ const styles = StyleSheet.create({
     minHeight: 64,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#E7D9C7",
-    backgroundColor: "rgba(255,248,244,0.96)",
+    borderColor: "rgba(219,193,185,0.4)",
+    backgroundColor: "rgba(250,245,239,0.96)",
     paddingHorizontal: 8,
     paddingVertical: 8,
     flexDirection: "row",
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   footerGhostText: {
-    color: "#6C5647",
+    color: "#9A938B",
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: "uppercase",

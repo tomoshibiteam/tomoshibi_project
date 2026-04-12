@@ -18,14 +18,14 @@ import { fonts } from "@/theme/fonts";
 
 /* ───────── palette ───────── */
 
-const PRIMARY = "#934529";
-const TERTIARY = "#7b5413";
-const SECONDARY = "#516446";
-const OUTLINE = "#88726c";
-const OUTLINE_VARIANT = "#dbc1b9";
-const ON_SURFACE = "#1c1c18";
-const SURFACE_LOW = "#f6f3ec";
-const SURFACE = "#fcf9f2";
+const PRIMARY = "#EE8C2B";
+const TERTIARY = "#7a3520";
+const SECONDARY = "#934529";
+const OUTLINE = "#9A938B";
+const OUTLINE_VARIANT = "#DBC1B9";
+const ON_SURFACE = "#221910";
+const SURFACE_LOW = "#f3ede3";
+const SURFACE = "#faf5ef";
 
 /* ───────── floating steam orbs (consistent with Home) ───────── */
 
@@ -1183,19 +1183,19 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   seriesCard: {
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: OUTLINE,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(219,193,185,0.35)",
     backgroundColor: "#fff",
     overflow: "hidden",
-    shadowColor: PRIMARY,
+    shadowColor: "#7a3520",
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.08,
     shadowRadius: 28,
     elevation: 6,
   },
   seriesCardOlder: {
-    borderColor: "rgba(136,114,108,0.5)",
+    borderColor: "rgba(184,175,164,0.3)",
     shadowOpacity: 0.05,
   },
   seriesCoverWrap: {
@@ -1324,7 +1324,7 @@ const styles = StyleSheet.create({
     borderTopColor: "rgba(219,193,185,0.10)",
   },
   episodeRowPressed: {
-    backgroundColor: "rgba(147,69,41,0.04)",
+    backgroundColor: "rgba(238,140,43,0.06)",
   },
   episodeThumbWrap: {
     position: "relative",
@@ -1336,7 +1336,7 @@ const styles = StyleSheet.create({
     right: -3,
     bottom: -3,
     borderRadius: 15,
-    backgroundColor: "rgba(147,69,41,0.12)",
+    backgroundColor: "rgba(238,140,43,0.14)",
   },
   episodeThumb: {
     width: 58,
@@ -1411,9 +1411,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "rgba(219,193,185,0.55)",
     borderStyle: "dashed",
-    borderRadius: 8,
+    borderRadius: 20,
     padding: 20,
-    backgroundColor: "rgba(246,243,236,0.45)",
+    backgroundColor: "rgba(243,237,227,0.45)",
   },
   draftHeader: {
     flexDirection: "row",
@@ -1448,7 +1448,7 @@ const styles = StyleSheet.create({
   },
   draftPrompt: {
     fontSize: 11,
-    color: "#55433d",
+    color: "#9A938B",
     fontStyle: "italic",
     lineHeight: 17,
   },

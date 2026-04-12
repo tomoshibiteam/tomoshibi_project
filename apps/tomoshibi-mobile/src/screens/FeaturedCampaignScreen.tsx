@@ -112,7 +112,7 @@ const SectionHeading = ({ title, subtitle }: { title: string; subtitle?: string 
 const MetaChip = ({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) => (
   <View className="px-3 py-1.5 rounded-full bg-[#F7E5D6] flex-row items-center gap-1.5">
     <Ionicons name={icon} size={12} color="#554336" />
-    <Text className="text-[10px] text-[#554336]" style={{ fontFamily: fonts.displayBold }}>
+    <Text className="text-[10px] text-[#9A938B]" style={{ fontFamily: fonts.displayBold }}>
       {label}
     </Text>
   </View>
@@ -126,8 +126,8 @@ export const FeaturedCampaignScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-[#FFF8F4]">
-      <SafeAreaView edges={["top"]} className="bg-[#FFF8F4]/95 border-b border-[#DBC2B0]/30">
+    <View className="flex-1 bg-[#faf5ef]">
+      <SafeAreaView edges={["top"]} className="bg-[#faf5ef]/95 border-b border-[#DBC2B0]/30">
         <View className="h-14 px-4 flex-row items-center justify-between">
           <Pressable
             className="w-10 h-10 rounded-full items-center justify-center"
@@ -136,7 +136,7 @@ export const FeaturedCampaignScreen = () => {
             <Ionicons name="arrow-back" size={21} color="#231A11" />
           </Pressable>
 
-          <Text className="text-xs tracking-[2px] text-[#231A11]" style={{ fontFamily: fonts.displayExtraBold }}>
+          <Text className="text-xs tracking-[2px] text-[#221910]" style={{ fontFamily: fonts.displayExtraBold }}>
             イベント詳細
           </Text>
 
@@ -177,9 +177,9 @@ export const FeaturedCampaignScreen = () => {
           </View>
 
           <View className="items-center relative z-10">
-            <View className="px-4 py-1.5 rounded-full bg-[#904D00]/5 border border-[#904D00]/10 flex-row items-center mb-6">
-              <View className="w-1.5 h-1.5 rounded-full bg-[#904D00] mr-2" />
-              <Text className="text-[10px] tracking-[2px] text-[#904D00]" style={{ fontFamily: fonts.displayExtraBold }}>
+            <View className="px-4 py-1.5 rounded-full bg-[#EE8C2B]/8 border border-[#EE8C2B]/15 flex-row items-center mb-6">
+              <View className="w-1.5 h-1.5 rounded-full bg-[#EE8C2B] mr-2" />
+              <Text className="text-[10px] tracking-[2px] text-[#EE8C2B]" style={{ fontFamily: fonts.displayExtraBold }}>
                 九州大学オリエンテーション
               </Text>
             </View>
@@ -189,7 +189,7 @@ export const FeaturedCampaignScreen = () => {
               style={{ fontFamily: fonts.storySerifSemiBold }}
             >
               物語でめぐる、{"\n"}
-              <Text className="text-[#904D00]">九州大学</Text>はじめての冒険
+              <Text className="text-[#EE8C2B]">九州大学</Text>はじめての冒険
             </Text>
 
             <View className="flex-row flex-wrap justify-center gap-2 mb-8">
@@ -208,7 +208,7 @@ export const FeaturedCampaignScreen = () => {
 
             <Pressable onPress={handleJoin} className="w-full max-w-[340px]">
               <LinearGradient
-                colors={["#904D00", "#EE8C2B"]}
+                colors={["#EE8C2B", "#EE8C2B"]}
                 start={{ x: 0.1, y: 0.2 }}
                 end={{ x: 1, y: 1 }}
                 className="h-14 rounded-full flex-row items-center justify-center gap-2"
@@ -241,10 +241,10 @@ export const FeaturedCampaignScreen = () => {
               >
                 <View className="flex-row items-center justify-between mb-2">
                   <View className="flex-row items-center gap-2">
-                    <View className="w-8 h-8 rounded-xl bg-[#904D00] items-center justify-center">
+                    <View className="w-8 h-8 rounded-xl bg-[#EE8C2B] items-center justify-center">
                       <Ionicons name={beat.icon} size={14} color="#FFFFFF" />
                     </View>
-                    <Text className="text-[10px] tracking-[1.2px] text-[#904D00]" style={{ fontFamily: fonts.displayExtraBold }}>
+                    <Text className="text-[10px] tracking-[1.2px] text-[#EE8C2B]" style={{ fontFamily: fonts.displayExtraBold }}>
                       {beat.chapter}
                     </Text>
                   </View>
@@ -253,7 +253,7 @@ export const FeaturedCampaignScreen = () => {
                 <Text className="text-base text-[#231A11] mb-1.5" style={{ fontFamily: fonts.displayExtraBold }}>
                   {beat.title}
                 </Text>
-                <Text className="text-xs text-[#554336]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 19 }}>
+                <Text className="text-xs text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 19 }}>
                   {beat.body}
                 </Text>
               </View>
@@ -266,11 +266,11 @@ export const FeaturedCampaignScreen = () => {
           <View className="mt-10 flex-row flex-wrap justify-between">
             {BENEFIT_CARDS.map((card) => (
               <View key={card.title} className="w-[48%] bg-white rounded-2xl border border-[#DBC2B0]/35 p-4 mb-4">
-                <Ionicons name={card.icon} size={19} color="#904D00" style={{ marginBottom: 11 }} />
+                <Ionicons name={card.icon} size={19} color="#EE8C2B" style={{ marginBottom: 11 }} />
                 <Text className="text-sm text-[#231A11] mb-2" style={{ fontFamily: fonts.displayExtraBold, lineHeight: 21 }}>
                   {card.title}
                 </Text>
-                <Text className="text-[11px] text-[#554336]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
+                <Text className="text-[11px] text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
                   {card.body}
                 </Text>
               </View>
@@ -299,7 +299,7 @@ export const FeaturedCampaignScreen = () => {
                     </Text>
                   </View>
 
-                  <View className="mt-4 rounded-xl bg-[#904D00]/90 px-3 py-3 flex-row items-center justify-between">
+                  <View className="mt-4 rounded-xl bg-[#EE8C2B]/90 px-3 py-3 flex-row items-center justify-between">
                     <View>
                       <Text className="text-[10px] text-white/70 mb-0.5" style={{ fontFamily: fonts.displayBold }}>
                         NEXT SPOT
@@ -316,24 +316,24 @@ export const FeaturedCampaignScreen = () => {
 
             <View className="absolute top-8 left-0 bg-white rounded-2xl border border-[#DBC2B0]/30 px-3 py-2 shadow-lg">
               <View className="flex-row items-center gap-1.5">
-                <Ionicons name="chatbubble-ellipses-outline" size={14} color="#904D00" />
-                <Text className="text-[11px] text-[#231A11]" style={{ fontFamily: fonts.displayBold }}>
+                <Ionicons name="chatbubble-ellipses-outline" size={14} color="#EE8C2B" />
+                <Text className="text-[11px] text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                   物語が届く
                 </Text>
               </View>
             </View>
             <View className="absolute top-40 right-0 bg-white rounded-2xl border border-[#DBC2B0]/30 px-3 py-2 shadow-lg">
               <View className="flex-row items-center gap-1.5">
-                <Ionicons name="location-outline" size={14} color="#904D00" />
-                <Text className="text-[11px] text-[#231A11]" style={{ fontFamily: fonts.displayBold }}>
+                <Ionicons name="location-outline" size={14} color="#EE8C2B" />
+                <Text className="text-[11px] text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                   スポットを提示
                 </Text>
               </View>
             </View>
             <View className="absolute bottom-10 left-3 bg-white rounded-2xl border border-[#DBC2B0]/30 px-3 py-2 shadow-lg">
               <View className="flex-row items-center gap-1.5">
-                <Ionicons name="eye-outline" size={14} color="#904D00" />
-                <Text className="text-[11px] text-[#231A11]" style={{ fontFamily: fonts.displayBold }}>
+                <Ionicons name="eye-outline" size={14} color="#EE8C2B" />
+                <Text className="text-[11px] text-[#221910]" style={{ fontFamily: fonts.displayBold }}>
                   現地で発見
                 </Text>
               </View>
@@ -341,13 +341,13 @@ export const FeaturedCampaignScreen = () => {
           </View>
         </View>
 
-        <View className="px-6 py-20 bg-[#FFF1E7]">
+        <View className="px-6 py-20 bg-[#faf5ef]">
           <SectionHeading title="参加の流れ" />
 
           <View className="mt-12">
             {PARTICIPATION_STEPS.map((step, index) => (
               <View key={step.title} className={`flex-row gap-4 ${index > 0 ? "mt-8" : ""}`}>
-                <View className="w-10 h-10 rounded-full bg-[#904D00] items-center justify-center mt-0.5">
+                <View className="w-10 h-10 rounded-full bg-[#EE8C2B] items-center justify-center mt-0.5">
                   <Text className="text-white text-lg" style={{ fontFamily: fonts.storySerifSemiBold }}>
                     {index + 1}
                   </Text>
@@ -356,7 +356,7 @@ export const FeaturedCampaignScreen = () => {
                   <Text className="text-base text-[#231A11] mb-1.5" style={{ fontFamily: fonts.displayExtraBold }}>
                     {step.title}
                   </Text>
-                  <Text className="text-xs text-[#554336]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 19 }}>
+                  <Text className="text-xs text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 19 }}>
                     {step.body}
                   </Text>
                 </View>
@@ -370,36 +370,36 @@ export const FeaturedCampaignScreen = () => {
 
           <View className="mt-10 gap-4">
             <View className="rounded-2xl border border-[#DBC2B0]/50 bg-[#F7E5D6]/40 p-4 flex-row gap-3">
-              <Ionicons name="phone-portrait-outline" size={18} color="#904D00" />
+              <Ionicons name="phone-portrait-outline" size={18} color="#EE8C2B" />
               <View className="flex-1">
                 <Text className="text-sm text-[#231A11] mb-1" style={{ fontFamily: fonts.displayExtraBold }}>
                   何が必要？
                 </Text>
-                <Text className="text-[11px] text-[#554336]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
+                <Text className="text-[11px] text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
                   ネットに繋がるスマホが必要です。十分に充電してお越しください。
                 </Text>
               </View>
             </View>
 
             <View className="rounded-2xl border border-[#DBC2B0]/50 bg-[#F7E5D6]/40 p-4 flex-row gap-3">
-              <Ionicons name="walk-outline" size={18} color="#904D00" />
+              <Ionicons name="walk-outline" size={18} color="#EE8C2B" />
               <View className="flex-1">
                 <Text className="text-sm text-[#231A11] mb-1" style={{ fontFamily: fonts.displayExtraBold }}>
                   所要時間は？
                 </Text>
-                <Text className="text-[11px] text-[#554336]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
+                <Text className="text-[11px] text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
                   約60分を想定していますが、自分のペースでいつでも中断・再開できます。
                 </Text>
               </View>
             </View>
 
             <View className="rounded-2xl border border-[#DBC2B0]/50 bg-[#F7E5D6]/40 p-4 flex-row gap-3">
-              <Ionicons name="sunny-outline" size={18} color="#904D00" />
+              <Ionicons name="sunny-outline" size={18} color="#EE8C2B" />
               <View className="flex-1">
                 <Text className="text-sm text-[#231A11] mb-1" style={{ fontFamily: fonts.displayExtraBold }}>
                   おすすめの時間は？
                 </Text>
-                <Text className="text-[11px] text-[#554336]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
+                <Text className="text-[11px] text-[#9A938B]" style={{ fontFamily: fonts.bodyRegular, lineHeight: 17 }}>
                   景色がよく見える日中、または夕暮れ時が最もシネマティックです。
                 </Text>
               </View>
@@ -430,12 +430,12 @@ export const FeaturedCampaignScreen = () => {
                   </Text>
                 </View>
               </View>
-              <Text className="text-[10px] text-[#904D00]" style={{ fontFamily: fonts.displayExtraBold }}>
+              <Text className="text-[10px] text-[#EE8C2B]" style={{ fontFamily: fonts.displayExtraBold }}>
                 参加無料
               </Text>
             </View>
 
-            <Pressable onPress={handleJoin} className="h-12 rounded-full bg-[#904D00] flex-row items-center justify-center gap-2">
+            <Pressable onPress={handleJoin} className="h-12 rounded-full bg-[#EE8C2B] flex-row items-center justify-center gap-2">
               <Text className="text-white" style={{ fontFamily: fonts.displayExtraBold }}>
                 シリーズに参加する
               </Text>
