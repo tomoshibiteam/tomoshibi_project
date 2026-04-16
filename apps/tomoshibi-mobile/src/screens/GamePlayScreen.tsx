@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Easing,
   Image,
   Linking,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -20,6 +22,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import type { RootStackParamList } from "@/navigation/types";
 import { fonts } from "@/theme/fonts";
+import { AnimatedButton, PulseView } from "@/components/common/AnimatedButton";
 import {
   fetchGameplayQuest,
   type GameplayCharacter,
@@ -29,6 +32,7 @@ import {
 } from "@/services/gameplay";
 import { getSupabaseOrThrow, isSupabaseConfigured } from "@/lib/supabase";
 import { useSessionUserId } from "@/hooks/useSessionUser";
+import { DEV_QUEST_ID, devQuestData } from "@/mocks/devQuestData";
 
 type Props = NativeStackScreenProps<RootStackParamList, "GamePlay">;
 
@@ -1228,7 +1232,7 @@ const TypewriterDialogueOverlay = ({
               <Text
                 className={tone === "narrator" ? "text-white/95" : "text-white"}
                 style={{
-                  fontFamily: fonts.bodyRegular,
+                  fontFamily: tone === "narrator" ? fonts.storySerifRegular : fonts.bodyRegular,
                   fontSize: bodyFontSize,
                   lineHeight: bodyLineHeight,
                   textShadowColor: "rgba(0,0,0,0.78)",
@@ -1349,7 +1353,7 @@ const PrologueCinematicOverlay = ({
         <Text
           className="text-center text-[#F2E8D8]"
           style={{
-            fontFamily: fonts.displayBold,
+            fontFamily: fonts.storySerifRegular,
             fontSize: textFontSize,
             lineHeight: textLineHeight,
             textShadowColor: "rgba(0,0,0,0.75)",
@@ -1375,7 +1379,7 @@ const PrologueCinematicOverlay = ({
   );
 };
 
-export const GamePlayScreen = ({ route }: Props) => {
+export const GamePlayScreen = ({ route, navigation }: Props) => {
   const { questId, startEpisodeNo } = route.params;
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -1852,6 +1856,38 @@ export const GamePlayScreen = ({ route }: Props) => {
     []
   );
 
+  const handleGoHome = useCallback(() => {
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "ゲームを中断しますか？\nホームに戻ります。現在の進行状況は失われる場合があります。"
+      );
+      if (confirmed) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "MainTabs" }],
+        });
+      }
+    } else {
+      Alert.alert(
+        "ゲームを中断しますか？",
+        "ホームに戻ります。現在の進行状況は失われる場合があります。",
+        [
+          { text: "キャンセル", style: "cancel" },
+          {
+            text: "ホームに戻る",
+            style: "destructive",
+            onPress: () => {
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "MainTabs" }],
+              });
+            },
+          },
+        ]
+      );
+    }
+  }, [navigation]);
+
   const handleEnableLocationGate = useCallback(() => {
     void requestGpsPermission(() => {
       triggerHaptic("soft");
@@ -1964,6 +2000,14 @@ export const GamePlayScreen = ({ route }: Props) => {
     runSceneTransition,
     triggerHaptic,
   ]);
+
+  /** DEVモード専用: 現在のスポット座標に位置を上書きしてロケーションゲートをパスする */
+  const handleDevWarpToSpot = useCallback(() => {
+    if (!currentSpotCoords) return;
+    setUserLocation({ lat: currentSpotCoords.lat, lng: currentSpotCoords.lng });
+    setLocationStatus("nearTarget");
+    setDistance(0);
+  }, [currentSpotCoords]);
 
   const handleSubmitPuzzle = useCallback(() => {
     if (!currentSpot) return;
@@ -2149,9 +2193,12 @@ export const GamePlayScreen = ({ route }: Props) => {
       try {
         const shouldUseFrontendDemo =
           !isSupabaseConfigured || questId === "demo" || questId === "preview";
-        let loaded = shouldUseFrontendDemo
-          ? createFrontendOnlyDemoQuest(questId)
-          : await fetchGameplayQuest(questId);
+        const shouldUseDevMock = __DEV__ && questId === DEV_QUEST_ID;
+        let loaded = shouldUseDevMock
+          ? devQuestData
+          : shouldUseFrontendDemo
+            ? createFrontendOnlyDemoQuest(questId)
+            : await fetchGameplayQuest(questId);
         if (!active) return;
 
         if (!loaded || loaded.spots.length === 0) {
@@ -2233,7 +2280,8 @@ export const GamePlayScreen = ({ route }: Props) => {
         setHasPlayedOpeningPrologue(false);
         setPrologueNextMode("travel");
 
-        setMode("location_gate");
+        // DEV_MOCKモードでは location_gate（マップロード待ち）をスキップ
+        setMode(shouldUseDevMock ? "opening_prologue" : "location_gate");
         setPuzzleInput("");
         setPuzzleState("idle");
         setPuzzleError(null);
@@ -2249,11 +2297,12 @@ export const GamePlayScreen = ({ route }: Props) => {
         setWrongAnswers(0);
         setHintsUsed(0);
         setSessionSaved(false);
-        setLocationSkipped(false);
+        setLocationSkipped(true); // DEV_MOCKでは位置情報スキップ扱い
         startedAtRef.current = Date.now();
       } catch (error) {
         console.error("GamePlayScreen: failed to load gameplay quest", error);
         if (active) {
+          const shouldUseDevMock = __DEV__ && questId === DEV_QUEST_ID;
           const fallback = createFrontendOnlyDemoQuest(questId);
           const safeIndex = Math.min(
             Math.max(0, (startEpisodeNo || 1) - 1),
@@ -2314,7 +2363,8 @@ export const GamePlayScreen = ({ route }: Props) => {
           setDialogueIndex(0);
           setHasPlayedOpeningPrologue(false);
           setPrologueNextMode("travel");
-          setMode("location_gate");
+          // DEV_MOCKモードでは location_gate（マップロード待ち）をスキップ
+          setMode(shouldUseDevMock ? "opening_prologue" : "location_gate");
           setPuzzleInput("");
           setPuzzleState("idle");
           setPuzzleError(null);
@@ -2329,7 +2379,7 @@ export const GamePlayScreen = ({ route }: Props) => {
           setWrongAnswers(0);
           setHintsUsed(0);
           setSessionSaved(false);
-          setLocationSkipped(false);
+          setLocationSkipped(shouldUseDevMock); // DEV_MOCKでは位置情報スキップ扱い
           setLoadError(null);
           startedAtRef.current = Date.now();
         }
@@ -2934,6 +2984,24 @@ export const GamePlayScreen = ({ route }: Props) => {
 
   return (
     <View className="flex-1 bg-black">
+      {/* ホームに戻るボタン（常時表示） */}
+      <Pressable
+        onPress={handleGoHome}
+        className="absolute items-center justify-center"
+        style={{
+          top: insets.top + 8,
+          left: 16,
+          width: 36,
+          height: 36,
+          borderRadius: 18,
+          backgroundColor: "rgba(0,0,0,0.45)",
+          zIndex: 9999,
+        }}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+      >
+        <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+      </Pressable>
+
       {isMapMode ? (
         <View className="absolute inset-0">
           <MapView
@@ -3147,7 +3215,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                   <Text className="text-[10px] tracking-[1.6px] text-[#EBC28F]" style={{ fontFamily: fonts.displayBold }}>
                     次の導入
                   </Text>
-                  <Text className="mt-1 text-[11px] leading-5 text-white/82" style={{ fontFamily: fonts.bodyRegular }}>
+                  <Text className="mt-1 text-[11px] leading-5 text-white/82" style={{ fontFamily: fonts.storySerifRegular }}>
                     {nextCueText}
                   </Text>
                 </View>
@@ -3175,7 +3243,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                 <Text className="text-[10px] tracking-[1.4px] text-white/65" style={{ fontFamily: fonts.displayBold }}>
                   前章の記録
                 </Text>
-                <Text className="mt-1 text-[11px] leading-5 text-white/82" style={{ fontFamily: fonts.bodyRegular }}>
+                <Text className="mt-1 text-[11px] leading-5 text-white/82" style={{ fontFamily: fonts.storySerifRegular }}>
                   {previousMemoryText}
                 </Text>
               </View>
@@ -3436,10 +3504,10 @@ export const GamePlayScreen = ({ route }: Props) => {
                 <Text className={`text-[10px] tracking-[1.6px] ${travelStoryLabelClass}`} style={{ fontFamily: fonts.displayBold }}>
                   STORY LOG
                 </Text>
-                <Text className={`mt-1 text-[11px] ${travelStoryBodyClass}`} style={{ fontFamily: fonts.bodyRegular }}>
+                <Text className={`mt-1 text-[11px] ${travelStoryBodyClass}`} style={{ fontFamily: fonts.storySerifRegular }}>
                   前章: {previousMemoryText}
                 </Text>
-                <Text className={`mt-1 text-[11px] ${travelStoryBodyClass}`} style={{ fontFamily: fonts.bodyRegular }}>
+                <Text className={`mt-1 text-[11px] ${travelStoryBodyClass}`} style={{ fontFamily: fonts.storySerifRegular }}>
                   次の導入: {nextCueText}
                 </Text>
                 <Text className={`mt-1 text-[10px] ${travelStoryLabelClass}`} style={{ fontFamily: fonts.bodyRegular }}>
@@ -3520,9 +3588,10 @@ export const GamePlayScreen = ({ route }: Props) => {
               className="w-full"
               style={canArrive ? { transform: [{ scale: arriveCtaPulse }] } : undefined}
             >
-              <Pressable
+              <AnimatedButton
                 onPress={handleArrive}
                 disabled={!canArrive}
+                pressedScale={0.96}
                 className={`h-11 rounded-xl items-center justify-center ${
                   canArrive ? "bg-[#EE8C2B]" : "bg-[#CBD5E1]"
                 }`}
@@ -3530,7 +3599,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                 <Text className="text-white text-sm" style={{ fontFamily: fonts.displayBold }}>
                   {travelPrimaryCtaText}
                 </Text>
-              </Pressable>
+              </AnimatedButton>
             </Animated.View>
 
             {!canArrive && gpsEnabled && locationStatus === "tooFar" && nextSpot ? (
@@ -3540,6 +3609,24 @@ export const GamePlayScreen = ({ route }: Props) => {
               >
                 次の候補: {nextSpot.name}
               </Text>
+            ) : null}
+
+            {__DEV__ && currentSpotCoords ? (
+              <Pressable
+                onPress={handleDevWarpToSpot}
+                className="mt-3 h-9 rounded-xl items-center justify-center border"
+                style={{
+                  backgroundColor: "rgba(80,40,180,0.12)",
+                  borderColor: "rgba(100,60,200,0.35)",
+                }}
+              >
+                <Text
+                  className="text-[12px]"
+                  style={{ fontFamily: fonts.displayBold, color: "#5B3FC8" }}
+                >
+                  📍 このスポットにワープ（DEV）
+                </Text>
+              </Pressable>
             ) : null}
             </ScrollView>
           </View>
@@ -3597,19 +3684,19 @@ export const GamePlayScreen = ({ route }: Props) => {
                         正解: <Text style={{ fontFamily: fonts.displayBold }}>{explanationAnswerText}</Text>
                       </Text>
                     ) : null}
-                    <Text className="text-white/90 text-sm leading-6" style={{ fontFamily: fonts.bodyRegular }}>
+                    <Text className="text-white/90 text-sm leading-6" style={{ fontFamily: fonts.storySerifRegular }}>
                       {currentSpot.puzzleSuccessMessage || "謎の解説は準備中です。"}
                     </Text>
                   </View>
 
-                  <Pressable
+                  <AnimatedButton
                     className="h-12 rounded-xl bg-[#EE8C2B] items-center justify-center mt-4"
                     onPress={handleClosePuzzleExplanation}
                   >
                     <Text className="text-white text-base" style={{ fontFamily: fonts.displayBold }}>
                       次へ進む
                     </Text>
-                  </Pressable>
+                  </AnimatedButton>
                 </View>
               ) : (
                 <>
@@ -3619,7 +3706,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                     showsVerticalScrollIndicator={false}
                   >
                     <View className="p-4 bg-white/10 rounded-xl border border-white/20 mb-4">
-                      <Text className="text-white text-sm leading-6" style={{ fontFamily: fonts.bodyRegular }}>
+                      <Text className="text-white text-sm leading-6" style={{ fontFamily: fonts.storySerifRegular }}>
                         {puzzlePromptText}
                       </Text>
                     </View>
@@ -3683,7 +3770,7 @@ export const GamePlayScreen = ({ route }: Props) => {
 
                             <Text
                               className="text-sm text-white flex-1 leading-6"
-                              style={{ fontFamily: fonts.bodyRegular }}
+                              style={{ fontFamily: fonts.storySerifRegular }}
                             >
                               {choice.text}
                             </Text>
@@ -3712,7 +3799,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                   </ScrollView>
 
                   <View className="px-4 pb-4 pt-2">
-                    <Pressable
+                    <AnimatedButton
                       className={`h-12 rounded-xl items-center justify-center ${
                         selectedChoiceId && !choiceShowResult && !choiceAutoAdvancing
                           ? "bg-[#EE8C2B]"
@@ -3739,7 +3826,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                               : "次へ進む"
                             : "回答する"}
                       </Text>
-                    </Pressable>
+                    </AnimatedButton>
                   </View>
                 </>
               )}
@@ -3795,7 +3882,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                 showsVerticalScrollIndicator={false}
               >
                 <View className="mb-3 rounded-xl border border-white/15 bg-white/8 px-4 py-3">
-                  <Text className="text-white text-[15px] leading-6" style={{ fontFamily: fonts.bodyRegular }}>
+                  <Text className="text-white text-[15px] leading-6" style={{ fontFamily: fonts.storySerifRegular }}>
                     {puzzlePromptText}
                   </Text>
                 </View>
@@ -3839,7 +3926,7 @@ export const GamePlayScreen = ({ route }: Props) => {
 
               <View className="px-4 pb-4 pt-2">
                 <View className="flex-row items-center gap-2 mb-2">
-                  <Pressable
+                  <AnimatedButton
                     onPress={handleRevealHint}
                     disabled={revealedHintLevel >= (currentSpot.puzzleHints || []).length}
                     className="flex-1 h-10 rounded-xl border border-white/20 bg-white/5 items-center justify-center flex-row gap-1.5"
@@ -3848,9 +3935,9 @@ export const GamePlayScreen = ({ route }: Props) => {
                     <Text className="text-white/90 text-sm" style={{ fontFamily: fonts.bodyMedium }}>
                       ヒントを見る
                     </Text>
-                  </Pressable>
+                  </AnimatedButton>
 
-                  <Pressable
+                  <AnimatedButton
                     onPress={handleRevealAnswer}
                     disabled={attemptCount < 3 || !currentSpot.puzzleAnswer}
                     className="flex-1 h-10 rounded-xl border border-white/20 bg-white/5 items-center justify-center"
@@ -3858,10 +3945,10 @@ export const GamePlayScreen = ({ route }: Props) => {
                     <Text className="text-white/90 text-sm" style={{ fontFamily: fonts.bodyMedium }}>
                       答えを見る
                     </Text>
-                  </Pressable>
+                  </AnimatedButton>
                 </View>
 
-                <Pressable
+                <AnimatedButton
                   onPress={handleSubmitPuzzle}
                   className="h-11 rounded-xl bg-[#EE8C2B] items-center justify-center"
                 >
@@ -3870,7 +3957,7 @@ export const GamePlayScreen = ({ route }: Props) => {
                       ? "次へ進む"
                       : "回答する"}
                   </Text>
-                </Pressable>
+                </AnimatedButton>
               </View>
             </SafeAreaView>
           </View>
@@ -3891,7 +3978,7 @@ export const GamePlayScreen = ({ route }: Props) => {
             <Text className="text-[#F6D4A7] text-sm text-center mb-1" style={{ fontFamily: fonts.displayBold }}>
               記憶ランク {journeyRank.rank} · スコア {journeyScore}
             </Text>
-            <Text className="text-white/70 text-sm text-center mb-4" style={{ fontFamily: fonts.bodyRegular }}>
+            <Text className="text-white/70 text-sm text-center mb-4" style={{ fontFamily: fonts.storySerifRegular }}>
               {journeyRank.comment}
             </Text>
 

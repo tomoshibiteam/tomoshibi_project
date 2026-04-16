@@ -18,6 +18,7 @@ import {
 import {
   NotoSerifJP_400Regular,
   NotoSerifJP_600SemiBold,
+  NotoSerifJP_700Bold,
   useFonts as useNotoSerifFonts,
 } from "@expo-google-fonts/noto-serif-jp";
 import {
@@ -72,6 +73,7 @@ export default function App() {
   const [storyLoaded] = useNotoSerifFonts({
     NotoSerifJP_400Regular,
     NotoSerifJP_600SemiBold,
+    NotoSerifJP_700Bold,
   });
   const [roundedLoaded] = useZenMaruFonts({
     ZenMaruGothic_500Medium,

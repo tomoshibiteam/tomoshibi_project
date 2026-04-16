@@ -12,6 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { DEV_QUEST_ID } from "@/mocks/devQuestData";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -589,6 +590,27 @@ export const HomeScreen = () => {
           </Animated.View>
 
           <View style={styles.bottomSpace} />
+
+          {__DEV__ ? (
+            <View style={styles.devSection}>
+              <View style={styles.devBadgeRow}>
+                <Text style={[styles.devBadge, { fontFamily: fonts.displayBold }]}>
+                  🛠 DEV MODE
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => navigation.navigate("GamePlay", { questId: DEV_QUEST_ID })}
+                style={({ pressed }) => [styles.devButton, pressed && styles.devButtonPressed]}
+              >
+                <Text style={[styles.devButtonText, { fontFamily: fonts.displayBold }]}>
+                  📍 伊都キャンパス DEVゲームテスト
+                </Text>
+                <Text style={[styles.devButtonSub, { fontFamily: fonts.bodyRegular }]}>
+                  「伊都の灯火 〜消えた論文の謎〜」をモックデータで起動
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -928,5 +950,50 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.84,
     transform: [{ scale: 0.98 }],
+  },
+  devSection: {
+    marginTop: 8,
+    marginBottom: 8,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(30,20,60,0.06)",
+    borderWidth: 1.5,
+    borderColor: "rgba(100,60,200,0.25)",
+    borderStyle: "dashed",
+  },
+  devBadgeRow: {
+    flexDirection: "row",
+    marginBottom: 8,
+  },
+  devBadge: {
+    fontSize: 10,
+    letterSpacing: 1.4,
+    color: "#5B3FC8",
+    backgroundColor: "rgba(100,60,200,0.12)",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    overflow: "hidden",
+  },
+  devButton: {
+    backgroundColor: "#4F2FBF",
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  devButtonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.97 }],
+  },
+  devButtonText: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    marginBottom: 4,
+  },
+  devButtonSub: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.72)",
+    textAlign: "center",
   },
 });
