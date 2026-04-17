@@ -3,11 +3,9 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import type { MainTabParamList } from "@/navigation/types";
 import { HomeScreen } from "@/screens/HomeScreen";
 import { SearchScreen } from "@/screens/SearchScreen";
-import { CreateScreen } from "@/screens/CreateScreen";
-import { ScanScreen } from "@/screens/ScanScreen";
-import { NotificationsScreen } from "@/screens/NotificationsScreen";
 import { HistoryScreen } from "@/screens/HistoryScreen";
 import { ProfileScreen } from "@/screens/ProfileScreen";
+import { FavoritesScreen } from "@/screens/FavoritesScreen";
 import { MainBottomBar } from "@/components/navigation/MainBottomBar";
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -23,9 +21,8 @@ export const MainTabs = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name="Scan" component={ScanScreen} />
-      <Tab.Screen name="Create" component={CreateScreen} />
       <Tab.Screen name="Notifications" component={HistoryScreen} />
+      <Tab.Screen name="Create" component={FavoritesScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

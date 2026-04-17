@@ -6,7 +6,8 @@
     "dev": "npm-run-all -p dev:public-site dev:admin-console dev:tomoshibi-mobile",
     "dev:public-site": "npm --prefix apps/public-site run dev -- --port 3000",
     "dev:admin-console": "npm --prefix apps/admin-console run dev -- --port 3001",
-    "dev:tomoshibi-mobile": "npm --prefix apps/tomoshibi-mobile run start:expo -- --web --port 8081"
+    "dev:tomoshibi-mobile": "EXPO_NO_METRO_WORKSPACE_ROOT=1 npm --prefix apps/tomoshibi-mobile run start:expo -- --web --port 8081",
+    "dev:kyudai-dictionary-mvp-mobile": "EXPO_NO_METRO_WORKSPACE_ROOT=1 npm --prefix apps/kyudai-dictionary-mvp-mobile run start -- --web --port 8082"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5"

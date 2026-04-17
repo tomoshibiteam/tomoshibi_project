@@ -1,9 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  Easing,
   Image,
   Pressable,
   ScrollView,
@@ -12,605 +8,365 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { DEV_QUEST_ID } from "@/mocks/devQuestData";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { fonts } from "@/theme/fonts";
 import type { RootStackParamList } from "@/navigation/types";
-import { isSupabaseConfigured } from "@/lib/supabase";
-import { useSessionUserId } from "@/hooks/useSessionUser";
-import { fetchExplorePayload } from "@/services/feed";
 import { featuredCampaign } from "@/lib/featuredCampaign";
-import type { ExploreCreator, ExploreQuest } from "@/types/feed";
 
-const HERO_FALLBACK =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAthdvAhJ4XCOykibTGqOzJ_w5Lh6y0WxbkPOYpWLt_m1LaV8N-y5K1I_BnGOJMX3MaFIQ_gui-Dmpe8116af02vjntcnGCL4SEJ8-6nGc4cMkaKt1kxWKRJL59WBWX33UQrKNVkqk5_Yn3NtUithfpBO3GPCIE4_yuOy4HsfNVPpZ9TtJV3habfIpDwJMMcbBRhxVrSNtxL8t_zX4QF0C_LikkLr0cTzjxBpaCILVXOZubbl1V-5W4C8OlzwcdVDvDSB035fdY6f4";
-
-const PROFILE_FALLBACK =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAzPo9gS-PgvWKlM4d908SLrTOVA-tig_SzVJJo0rwG8VeeWAOtDOkYgYacjUOuULINTeUkpDBIEklNyQvd4qrdMn4puUFGP6pyznJBtDA9GCJcXT7aXNS9eVSSKbECjNTk6D0wmo6mCIESr5gW_vAMDneJ7frIiHwrOlKqRDUUxmmINZ85Aj5bQSs-tcaNnxu8qTcmp1ZxsgTYb1NXI4dBufNKEY7heoxoJ8EoeEdo-cnCNP61SRzwxTINT-n-N6V7yffLWP5U08o";
-
-type FeedPost = {
-  id: string;
-  questId: string;
-  authorId: string | null;
-  authorName: string;
-  authorAvatar: string | null;
-  postedAt: string;
-  questTitle: string;
-  questImage: string;
-  area: string;
-  tags: string[];
+const colors = {
+  background: "#f8f9fa",
+  onSurface: "#2b3437",
+  onSurfaceVariant: "#586064",
+  primary: "#7d562d",
+  onPrimary: "#fff6f1",
+  surfaceContainerLowest: "#ffffff",
+  surfaceContainerLow: "#f1f4f6",
+  surfaceContainer: "#eaeff1",
+  surfaceContainerHigh: "#e3e9ec",
+  surfaceContainerHighest: "#dbe4e7",
+  outlineVariant: "#abb3b7",
 };
 
-type RecommendationCard = {
+const profileAvatar =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuCkPUeGm8v7ynGSzvjes7pCq5cmjD4aFoJ34DlQEj25zAnwKkyQlOM0q4skQb570zS854NrFzK9nlkrX0zD8GdDd76QP_ZpnYc4giNunyPMVuq7wQZjZnq2BUqkUgSSUNUORZqyGW-oDMMA82Yb8HKg7L1mFIxlKMnzoEgY8U_u6PqFOvzs_fdtjKw8pxkAeQ3UX9ltsAWzbLa7t0p7jfomDWDamFVqsbmE1KsBFLMSsDZO6nBXUvZo8Z1Yq_q8xybZbh-DDGoskyv_";
+
+const continueCardImage =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuAfUBsz_YrKhy03IWTe5qzCeNQBT2WfvRGm-J9gRpUcsv00U3bFnz_ukEQ5lSEkMYmtCFiALqobEX6_1_j5vOg2moUAo5ITjQ5PQePJoQ9v0jtxiCvNndtQRbzAOFQ-DmwKbRHOIPP82ESIaGogdLNy8Nd1JaftHEXhj8PYHe-dvnjEGlTb6Lmahj5l7jMW8EgQeZCQ6avlIfVb7gU_i1bp9LcZesssFavQDjQDBf1L99iw3oB2ubtYWxu3p_9wF49FwXLbMU3zn21c";
+
+type FeatureArticle = {
   id: string;
+  badge: string;
   title: string;
   description: string;
+  image: string;
+};
+
+const featureArticles: FeatureArticle[] = [
+  {
+    id: "feature-1",
+    badge: "Editorial",
+    title: "岩美駅プロジェクト：潮風と記憶の駅",
+    description: "静かな海岸線で、過ぎ去った時間に思いを馳せる旅。",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDvJXQFfqEAwqgENzg9cXrRoaXObiFIxmiR30PcqlVW03gCdi0T7ZIaK3TC-I_Z7YAaS6ebWs1q50F6oEhzhD_jMyobhDfnsZ89UgUgIL1hj2UVdGLKuYDBhhmS44G8g9puYWlmIN8DmVdNBuw_S1IwgNI8yAUwQlljo-W-ocA7JF966JRb7NOWQ7_nrrcAd1VUYUmTeTydEcV3m6j_RTwRJc1Z4n5InN3ozK8El5T2f0bgXCZQ-00I5jTADhUCMzG9pVP28o89pRdu",
+  },
+  {
+    id: "feature-2",
+    badge: "Artisan",
+    title: "Masters of Uji",
+    description:
+      "Meet the generational tea masters who keep the 800-year-old tradition alive in the mist of Kyoto's hills.",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCCPXATdwLKNynSB1yXNoMefnVZBNpq36VuZ-_IYjSVfE8pnae6meDOhC-_x8hvVl0lhdbUl1HKESvfyXoSgd1544VKSArT5lEZaXLoFoIZFm47Jl1PptUmoaSmq-qNx9uKtvu5HmNKet1WBoY0BOX9yR2KB8hwPtgZj-PeZn8ExgEKhWgepd4y2Lr3Dt4elylyOeEBck0u5vEyizwhPY18gJIXf71TamXf9ONqSC7DsQpLBxLtcSMFgrsg5Cn7mwbLgzqHG1Z3dKdg",
+  },
+];
+
+type NearbyItem = {
+  id: string;
+  title: string;
   distance: string;
-  duration: string;
-  tagPrimary: string;
-  tagSecondary: string;
-  imageUrl: string;
-  authorAvatar?: string | null;
+  image: string;
 };
 
-const recommendationFallback: RecommendationCard[] = [
+const nearbyItems: NearbyItem[] = [
   {
-    id: "fallback-1",
-    title: "Echoes of the Bamboo Grove",
-    description: "竹林に響く風の音と共に、この地に伝わる古い詩を辿る静かな散策路。",
-    distance: "2.4 km",
-    duration: "45 min",
-    tagPrimary: "Nature",
-    tagSecondary: "Poetry",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCLztwXnAbS1PGR5xsZg49qMDvuCsyLUEV9_RVRZkU2QaGNt-MU8CS7-fguxK6hEJ4FNfjHPhv2okWYq50ubnrHOaI62mNDiE9YE9nHJwB9NOaRs0HJAzhwaW5iUNCUWtIIx_ZCqFAVwFm96PU-PJ5pYI7a0ZsgSIJDfmqFkOFH3h_0hGuZHhGV007Z1seKtABoyw_vXTaw6vOebayRzCktvy0MzCNIFstm-v7_lPvi4lvDtFH7QctrLZPvVPtJxuXD80yUppM_pG8",
+    id: "nearby-1",
+    title: "静寂の庭園",
+    distance: "500m先",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuDr0Mos7bz10Y9y1nUE5fh5tR8VzTX18TgVHLT37277omxr2mfrrPO4MCDYa5uH5k2YgWNgTLudLrPfhe1uvN17Xf4_FsMO-yCigItJHjUsxVICF4JKfNCLKAObRKEufpAG6Y5DsmbDHqkBQE4vgO-zV4-HGJHTM_HnlT_mPl3E-ARVuAKjHaoCTVqzL8Gx2ey546EJwpylmX8jEc0iCy1Nirk4DofXMWBcwkeC-j2BMOc8rRBdFQewOXgvbuoqjppfe9Yxyofh9Ogu",
   },
   {
-    id: "fallback-2",
-    title: "The Hidden Shrine Path",
-    description: "地元の人しか知らない小さな祠を巡り、忘れられた物語を紐解く旅。",
-    distance: "1.2 km",
-    duration: "30 min",
-    tagPrimary: "History",
-    tagSecondary: "Mystery",
-    imageUrl:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuCFNd_e5huf6lsTVThV527HU2El0v9wRPSVGq9dQYZCz5md3xrVXdc9pCVt1GbvTP3qTOKOvBmSOoP0K-q8hV_KPea9cW_M8qzQo37llcDhKNwxENwlBBMx7qAI1Ow5GzykNu6nnSiPieonjY8XfjJtTurZDBjKHNHTn3n6gglpUEcd8nlloEKteEipZBBdrwRIeMkXI65u8DIEHKRHGbY1qnb47m4oTkwkUGm_6UgoCr1lD34ph_9rwXEGoJ70MQX4PxuwrTGg8JM",
+    id: "nearby-2",
+    title: "Koubo Bakery",
+    distance: "1.2km away",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBHC_9kir3QQQ5fkMn7mKFjYMmFoYS24dhDJ1oFxWFejuOWjNyJOUasMkoYV5JGI5FbdE4pyHvhgSR20XLl7UEDUlGoqSvba-ATqj3TSke_aVv8AAcxK7mKG7BbTHWf8omAM_MhTAbBFMCCEM21cyb6u-ox4qeQRfwqO4ydHmxmHTqH1Fuw5hvQOhhw1YJoywkkP14B8qgm3mVzzZvpyFCUP2uG2dH2awwCQ7pPHfkXbQemoo3iucG4dKKc4B2CKCfUml5Ab4RMpvjP",
+  },
+  {
+    id: "nearby-3",
+    title: "Ame Books",
+    distance: "1.8km away",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAjL72mxTJAisCzPER2gS7rfMXVW2OKqKsAbzmpXI4YLSggrcOfaK4K60bGzUKMCm-1ArKOl43W_-fSEenVHusLKpHlk6OJkZ-eWkNX0lEeqT61qz2JH4gMym1N_4HaJY1E5di7bC0T2glgIC-1B3yghRmuKVhmpxnziCpoYDtoznWbTh-PmaQKHJEzIQnLZIzRjIf-PUHjT2qZPTGZaRsA29551jeUpDU_278Yzcv1sbz6t13I87bOC833hhV-DQexCxpzy9Cw_M-k",
+  },
+  {
+    id: "nearby-4",
+    title: "Tsuchi Ceramics",
+    distance: "2.1km away",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuBtrYU_tUOVLK9KVX4WCyyfXuFBZbpQutHoFjN6I7Fruy5yaW6F1EJsvbQ0_V7CuY7pwbRo9FcrMAIKyYUhLrI5BWNhP5zeK5Nslkb7Pyg1re9JFu09N7EZGwQOHm14ByFrybv3yL4HtRUjPOCBnfDSALbKZPWTnS7WcokK6q93LnXRydlND5R2TNl-wRF0SdOceSml3909afBHsPqUUNb2VIT8SsXFib6FlxkJUDkobjDn9Sg33VNJZH2Lpy3byigeIR-tByAFT3ur",
   },
 ];
 
-const backgroundSteamOrbs: Array<{
-  size: number;
-  top: number;
-  left?: number;
-  right?: number;
-  color: string;
-}> = [
-  { size: 280, top: -80, left: -120, color: "rgba(255,255,255,0.52)" },
-  { size: 220, top: 160, right: -88, color: "rgba(250,240,226,0.55)" },
-  { size: 250, top: 380, left: -106, color: "rgba(255,251,245,0.42)" },
-  { size: 240, top: 680, right: -110, color: "rgba(241,228,208,0.44)" },
+type RecommendItem = {
+  id: string;
+  title: string;
+  rating: string;
+  tags: string[];
+  description: string;
+  image: string;
+};
+
+const recommendItems: RecommendItem[] = [
+  {
+    id: "recommend-1",
+    title: "Forest Bathing Journey",
+    rating: "4.9",
+    tags: ["Wellness", "Nature"],
+    description: "Experience the restorative power of Shinrin-yoku in cedar forests.",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCrCHhHm6E5pkpy2O-Ior709YtD483_zRTl3ZSmZrNzTovD8UD2I1XYY8tIc24WEcJAepyqvzifZ-K4Go2mykYfU38bC80HwEevi6Rb4_x_Cx0UfQyzloIgmrtJD1XKUB3mO3D5wLRqOc4f921FwlDapMb0pd64nTImMCqiypAPD_LZD4CTEG9xtBmRz9wt9P87LpO5rZv4kNdoEsVfBpfBoWrGq5KwL577IOg3-KFVXxnMrGaAA9Sj7ach_JYO3IibQ56pvTsjQT3Y",
+  },
+  {
+    id: "recommend-2",
+    title: "ネオン・シャドウ・ウォーク",
+    rating: "4.8",
+    tags: ["Urban", "Nightlife"],
+    description: "夜の路地裏に隠された、もう一つの街の物語。",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuA2LmaVzfp5dRCkHZU2rHuqkpBz83zCanaiND0lfmSvitOTnvCHk4oaxODyrzxXTmx79LsCZe-RBVGm5AAJ21hvWHrJ59nEbck68SlkpM1v6OtQOyprubDAXmgletV2UON7z7znJOwlPd3YsYvFmazgCIhgKIoFgaxjAstoFkcO8WO4JgoaDdENnVQqQA82hFHxy5ND2bNMaTbOD267qoQqHhQzZqcIO9Pp9303fONKqKX9efILV2UYSwEac7sIR03kp0u_PvWaA6qP",
+  },
 ];
 
-const heroSteamPuffs = [
-  { size: 120, left: -16, opacity: 0.68 },
-  { size: 138, left: 58, opacity: 0.62 },
-  { size: 124, left: 156, opacity: 0.66 },
-  { size: 132, left: 236, opacity: 0.58 },
-] as const;
-
-const estimateDuration = (title: string) => `${Math.min(140, Math.max(30, title.length * 3))} min`;
-const estimateDistance = (title: string) => `${Math.min(6.8, Math.max(1.2, title.length / 8)).toFixed(1)} km`;
-
-const toFeedPost = (
-  quest: ExploreQuest,
-  creatorById: Record<string, ExploreCreator>
-): FeedPost => {
-  const creatorId = quest.creatorId || null;
-  const creator = creatorId ? creatorById[creatorId] : undefined;
-
-  return {
-    id: quest.id,
-    questId: quest.id,
-    authorId: creatorId,
-    authorName: quest.creatorName || creator?.name || "旅の案内人",
-    authorAvatar: creator?.profilePictureUrl || null,
-    postedAt: "たった今",
-    questTitle: quest.title || "無題の物語",
-    questImage: quest.coverImageUrl || HERO_FALLBACK,
-    area: quest.areaName || "Unknown Area",
-    tags: quest.areaName ? [quest.areaName] : ["Stories"],
-  } satisfies FeedPost;
+type SeasonalItem = {
+  id: string;
+  badge: string;
+  title: string;
+  image: string;
 };
+
+const seasonalItems: SeasonalItem[] = [
+  {
+    id: "seasonal-1",
+    badge: "Spring",
+    title: "桜の小径を歩く",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuCLdSPvPwmNU-4AFF9rFpuApYru4FnHHZglWTGtob5xo8YujcqGEBLAl4rcDLFYN0qT7ra7KYMZenlLss4215LsVT4WjlyH-fL-5ae-NboTMfz78sOXwZYdLv6IMgH7sj5LRzHFgDNce_mg78rxLSX0I1VBz0O0eQR06hq0I4IRFkMH0KGrcmPdlQlmejionGIewT_Lylf334IggoI86wUfQx5MyAE47ZKit3euwI_D7rUY_Qoxa7Gq441gp_CrCNIdpvz1CEkgsxzE",
+  },
+  {
+    id: "seasonal-2",
+    badge: "Limited",
+    title: "禅のリトリート",
+    image:
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAK9dNQtZGaA50Ug-7mXViBNOMivfNx-vNaEZzll0WtDpXNj68YBjm8NWw9st6QHB1Ab9Qm3Bt5pMQ0r0lkkG6bkFjMMko1hoV6_QBuQcF3zjy02pmACLsEbekaaCIesFYCP5QDB6p7alJmj1Xnt8I1w-LSm5DikBSgiNt4brET5SzHMhgQ_yGOnkpqij8irySZ__5gzLngCDZTxMFkPkKaKJ6NP2EMcBbPd9FABqju1F_Z4aFdD0J8IYHkZTNg8S4-eLLxPHEqDHzc",
+  },
+];
 
 export const HomeScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { userId } = useSessionUserId();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
 
-  const [loading, setLoading] = useState(true);
-  const [quests, setQuests] = useState<ExploreQuest[]>([]);
-  const [creatorById, setCreatorById] = useState<Record<string, ExploreCreator>>({});
+  const containerWidth = useMemo(() => Math.min(width - 32, 760), [width]);
+  const featureCardWidth = useMemo(() => Math.max(320, Math.min(width * 0.84, 560)), [width]);
+  const topBarHeight = insets.top + 64;
 
-  const steamAnimations = useMemo(() => backgroundSteamOrbs.map(() => new Animated.Value(0)), []);
-  const heroAppear = useRef(new Animated.Value(0)).current;
-  const sectionAppear = useMemo(() => [new Animated.Value(0), new Animated.Value(0)], []);
-  const cardAppear = useMemo(() => [new Animated.Value(0), new Animated.Value(0)], []);
+  const goSearch = () => {
+    navigation.navigate("MainTabs", { screen: "Search" });
+  };
 
-  const textureDots = useMemo(() => {
-    const columns = 7;
-    const gapX = Math.max(30, Math.floor(width / columns));
-    return Array.from({ length: 42 }, (_, index) => {
-      const row = Math.floor(index / columns);
-      const col = index % columns;
-      return {
-        id: `dot-${index}`,
-        top: row * 52 + (row % 2 === 0 ? 6 : 20),
-        left: col * gapX + (row % 2 === 0 ? 8 : 20),
-        size: index % 3 === 0 ? 2 : 1,
-        opacity: index % 3 === 0 ? 0.16 : 0.11,
-      };
-    });
-  }, [width]);
+  const goProfile = () => {
+    navigation.navigate("MainTabs", { screen: "Profile" });
+  };
 
-  const refresh = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const payload = await fetchExplorePayload(userId);
-      setQuests(payload.quests);
-
-      const creatorMap: Record<string, ExploreCreator> = {};
-      [...payload.creators, ...payload.allCreators].forEach((creator) => {
-        if (!creatorMap[creator.id]) {
-          creatorMap[creator.id] = creator;
-        }
-      });
-      setCreatorById(creatorMap);
-    } catch (error) {
-      console.error("HomeScreen: failed to refresh", error);
-      Alert.alert("ホームを読み込めません", "時間をおいて再度お試しください。");
-      setQuests([]);
-      setCreatorById({});
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      void refresh();
-    }, [refresh])
-  );
-
-  useEffect(() => {
-    const steamLoops = steamAnimations.map((steamAnimation, index) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(steamAnimation, {
-            toValue: 1,
-            duration: 3600 + index * 400,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-          Animated.timing(steamAnimation, {
-            toValue: 0,
-            duration: 3300 + index * 460,
-            easing: Easing.inOut(Easing.sin),
-            useNativeDriver: true,
-          }),
-        ])
-      )
-    );
-
-    const heroAnimation = Animated.timing(heroAppear, {
-      toValue: 1,
-      duration: 660,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    });
-
-    const sectionAnimation = Animated.stagger(
-      130,
-      sectionAppear.map((value) =>
-        Animated.timing(value, {
-          toValue: 1,
-          duration: 520,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        })
-      )
-    );
-
-    steamLoops.forEach((loop) => loop.start());
-    heroAnimation.start();
-    sectionAnimation.start();
-
-    return () => {
-      steamLoops.forEach((loop) => loop.stop());
-    };
-  }, [cardAppear, heroAppear, sectionAppear, steamAnimations]);
-
-  const recommendationPosts = useMemo(() => {
-    const seen = new Set<string>();
-    const sorted = [...quests]
-      .slice(0, 12)
-      .map((quest) => toFeedPost(quest, creatorById));
-
-    return sorted.filter((post) => {
-      if (seen.has(post.id)) return false;
-      seen.add(post.id);
-      return true;
-    });
-  }, [quests, creatorById]);
-
-  const recommendationCards = useMemo(() => {
-    const mapped = recommendationPosts.slice(0, 2).map((post, index) => ({
-      id: post.id,
-      title: post.questTitle,
-      description: `${post.area}で語り継がれる記憶と景色をたどる、静かな散策ルート。`,
-      distance: estimateDistance(post.questTitle),
-      duration: estimateDuration(post.questTitle),
-      tagPrimary: post.tags[0] || "Nature",
-      tagSecondary: index % 2 === 0 ? "Poetry" : "Mystery",
-      imageUrl: post.questImage,
-      authorAvatar: post.authorAvatar,
-    } satisfies RecommendationCard));
-
-    if (mapped.length >= 2) return mapped;
-    return [...mapped, ...recommendationFallback.slice(0, 2 - mapped.length)];
-  }, [recommendationPosts]);
-
-  const profileAvatarUri =
-    recommendationCards.find((card) => card.authorAvatar)?.authorAvatar || PROFILE_FALLBACK;
-
-  const stats = useMemo(
-    () => ({
-      stories: `${quests.length > 0 ? Math.min(99, quests.length) : 12}`.padStart(2, "0"),
-      streak: `${quests.length > 0 ? Math.min(30, Math.max(1, Math.round(quests.length / 2))) : 5}`.padStart(2, "0"),
-      title: "Explorer",
-    }),
-    [quests.length]
-  );
-
-  useEffect(() => {
-    if (loading) {
-      cardAppear.forEach((value) => value.setValue(0));
-      return;
-    }
-
-    Animated.stagger(
-      120,
-      cardAppear.map((value) =>
-        Animated.timing(value, {
-          toValue: 1,
-          duration: 460,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        })
-      )
-    ).start();
-  }, [cardAppear, loading, recommendationCards.length]);
-
-  const headerHeight = insets.top + 64;
-
-  if (!isSupabaseConfigured) {
-    return (
-      <SafeAreaView edges={["left", "right", "bottom"]} style={styles.safeArea}>
-        <View style={styles.configWrap}>
-          <Text style={[styles.configTitle, { fontFamily: fonts.displayBold }]}>Firebase設定が必要です</Text>
-          <Text style={[styles.configBody, { fontFamily: fonts.bodyRegular }]}>
-            `.env` に EXPO_PUBLIC_FIREBASE_API_KEY などの EXPO_PUBLIC_FIREBASE_* を設定してください。
-          </Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const heroTranslateY = heroAppear.interpolate({
-    inputRange: [0, 1],
-    outputRange: [18, 0],
-  });
-
-  const sectionOneTranslateY = sectionAppear[0].interpolate({
-    inputRange: [0, 1],
-    outputRange: [18, 0],
-  });
-
-  const sectionTwoTranslateY = sectionAppear[1].interpolate({
-    inputRange: [0, 1],
-    outputRange: [18, 0],
-  });
+  const goFeaturedCampaign = () => {
+    navigation.navigate("FeaturedCampaign", { campaignId: featuredCampaign.id });
+  };
 
   return (
-    <SafeAreaView edges={["left", "right", "bottom"]} style={styles.safeArea}>
+    <SafeAreaView edges={["left", "right"]} style={styles.safeArea}>
       <View style={styles.root}>
-        <LinearGradient
-          colors={["#fcf9f2", "#f6f1e8", "#fcf9f2"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-
-        <View style={styles.textureLayer} pointerEvents="none">
-          {textureDots.map((dot) => (
-            <View
-              key={dot.id}
-              style={{
-                position: "absolute",
-                left: dot.left,
-                top: dot.top,
-                width: dot.size,
-                height: dot.size,
-                borderRadius: dot.size,
-                backgroundColor: `rgba(155,114,90,${dot.opacity})`,
-              }}
-            />
-          ))}
-        </View>
-
-        {backgroundSteamOrbs.map((orb, index) => {
-          const steam = steamAnimations[index];
-          const translateY = steam.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, -16 - index * 4],
-          });
-
-          const opacity = steam.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0.2, 0.42],
-          });
-
-          return (
-            <Animated.View
-              key={`steam-${index}`}
-              pointerEvents="none"
-              style={[
-                styles.backgroundSteamOrb,
-                {
-                  width: orb.size,
-                  height: orb.size,
-                  top: orb.top,
-                  left: orb.left,
-                  right: orb.right,
-                  backgroundColor: orb.color,
-                  opacity,
-                  transform: [{ translateY }],
-                },
-              ]}
-            />
-          );
-        })}
-
-        <View style={[styles.topAppBar, { paddingTop: insets.top }]}> 
-          <View style={styles.topAppBarInner}>
-            <Pressable
-              onPress={() => navigation.navigate("MainTabs", { screen: "Search" })}
-              style={({ pressed }) => [styles.iconCircle, pressed && styles.pressed]}
-            >
-              <Ionicons name="menu-outline" size={22} color="#934529" />
+        <View style={[styles.topBar, { paddingTop: insets.top }]}> 
+          <View style={styles.topBarInner}>
+            <Pressable onPress={goSearch} style={({ pressed }) => [styles.topIconButton, pressed && styles.pressed]}>
+              <Ionicons name="search" size={22} color="#6f4a22" />
             </Pressable>
 
-            <Text style={[styles.brandName, { fontFamily: fonts.roundedBold }]}>TOMOSHIBI</Text>
+            <Text style={[styles.brand, { fontFamily: fonts.displayExtraBold }]}>TOMOSHIBI</Text>
 
-            <Pressable
-              onPress={() => navigation.navigate("MainTabs", { screen: "Profile" })}
-              style={({ pressed }) => [styles.profileWrap, pressed && styles.pressed]}
-            >
-              <Image source={{ uri: profileAvatarUri }} style={styles.profileImage} resizeMode="cover" />
+            <Pressable onPress={goProfile} style={({ pressed }) => [styles.profileButton, pressed && styles.pressed]}>
+              <Image source={{ uri: profileAvatar }} style={styles.profileImage} resizeMode="cover" />
             </Pressable>
           </View>
         </View>
 
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={{
-            paddingTop: headerHeight + 6,
-            paddingBottom: 128,
-            paddingHorizontal: 16,
-          }}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingTop: topBarHeight + 20,
+            paddingBottom: 130,
+            alignItems: "center",
+          }}
         >
-          <Animated.View
-            style={{
-              opacity: heroAppear,
-              transform: [{ translateY: heroTranslateY }],
-            }}
-          >
-            <Pressable
-              onPress={() => navigation.navigate("FeaturedCampaign", { campaignId: featuredCampaign.id })}
-              style={({ pressed }) => [styles.heroCard, pressed && styles.pressed]}
-            >
-              <Image
-                source={{ uri: featuredCampaign.heroImageUrl || HERO_FALLBACK }}
-                style={styles.heroImage}
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={["rgba(0,0,0,0.0)", "rgba(49,23,12,0.52)", "rgba(35,14,7,0.92)"]}
-                start={{ x: 0.5, y: 0.1 }}
-                end={{ x: 0.5, y: 1 }}
-                style={styles.heroGradient}
-              />
-
-              <View pointerEvents="none" style={styles.heroSteamStrip}>
-                {heroSteamPuffs.map((puff, idx) => (
-                  <View
-                    key={`hero-puff-${idx}`}
-                    style={[
-                      styles.heroSteamPuff,
-                      {
-                        width: puff.size,
-                        height: puff.size,
-                        left: puff.left,
-                        opacity: puff.opacity,
-                      },
-                    ]}
-                  />
-                ))}
-              </View>
-
-              <View style={styles.heroContent}>
-                <Text style={[styles.heroBadge, { fontFamily: fonts.displayBold }]}>Featured Walk</Text>
-
-                <Text style={[styles.heroTitle, { fontFamily: fonts.roundedBold }]}>
-                  Iwami Station PoC:{"\n"}
-                  Walk through the history of the station
-                </Text>
-
-                <Pressable
-                  onPress={() => navigation.navigate("FeaturedCampaign", { campaignId: featuredCampaign.id })}
-                  style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}
-                >
-                  <Text style={[styles.heroButtonText, { fontFamily: fonts.displayBold }]}>Start Experience</Text>
-                  <Ionicons name="play" size={14} color="#934529" />
-                </Pressable>
-              </View>
-            </Pressable>
-          </Animated.View>
-
-          <Animated.View
-            style={{
-              opacity: sectionAppear[0],
-              transform: [{ translateY: sectionOneTranslateY }],
-            }}
-          >
-            <View style={styles.sectionBlock}>
-              <View style={styles.sectionHeader}>
-                <Text style={[styles.sectionTitle, { fontFamily: fonts.roundedBold }]}>旅の軌跡</Text>
-                <Text style={[styles.sectionMiniLabel, { fontFamily: fonts.displayBold }]}>Your Records</Text>
-              </View>
-
-              <View style={styles.statsRow}>
-                <View style={styles.statCard}>
-                  <Ionicons name="book-outline" size={18} color="#934529" style={styles.statIcon} />
-                  <Text style={[styles.statValue, { fontFamily: fonts.displayExtraBold }]}>{stats.stories}</Text>
-                  <Text style={[styles.statLabel, { fontFamily: fonts.bodyMedium }]}>Stories</Text>
-                </View>
-
-                <View style={[styles.statCard, styles.statCardMiddle]}>
-                  <Ionicons name="flame" size={18} color="#7b5413" style={styles.statIcon} />
-                  <Text style={[styles.statValue, { fontFamily: fonts.displayExtraBold }]}>{stats.streak}</Text>
-                  <Text style={[styles.statLabel, { fontFamily: fonts.bodyMedium }]}>Day Streak</Text>
-                </View>
-
-                <View style={styles.statCardHighlight}>
-                  <Ionicons name="ribbon-outline" size={18} color="#FFFFFF" style={styles.statIcon} />
-                  <Text style={[styles.statTitleValue, { fontFamily: fonts.displayBold }]}>{stats.title}</Text>
-                  <Text style={[styles.statLabelHighlight, { fontFamily: fonts.bodyMedium }]}>Current Title</Text>
-                </View>
-              </View>
+          <View style={[styles.content, { width: containerWidth }]}> 
+            <View style={styles.greetingSection}>
+              <Text style={[styles.greetingMini, { fontFamily: fonts.bodyMedium }]}>ただいま</Text>
+              <Text style={[styles.greetingMain, { fontFamily: fonts.displayExtraBold }]}>おはようございます、海斗さん</Text>
             </View>
-          </Animated.View>
 
-          <Animated.View
-            style={{
-              opacity: sectionAppear[1],
-              transform: [{ translateY: sectionTwoTranslateY }],
-            }}
-          >
-            <View style={styles.sectionBlock}>
-              <View style={styles.sectionHeader}>
-                <View>
-                    <Text style={[styles.sectionTitle, { fontFamily: fonts.roundedBold }]}>今日のおすすめ</Text>
-                    <Text style={[styles.sectionMiniLabel, { fontFamily: fonts.displayBold }]}>TODAY'S PICKS</Text>
-                  </View>
-                <Pressable
-                  onPress={() => navigation.navigate("MainTabs", { screen: "Search" })}
-                  style={({ pressed }) => [styles.seeAllButton, pressed && styles.pressed]}
-                >
-                  <Text style={[styles.seeAllText, { fontFamily: fonts.displayBold }]}>See All</Text>
-                  <Ionicons name="arrow-forward" size={13} color="#516446" />
-                </Pressable>
-              </View>
-
-              {loading ? (
-                <View style={styles.loadingWrap}>
-                  <ActivityIndicator color="#934529" />
-                </View>
-              ) : (
-                <View style={styles.recommendList}>
-                  {recommendationCards.map((card, index) => {
-                    const cardTranslateY = cardAppear[index].interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [18, 0],
-                    });
-
-                    return (
-                      <Animated.View
-                        key={card.id}
-                        style={{
-                          opacity: cardAppear[index],
-                          transform: [{ translateY: cardTranslateY }],
-                        }}
-                      >
-                        <Pressable
-                          onPress={() => navigation.navigate("MainTabs", { screen: "Search" })}
-                          style={({ pressed }) => [styles.recommendCard, pressed && styles.pressed]}
-                        >
-                          <View style={styles.recommendImageWrap}>
-                            <Image source={{ uri: card.imageUrl }} style={styles.recommendImage} resizeMode="cover" />
-                          </View>
-
-                          <View style={styles.recommendBody}>
-                            <View style={styles.recommendMetaRow}>
-                              <Ionicons name="walk-outline" size={12} color="#516446" />
-                              <Text style={[styles.recommendMetaText, { fontFamily: fonts.displayBold }]}>
-                                {card.distance} • {card.duration}
-                              </Text>
-                            </View>
-
-                            <Text style={[styles.recommendTitle, { fontFamily: fonts.roundedBold }]} numberOfLines={2}>
-                              {card.title}
-                            </Text>
-                            <Text style={[styles.recommendDesc, { fontFamily: fonts.bodyRegular }]} numberOfLines={2}>
-                              {card.description}
-                            </Text>
-
-                            <View style={styles.tagRow}>
-                              <Text style={[styles.tagGreen, { fontFamily: fonts.bodyMedium }]}>{card.tagPrimary}</Text>
-                              <Text style={[styles.tagAmber, { fontFamily: fonts.bodyMedium }]}>{card.tagSecondary}</Text>
-                            </View>
-                          </View>
-                        </Pressable>
-                      </Animated.View>
-                    );
-                  })}
-                </View>
-              )}
-            </View>
-          </Animated.View>
-
-          <View style={styles.bottomSpace} />
-
-          {__DEV__ ? (
-            <View style={styles.devSection}>
-              <View style={styles.devBadgeRow}>
-                <Text style={[styles.devBadge, { fontFamily: fonts.displayBold }]}>
-                  🛠 DEV MODE
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => navigation.navigate("GamePlay", { questId: DEV_QUEST_ID })}
-                style={({ pressed }) => [styles.devButton, pressed && styles.devButtonPressed]}
-              >
-                <Text style={[styles.devButtonText, { fontFamily: fonts.displayBold }]}>
-                  📍 伊都キャンパス DEVゲームテスト
-                </Text>
-                <Text style={[styles.devButtonSub, { fontFamily: fonts.bodyRegular }]}>
-                  「伊都の灯火 〜消えた論文の謎〜」をモックデータで起動
-                </Text>
+            <View style={styles.searchRow}>
+              <Pressable onPress={goSearch} style={({ pressed }) => [styles.searchField, pressed && styles.pressed]}>
+                <Text style={[styles.searchPlaceholder, { fontFamily: fonts.bodyRegular }]}>体験を検索...</Text>
+              </Pressable>
+              <Pressable onPress={goSearch} style={({ pressed }) => [styles.mapButton, pressed && styles.pressed]}>
+                <Ionicons name="map-outline" size={20} color={colors.primary} />
               </Pressable>
             </View>
-          ) : null}
+
+            <View style={styles.section}>
+              <Pressable
+                onPress={goFeaturedCampaign}
+                style={({ pressed }) => [styles.continueCard, pressed && styles.pressed]}
+              >
+                <View style={styles.continueImageWrap}>
+                  <Image source={{ uri: continueCardImage }} style={styles.continueImage} resizeMode="cover" />
+                </View>
+                <View style={styles.continueBody}>
+                  <Text style={[styles.continueStatus, { fontFamily: fonts.displayBold }]}>進行中</Text>
+                  <Text style={[styles.continueTitle, { fontFamily: fonts.bodyBold }]}>岩美駅の記憶を辿る</Text>
+                  <Text style={[styles.continueDistance, { fontFamily: fonts.bodyRegular }]}>現在地から2.4km</Text>
+                </View>
+                <View style={styles.continuePlayButton}>
+                  <Ionicons name="play" size={16} color={colors.onPrimary} />
+                </View>
+              </Pressable>
+            </View>
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { fontFamily: fonts.displayBold }]}>特集記事</Text>
+                <Pressable onPress={goSearch}>
+                  <Text style={[styles.seeAllText, { fontFamily: fonts.displayBold }]}>すべて見る</Text>
+                </Pressable>
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalContainer}
+              >
+                {featureArticles.map((article) => (
+                  <Pressable
+                    key={article.id}
+                    onPress={goSearch}
+                    style={({ pressed }) => [styles.featureItem, { width: featureCardWidth }, pressed && styles.pressed]}
+                  >
+                    <View style={styles.featureImageWrap}>
+                      <Image source={{ uri: article.image }} style={styles.featureImage} resizeMode="cover" />
+                      <LinearGradient
+                        colors={["rgba(0,0,0,0.0)", "rgba(0,0,0,0.62)"]}
+                        start={{ x: 0.5, y: 0.2 }}
+                        end={{ x: 0.5, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                      />
+                      <View style={styles.featureOverlay}>
+                        <View style={styles.featureBadge}>
+                          <Text style={[styles.featureBadgeText, { fontFamily: fonts.displayBold }]}>{article.badge}</Text>
+                        </View>
+                        <Text style={[styles.featureTitle, { fontFamily: fonts.displayBold }]} numberOfLines={2}>
+                          {article.title}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text style={[styles.featureDescription, { fontFamily: fonts.bodyRegular }]}>{article.description}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, styles.sectionMargin, { fontFamily: fonts.displayBold }]}>近くで見つける</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalContainer}
+              >
+                {nearbyItems.map((item) => (
+                  <Pressable key={item.id} onPress={goSearch} style={({ pressed }) => [styles.nearbyCard, pressed && styles.pressed]}>
+                    <View style={styles.nearbyImageWrap}>
+                      <Image source={{ uri: item.image }} style={styles.nearbyImage} resizeMode="cover" />
+                    </View>
+                    <Text style={[styles.nearbyTitle, { fontFamily: fonts.bodyBold }]} numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                    <View style={styles.nearbyMeta}>
+                      <Ionicons name="navigate-outline" size={12} color={colors.onSurfaceVariant} />
+                      <Text style={[styles.nearbyDistance, { fontFamily: fonts.bodyMedium }]}>{item.distance}</Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, styles.sectionMargin, { fontFamily: fonts.displayBold }]}>あなたへのおすすめ</Text>
+              <View style={styles.recommendList}>
+                {recommendItems.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={goSearch}
+                    style={({ pressed }) => [styles.recommendCard, pressed && styles.pressed]}
+                  >
+                    <View style={styles.recommendImageWrap}>
+                      <Image source={{ uri: item.image }} style={styles.recommendImage} resizeMode="cover" />
+                    </View>
+                    <View style={styles.recommendBody}>
+                      <View style={styles.recommendTopRow}>
+                        <Text style={[styles.recommendTitle, { fontFamily: fonts.bodyBold }]} numberOfLines={1}>
+                          {item.title}
+                        </Text>
+                        <View style={styles.ratingWrap}>
+                          <Ionicons name="star" size={14} color={colors.primary} />
+                          <Text style={[styles.ratingText, { fontFamily: fonts.displayBold }]}>{item.rating}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.tagRow}>
+                        {item.tags.map((tag) => (
+                          <View key={`${item.id}-${tag}`} style={styles.tagChip}>
+                            <Text style={[styles.tagText, { fontFamily: fonts.displayBold }]}>{tag}</Text>
+                          </View>
+                        ))}
+                      </View>
+                      <Text style={[styles.recommendDescription, { fontFamily: fonts.bodyRegular }]} numberOfLines={1}>
+                        {item.description}
+                      </Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, styles.sectionMargin, { fontFamily: fonts.displayBold }]}>季節の体験</Text>
+              <View style={styles.seasonalGrid}>
+                {seasonalItems.map((item) => (
+                  <Pressable
+                    key={item.id}
+                    onPress={goSearch}
+                    style={({ pressed }) => [styles.seasonalCard, pressed && styles.pressed]}
+                  >
+                    <Image source={{ uri: item.image }} style={styles.seasonalImage} resizeMode="cover" />
+                    <LinearGradient
+                      colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.48)"]}
+                      start={{ x: 0.5, y: 0.2 }}
+                      end={{ x: 0.5, y: 1 }}
+                      style={StyleSheet.absoluteFill}
+                    />
+                    <View style={styles.seasonalOverlay}>
+                      <Text style={[styles.seasonalBadge, { fontFamily: fonts.displayBold }]}>{item.badge}</Text>
+                      <Text style={[styles.seasonalTitle, { fontFamily: fonts.bodyBold }]}>{item.title}</Text>
+                    </View>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          </View>
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -620,262 +376,282 @@ export const HomeScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fcf9f2",
+    backgroundColor: colors.background,
   },
   root: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  scroll: {
-    flex: 1,
-  },
-  textureLayer: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.62,
-  },
-  backgroundSteamOrb: {
-    position: "absolute",
-    borderRadius: 999,
-  },
-  topAppBar: {
+  topBar: {
     position: "absolute",
     left: 0,
     right: 0,
-    zIndex: 30,
-    backgroundColor: "rgba(252,249,242,0.85)",
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(219,193,185,0.18)",
-    shadowColor: "#1c1c18",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.05,
-    shadowRadius: 14,
-    elevation: 7,
+    zIndex: 50,
+    backgroundColor: "rgba(248, 249, 250, 0.72)",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(115,124,127,0.15)",
   },
-  topAppBarInner: {
+  topBarInner: {
     height: 64,
-    paddingHorizontal: 18,
+    paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  iconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  topIconButton: {
+    width: 32,
+    height: 32,
     alignItems: "center",
     justifyContent: "center",
   },
-  brandName: {
-    fontSize: 22,
-    color: "#934529",
-    letterSpacing: 0.35,
+  brand: {
+    fontSize: 25,
+    color: "#7a532a",
+    letterSpacing: 2,
   },
-  profileWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  profileButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(136,114,108,0.26)",
+    backgroundColor: colors.surfaceContainerHighest,
   },
   profileImage: {
     width: "100%",
     height: "100%",
   },
-  heroCard: {
-    height: 420,
-    borderRadius: 40,
-    overflow: "hidden",
-    marginBottom: 26,
-    shadowColor: "#934529",
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 11,
+  scroll: {
+    flex: 1,
   },
-  heroImage: {
-    ...StyleSheet.absoluteFillObject,
+  content: {
+    paddingHorizontal: 0,
   },
-  heroGradient: {
-    ...StyleSheet.absoluteFillObject,
+  greetingSection: {
+    marginTop: 6,
+    marginBottom: 18,
   },
-  heroSteamStrip: {
-    position: "absolute",
-    left: -18,
-    right: -18,
-    bottom: -76,
-    height: 142,
-  },
-  heroSteamPuff: {
-    position: "absolute",
-    bottom: 0,
-    borderRadius: 999,
-    backgroundColor: "#f6f0e5",
-  },
-  heroContent: {
-    position: "absolute",
-    left: 24,
-    right: 24,
-    bottom: 24,
-  },
-  heroBadge: {
-    alignSelf: "flex-start",
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    fontSize: 10,
-    letterSpacing: 1.6,
+  greetingMini: {
+    fontSize: 12,
     textTransform: "uppercase",
-    color: "#291800",
-    backgroundColor: "#f2be73",
-    marginBottom: 12,
-    shadowColor: "#934529",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 4,
+    letterSpacing: 0.9,
+    color: colors.onSurfaceVariant,
+    marginBottom: 4,
   },
-  heroTitle: {
-    fontSize: 26,
-    lineHeight: 33,
-    color: "#ffffff",
-    marginBottom: 20,
-    textShadowColor: "rgba(0,0,0,0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+  greetingMain: {
+    fontSize: 31,
+    lineHeight: 38,
+    color: colors.onSurface,
   },
-  heroButton: {
-    alignSelf: "flex-start",
-    height: 46,
-    borderRadius: 999,
-    paddingHorizontal: 20,
-    backgroundColor: "#ffffff",
+  searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
+    marginBottom: 30,
+  },
+  searchField: {
+    flex: 1,
+    height: 48,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceContainerLow,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+  },
+  searchPlaceholder: {
+    fontSize: 15,
+    color: "rgba(115,124,127,0.8)",
+  },
+  mapButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceContainerLowest,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.07,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  heroButtonText: {
-    color: "#934529",
-    fontSize: 13,
-    letterSpacing: 0.3,
+  section: {
+    marginBottom: 34,
   },
-  sectionBlock: {
-    marginBottom: 26,
+  continueCard: {
+    borderRadius: 16,
+    backgroundColor: colors.surfaceContainerLowest,
+    borderWidth: 1,
+    borderColor: "rgba(171,179,183,0.22)",
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.04,
+    shadowRadius: 18,
+    elevation: 2,
+  },
+  continueImageWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: colors.surfaceContainer,
+  },
+  continueImage: {
+    width: "100%",
+    height: "100%",
+  },
+  continueBody: {
+    flex: 1,
+  },
+  continueStatus: {
+    fontSize: 10,
+    letterSpacing: 1.5,
+    color: colors.primary,
+    textTransform: "uppercase",
+    marginBottom: 3,
+  },
+  continueTitle: {
+    fontSize: 18,
+    lineHeight: 22,
+    color: colors.onSurface,
+    marginBottom: 2,
+  },
+  continueDistance: {
+    fontSize: 12,
+    color: colors.onSurfaceVariant,
+  },
+  continuePlayButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primary,
   },
   sectionHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
-    marginBottom: 14,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 22,
-    color: "#221910",
+    fontSize: 24,
+    lineHeight: 30,
+    color: colors.onSurface,
+    letterSpacing: -0.2,
   },
-  sectionMiniLabel: {
-    fontSize: 10,
-    letterSpacing: 1.4,
-    color: "#B8AFA4",
-    textTransform: "uppercase",
-    marginTop: 1,
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 24,
-    backgroundColor: "#f6f3ec",
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(147,69,41,0.07)",
-  },
-  statCardMiddle: {
-    borderWidth: 1,
-    borderColor: "rgba(147,69,41,0.1)",
-    backgroundColor: "#f3ede3",
-  },
-  statCardHighlight: {
-    flex: 1,
-    borderRadius: 24,
-    backgroundColor: "#7a3520",
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#7a3520",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.28,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  statIcon: {
-    marginBottom: 7,
-  },
-  statValue: {
-    fontSize: 22,
-    color: "#1c1c18",
-  },
-  statLabel: {
-    marginTop: 2,
-    fontSize: 10,
-    color: "#88726c",
-  },
-  statTitleValue: {
-    fontSize: 12,
-    letterSpacing: 0.6,
-    color: "#ffffff",
-    textTransform: "uppercase",
-  },
-  statLabelHighlight: {
-    marginTop: 3,
-    fontSize: 10,
-    color: "rgba(255,255,255,0.8)",
-  },
-  seeAllButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 4,
+  sectionMargin: {
+    marginBottom: 16,
   },
   seeAllText: {
     fontSize: 12,
-    color: "#516446",
+    letterSpacing: 0.8,
+    color: colors.primary,
+    textTransform: "uppercase",
   },
-  loadingWrap: {
+  horizontalContainer: {
+    paddingRight: 10,
+    gap: 18,
+  },
+  featureItem: {
+    flexShrink: 0,
+  },
+  featureImageWrap: {
+    height: 320,
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: colors.surfaceContainerHigh,
+    marginBottom: 10,
+  },
+  featureImage: {
+    width: "100%",
+    height: "100%",
+  },
+  featureOverlay: {
+    position: "absolute",
+    left: 16,
+    right: 16,
+    bottom: 18,
+  },
+  featureBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.35)",
+    backgroundColor: "rgba(255,255,255,0.18)",
+    marginBottom: 10,
+  },
+  featureBadgeText: {
+    fontSize: 10,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+    color: "#ffffff",
+  },
+  featureTitle: {
+    fontSize: 29,
+    lineHeight: 34,
+    color: "#ffffff",
+  },
+  featureDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.onSurfaceVariant,
+    paddingHorizontal: 2,
+  },
+  nearbyCard: {
+    width: 178,
+    flexShrink: 0,
+  },
+  nearbyImageWrap: {
+    width: "100%",
+    aspectRatio: 1.02,
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 10,
+    backgroundColor: colors.surfaceContainerLow,
+  },
+  nearbyImage: {
+    width: "100%",
+    height: "100%",
+  },
+  nearbyTitle: {
+    fontSize: 15,
+    color: colors.onSurface,
+    marginBottom: 4,
+  },
+  nearbyMeta: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 28,
+    gap: 3,
+  },
+  nearbyDistance: {
+    fontSize: 11,
+    color: colors.onSurfaceVariant,
   },
   recommendList: {
     gap: 12,
   },
   recommendCard: {
     flexDirection: "row",
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.85)",
-    borderWidth: 1,
-    borderColor: "rgba(219,193,185,0.4)",
-    padding: 12,
-    shadowColor: "#934529",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
+    gap: 14,
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: colors.surfaceContainerLowest,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 14,
     elevation: 2,
   },
   recommendImageWrap: {
     width: 96,
-    height: 128,
-    borderRadius: 16,
+    height: 96,
+    borderRadius: 10,
     overflow: "hidden",
-    marginRight: 12,
   },
   recommendImage: {
     width: "100%",
@@ -883,117 +659,84 @@ const styles = StyleSheet.create({
   },
   recommendBody: {
     flex: 1,
-    paddingTop: 3,
+    justifyContent: "center",
   },
-  recommendMetaRow: {
+  recommendTopRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: 4,
-    marginBottom: 2,
-  },
-  recommendMetaText: {
-    fontSize: 10,
-    color: "#516446",
+    gap: 8,
+    marginBottom: 6,
   },
   recommendTitle: {
-    fontSize: 17,
-    lineHeight: 22,
-    color: "#1c1c18",
-    marginBottom: 4,
+    flex: 1,
+    fontSize: 16,
+    color: colors.onSurface,
   },
-  recommendDesc: {
+  ratingWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  ratingText: {
     fontSize: 12,
-    lineHeight: 17,
-    color: "#55433d",
-    marginBottom: 10,
+    color: colors.primary,
   },
   tagRow: {
     flexDirection: "row",
-    alignItems: "center",
     gap: 6,
-  },
-  tagGreen: {
-    fontSize: 10,
-    color: "#3a4c30",
-    backgroundColor: "rgba(209,230,193,0.52)",
-    borderRadius: 8,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    overflow: "hidden",
-  },
-  tagAmber: {
-    fontSize: 10,
-    color: "#624000",
-    backgroundColor: "rgba(255,221,178,0.46)",
-    borderRadius: 8,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    overflow: "hidden",
-  },
-  configWrap: {
-    paddingHorizontal: 24,
-    paddingTop: 40,
-  },
-  configTitle: {
-    fontSize: 20,
-    color: "#221910",
     marginBottom: 8,
   },
-  configBody: {
-    fontSize: 14,
-    color: "#6C5647",
-    lineHeight: 22,
-  },
-  bottomSpace: {
-    height: 16,
-  },
-  pressed: {
-    opacity: 0.84,
-    transform: [{ scale: 0.98 }],
-  },
-  devSection: {
-    marginTop: 8,
-    marginBottom: 8,
-    padding: 12,
-    borderRadius: 16,
-    backgroundColor: "rgba(30,20,60,0.06)",
-    borderWidth: 1.5,
-    borderColor: "rgba(100,60,200,0.25)",
-    borderStyle: "dashed",
-  },
-  devBadgeRow: {
-    flexDirection: "row",
-    marginBottom: 8,
-  },
-  devBadge: {
-    fontSize: 10,
-    letterSpacing: 1.4,
-    color: "#5B3FC8",
-    backgroundColor: "rgba(100,60,200,0.12)",
-    borderRadius: 6,
+  tagChip: {
+    borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    overflow: "hidden",
+    backgroundColor: colors.surfaceContainerHighest,
   },
-  devButton: {
-    backgroundColor: "#4F2FBF",
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: "center",
+  tagText: {
+    fontSize: 10,
+    color: "#636769",
+    textTransform: "uppercase",
+    letterSpacing: 0.3,
   },
-  devButtonPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.97 }],
-  },
-  devButtonText: {
-    fontSize: 14,
-    color: "#FFFFFF",
-    marginBottom: 4,
-  },
-  devButtonSub: {
+  recommendDescription: {
     fontSize: 11,
-    color: "rgba(255,255,255,0.72)",
-    textAlign: "center",
+    color: colors.onSurfaceVariant,
+  },
+  seasonalGrid: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  seasonalCard: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: colors.surfaceContainerLow,
+  },
+  seasonalImage: {
+    width: "100%",
+    height: "100%",
+  },
+  seasonalOverlay: {
+    position: "absolute",
+    left: 10,
+    right: 10,
+    bottom: 10,
+  },
+  seasonalBadge: {
+    fontSize: 9,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+    color: "rgba(255,255,255,0.82)",
+    marginBottom: 2,
+  },
+  seasonalTitle: {
+    fontSize: 13,
+    color: "#ffffff",
+  },
+  pressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.98 }],
   },
 });
