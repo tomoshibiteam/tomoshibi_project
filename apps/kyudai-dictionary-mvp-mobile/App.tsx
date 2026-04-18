@@ -6,6 +6,7 @@ import {
   Animated,
   Easing,
   Image,
+  Modal,
   Platform,
   Pressable,
   SafeAreaView,
@@ -47,6 +48,9 @@ const palette = {
 
 const heroImage =
   "https://lh3.googleusercontent.com/aida/ADBb0uhxai5hbeKu_CyFAeSLCKP_Bl443z6LMiMlWZGAOeldUMx-pd7w2vg3pl6pU8jmXdd0fwpiXZGCzJsfEU3LjVhHa7CqfjUZ2AAXj7mtGikcQCY5zIchCthsBOytZtJwAc141EcYSw5rGS6r8aWk3eeka1Nqsh7GCmHIZDgu6Xknl1Hxydl7GDSagYVh2yIhL3qcs3tumIgy8FswEwt6yQuF1T9PMZKhrZX2lNttAMgGSGS2LZSuI--77YM";
+
+const landingHeroImage = require("./assets/kyudai-night.jpg");
+const tomoshibiLogo = require("./assets/tomoshibi-logo.png");
 
 const readyImage =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCTscJo3wP0gqtPkDjft9qMPLzCFlIbdtD1dW_HjaS7BoQb2Lf2ba_7RgHd5QRuAkeuaISCabokQooMWh3KLQYelcom-My07WmNHwt9dG_Wh0mcM57sf1UKIdJgpBg2cKHgBV1PGsJTz6IxPGuGz0SShKtyi1jrg4N0-V5DVtoCWqXXwBSfxmhpwM78YcAULyAoIOnDjYH2yvhUENk4XxsaeQGo6li9QNGIrCTVz3d7XFcM2Ny7Rqd2hL9_IptyU9La72QiXp0PbNQ";
@@ -346,6 +350,24 @@ const familiarityOptions: Familiarity[] = [
   "よく来ている",
 ];
 const durationOptions: Duration[] = ["15〜20分", "20〜30分", "30〜45分"];
+
+type ExplorationStyle = "地図で事前確認" | "歩いて自分で発見" | "人に聞く" | "アプリで調べる";
+type ExperienceExpectation = "場所を覚えたい" | "物語を楽しみたい" | "新しい発見が欲しい" | "話すきっかけが欲しい";
+
+const explorationStyleOptions: ExplorationStyle[] = [
+  "地図で事前確認",
+  "歩いて自分で発見",
+  "人に聞く",
+  "アプリで調べる",
+];
+
+const experienceExpectationOptions: ExperienceExpectation[] = [
+  "場所を覚えたい",
+  "物語を楽しみたい",
+  "新しい発見が欲しい",
+  "話すきっかけが欲しい",
+];
+
 const durationSpotCountMap: Record<Duration, number> = {
   "15〜20分": 4,
   "20〜30分": 5,
@@ -400,6 +422,8 @@ type PersistedFlowDraft = {
   selectedUserType?: string;
   selectedFamiliarity?: string;
   selectedDuration?: string;
+  selectedExplorationStyle?: string;
+  selectedExperienceExpectation?: string;
   experienceSessionId?: string | null;
   experienceStartedAtIso?: string | null;
   currentSpotIndex?: number;
@@ -407,6 +431,8 @@ type PersistedFlowDraft = {
   feedbackOverallRating?: number | null;
   feedbackGuidanceScore?: number | null;
   feedbackCampusScore?: number | null;
+  feedbackVisitIntentScore?: number | null;
+  feedbackExpectationScore?: number | null;
   feedbackReuseIntent?: string | null;
   feedbackComment?: string;
 };
@@ -492,6 +518,12 @@ const isFamiliarity = (value: unknown): value is Familiarity =>
 const isDuration = (value: unknown): value is Duration =>
   typeof value === "string" && durationOptions.includes(value as Duration);
 
+const isExplorationStyle = (value: unknown): value is ExplorationStyle =>
+  typeof value === "string" && explorationStyleOptions.includes(value as ExplorationStyle);
+
+const isExperienceExpectation = (value: unknown): value is ExperienceExpectation =>
+  typeof value === "string" && experienceExpectationOptions.includes(value as ExperienceExpectation);
+
 const isFeedbackReuseIntent = (value: unknown): value is FeedbackReuseIntent =>
   value === "again" || value === "neutral" || value === "unlikely";
 
@@ -535,16 +567,16 @@ type FeatureCard = {
 const featureCards: FeatureCard[] = [
   {
     id: "feature-story",
-    title: "キャンパスを、物語で歩く",
-    body: "あなたの興味や条件をもとに、九大を楽しみながら巡れる体験です。",
+    title: "キャンパスを、物語で知る",
+    body: "移動なしで、九大の各スポットをあなた専用の物語とともに体験できます。",
     icon: "book-outline",
     iconBg: palette.secondaryContainer,
     iconColor: palette.onSecondaryContainer,
   },
   {
     id: "feature-explore",
-    title: "いつもの道に、意味が生まれる",
-    body: "キャンパスの場所や風景を、物語とともに新しく知ることができます。",
+    title: "各スポットに、意味が生まれる",
+    body: "伊都キャンパスの場所や風景を、物語を通じて新しい視点で知ることができます。",
     icon: "compass-outline",
     iconBg: palette.tertiaryContainer,
     iconColor: palette.onTertiaryContainer,
@@ -552,7 +584,7 @@ const featureCards: FeatureCard[] = [
   {
     id: "feature-step",
     title: "九大生活の第一歩",
-    body: "ただ歩くだけではない、伊都キャンパスの空気に触れる導入体験です。",
+    body: "実証実験として、伊都キャンパスの空気を物語とともに体感する体験を提供します。",
     icon: "sparkles-outline",
     iconBg: palette.primaryContainer,
     iconColor: palette.onPrimaryContainer,
@@ -584,23 +616,23 @@ type ReadyTip = {
 const journeySteps: JourneyStep[] = [
   {
     id: "journey-ready",
-    title: "あなた向けに体験を最適化",
-    body: "立場やキャンパス慣れの度合いから、歩きやすい順路と語り口を調整します。",
+    title: "あなた専用のシナリオを生成",
+    body: "立場やキャンパスの慣れ具合をもとに、あなたにぴったりの語り口とスポット順を自動で用意します。",
     icon: "sparkles-outline",
     badge: "STEP 1",
   },
   {
     id: "journey-walk",
-    title: "地図と現在地で迷わず移動",
-    body: "次のスポットまでの距離と所要時間を見ながら、安心して伊都を巡れます。",
-    icon: "walk-outline",
+    title: "各スポットの物語を順番に体験",
+    body: "移動は不要。ボタンを進めるだけで、伊都キャンパスの各スポットを物語とともに巡れます。",
+    icon: "book-outline",
     badge: "STEP 2",
   },
   {
     id: "journey-story",
-    title: "到着地点で物語が始まる",
-    body: "各スポットで、その場所ならではの文脈を短いシナリオで受け取れます。",
-    icon: "book-outline",
+    title: "スポットごとに物語と解説が展開",
+    body: "各スポットで、その場所ならではの背景や文脈を短いシナリオで体感できます。",
+    icon: "map-outline",
     badge: "STEP 3",
   },
 ];
@@ -688,6 +720,8 @@ export default function App() {
   });
   const [firebaseUid, setFirebaseUid] = useState<string | null>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(() =>
     isUserType(persistedFlowDraft?.selectedUserType) ? persistedFlowDraft.selectedUserType : "新入生",
   );
@@ -699,6 +733,16 @@ export default function App() {
   );
   const [selectedDuration, setSelectedDuration] = useState<Duration>(() =>
     isDuration(persistedFlowDraft?.selectedDuration) ? persistedFlowDraft.selectedDuration : "20〜30分",
+  );
+  const [selectedExplorationStyle, setSelectedExplorationStyle] = useState<ExplorationStyle>(
+    isExplorationStyle(persistedFlowDraft?.selectedExplorationStyle)
+      ? persistedFlowDraft.selectedExplorationStyle
+      : "地図で事前確認",
+  );
+  const [selectedExperienceExpectation, setSelectedExperienceExpectation] = useState<ExperienceExpectation>(
+    isExperienceExpectation(persistedFlowDraft?.selectedExperienceExpectation)
+      ? persistedFlowDraft.selectedExperienceExpectation
+      : "場所を覚えたい",
   );
   const spots = useMemo(
     () => buildExperienceSpots(selectedFamiliarity, selectedDuration),
@@ -715,6 +759,12 @@ export default function App() {
   );
   const [feedbackCampusScore, setFeedbackCampusScore] = useState<number | null>(() =>
     parseFiveScale(persistedFlowDraft?.feedbackCampusScore),
+  );
+  const [feedbackVisitIntentScore, setFeedbackVisitIntentScore] = useState<number | null>(() =>
+    parseFiveScale(persistedFlowDraft?.feedbackVisitIntentScore),
+  );
+  const [feedbackExpectationScore, setFeedbackExpectationScore] = useState<number | null>(() =>
+    parseFiveScale(persistedFlowDraft?.feedbackExpectationScore),
   );
   const [feedbackReuseIntent, setFeedbackReuseIntent] = useState<FeedbackReuseIntent | null>(() =>
     isFeedbackReuseIntent(persistedFlowDraft?.feedbackReuseIntent) ? persistedFlowDraft.feedbackReuseIntent : null,
@@ -1754,11 +1804,15 @@ export default function App() {
             userType: selectedUserType,
             familiarity: selectedFamiliarity,
             duration: selectedDuration,
+            explorationStyle: selectedExplorationStyle,
+            experienceExpectation: selectedExperienceExpectation,
           },
           feedback: {
             overallRating: feedbackOverallRating,
             guidanceScore: feedbackGuidanceScore,
             campusScore: feedbackCampusScore,
+            visitIntentScore: feedbackVisitIntentScore,
+            expectationScore: feedbackExpectationScore,
             reuseIntent: feedbackReuseIntent,
             comment: feedbackComment.trim(),
             submittedAt: new Date().toISOString(),
@@ -1777,6 +1831,8 @@ export default function App() {
       setFeedbackOverallRating(null);
       setFeedbackGuidanceScore(null);
       setFeedbackCampusScore(null);
+      setFeedbackVisitIntentScore(null);
+      setFeedbackExpectationScore(null);
       setFeedbackReuseIntent(null);
       setFeedbackComment("");
       setIsSubmittingFeedback(false);
@@ -1816,6 +1872,8 @@ export default function App() {
       selectedUserType,
       selectedFamiliarity,
       selectedDuration,
+      selectedExplorationStyle,
+      selectedExperienceExpectation,
       experienceSessionId,
       experienceStartedAtIso,
       currentSpotIndex: safeCurrentSpotIndex,
@@ -1823,6 +1881,8 @@ export default function App() {
       feedbackOverallRating,
       feedbackGuidanceScore,
       feedbackCampusScore,
+      feedbackVisitIntentScore,
+      feedbackExpectationScore,
       feedbackReuseIntent,
       feedbackComment,
     };
@@ -1832,6 +1892,8 @@ export default function App() {
     selectedUserType,
     selectedFamiliarity,
     selectedDuration,
+    selectedExplorationStyle,
+    selectedExperienceExpectation,
     experienceSessionId,
     experienceStartedAtIso,
     safeCurrentSpotIndex,
@@ -1839,6 +1901,8 @@ export default function App() {
     feedbackOverallRating,
     feedbackGuidanceScore,
     feedbackCampusScore,
+    feedbackVisitIntentScore,
+    feedbackExpectationScore,
     feedbackReuseIntent,
     feedbackComment,
   ]);
@@ -2599,34 +2663,31 @@ export default function App() {
         <StatusBar style="dark" />
 
         <View style={styles.preparingTopBar}>
-          <View style={styles.preparingTopSpacer} />
           <View style={styles.preparingBrandRow}>
             <Ionicons name="sparkles-outline" size={18} color="#1a1c20" />
-            <Text style={styles.preparingBrand}>TOMOSHIBI</Text>
+            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
           </View>
-          <Pressable style={({ pressed }) => [styles.preparingSkipButton, pressed && styles.pressed]} onPress={() => setScreen("ready")}>
-            <Text style={styles.preparingSkipButtonText}>テスト: 次へ</Text>
-          </Pressable>
         </View>
 
         <View style={styles.preparingMain}>
-          <Animated.View style={[styles.preparingGlow, preparingGlowAnimatedStyle]} />
+          <View style={styles.preparingLoaderContainer}>
+            <Animated.View style={[styles.preparingGlow, preparingGlowAnimatedStyle]} />
+            <View style={styles.preparingLoaderWrap}>
+              <Animated.View style={[styles.preparingCircleOuter, preparingOuterRingAnimatedStyle]} />
+              <Animated.View style={[styles.preparingCircleInner, preparingInnerRingAnimatedStyle]} />
 
-          <View style={styles.preparingLoaderWrap}>
-            <Animated.View style={[styles.preparingCircleOuter, preparingOuterRingAnimatedStyle]} />
-            <Animated.View style={[styles.preparingCircleInner, preparingInnerRingAnimatedStyle]} />
-
-            <View style={styles.preparingCenterWrap}>
-              <Animated.View style={[styles.preparingCoreDot, preparingCoreDotAnimatedStyle]}>
-                <View style={styles.preparingCoreDotRing} />
-                <View style={styles.preparingCoreDotIconWrap}>
-                  <Ionicons name="sparkles" size={21} color={palette.tertiary} style={styles.preparingCoreDotIcon} />
+              <View style={styles.preparingCenterWrap}>
+                <Animated.View style={[styles.preparingCoreDot, preparingCoreDotAnimatedStyle]}>
+                  <View style={styles.preparingCoreDotRing} />
+                  <View style={styles.preparingCoreDotIconWrap}>
+                    <Ionicons name="sparkles" size={21} color={palette.tertiary} style={styles.preparingCoreDotIcon} />
+                  </View>
+                </Animated.View>
+                <View style={styles.preparingBars}>
+                  <Animated.View style={[styles.preparingBar, styles.preparingBarShort, preparingBarAAnimatedStyle]} />
+                  <Animated.View style={[styles.preparingBar, styles.preparingBarTall, preparingBarBAnimatedStyle]} />
+                  <Animated.View style={[styles.preparingBar, styles.preparingBarMid, preparingBarCAnimatedStyle]} />
                 </View>
-              </Animated.View>
-              <View style={styles.preparingBars}>
-                <Animated.View style={[styles.preparingBar, styles.preparingBarShort, preparingBarAAnimatedStyle]} />
-                <Animated.View style={[styles.preparingBar, styles.preparingBarTall, preparingBarBAnimatedStyle]} />
-                <Animated.View style={[styles.preparingBar, styles.preparingBarMid, preparingBarCAnimatedStyle]} />
               </View>
             </View>
           </View>
@@ -2671,6 +2732,9 @@ export default function App() {
         </View>
 
         <View style={styles.preparingFooter}>
+          <Pressable style={({ pressed }) => [styles.preparingSkipButton, pressed && styles.pressed]} onPress={() => setScreen("ready")}>
+            <Text style={styles.preparingSkipButtonText}>次へ</Text>
+          </Pressable>
           <Text style={styles.preparingFooterText}>まもなく始まります</Text>
         </View>
       </SafeAreaView>
@@ -2684,7 +2748,7 @@ export default function App() {
 
         <View style={styles.readyTopBar}>
           <View style={styles.readyTopInner}>
-            <Text style={styles.readyBrand}>TOMOSHIBI</Text>
+            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
           </View>
         </View>
 
@@ -3340,7 +3404,7 @@ export default function App() {
         <StatusBar style="dark" />
 
         <View style={styles.feedbackTopBar}>
-          <Text style={styles.feedbackTopBrand}>TOMOSHIBI</Text>
+          <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
         </View>
 
         <ScrollView
@@ -3369,8 +3433,10 @@ export default function App() {
             </View>
 
             <View style={styles.feedbackSectionStack}>
+
+              {/* Q1: 全体満足度 */}
               <View style={styles.feedbackCard}>
-                <Text style={styles.feedbackLabel}>体験は全体としてどうでしたか？</Text>
+                <Text style={styles.feedbackLabel}>体験全体の満足度を教えてください</Text>
                 <View style={styles.feedbackStarRow}>
                   {fiveScale.map((value) => {
                     const selected = feedbackOverallRating !== null && value <= feedbackOverallRating;
@@ -3391,9 +3457,10 @@ export default function App() {
                 </View>
               </View>
 
+              {/* Q2・Q3: ユーザビリティ・場所への関心 */}
               <View style={styles.feedbackCard}>
                 <View style={styles.feedbackScaleGroup}>
-                  <Text style={styles.feedbackLabel}>流れや案内はわかりやすかったですか？</Text>
+                  <Text style={styles.feedbackLabel}>体験の内容はわかりやすかったですか？</Text>
                   <View style={styles.feedbackScaleRow}>
                     {fiveScale.map((value) => {
                       const selected = value === feedbackGuidanceScore;
@@ -3415,13 +3482,13 @@ export default function App() {
                     })}
                   </View>
                   <View style={styles.feedbackScaleHintRow}>
-                    <Text style={styles.feedbackScaleHint}>不透明だった</Text>
-                    <Text style={styles.feedbackScaleHint}>非常に明確だった</Text>
+                    <Text style={styles.feedbackScaleHint}>そう思わない</Text>
+                    <Text style={styles.feedbackScaleHint}>非常にそう思う</Text>
                   </View>
                 </View>
 
                 <View style={styles.feedbackScaleGroup}>
-                  <Text style={styles.feedbackLabel}>伊都キャンパスを知るきっかけになりましたか？</Text>
+                  <Text style={styles.feedbackLabel}>物語を通じて、伊都キャンパスへの興味が高まりましたか？</Text>
                   <View style={styles.feedbackScaleRow}>
                     {fiveScale.map((value) => {
                       const selected = value === feedbackCampusScore;
@@ -3449,8 +3516,68 @@ export default function App() {
                 </View>
               </View>
 
+              {/* Q4・Q5: 行動意図・期待確認 */}
               <View style={styles.feedbackCard}>
-                <Text style={styles.feedbackLabel}>また使いたいと思いますか？</Text>
+                <View style={styles.feedbackScaleGroup}>
+                  <Text style={styles.feedbackLabel}>体験後、実際にこのスポットを訪れてみたいと思いますか？</Text>
+                  <View style={styles.feedbackScaleRow}>
+                    {fiveScale.map((value) => {
+                      const selected = value === feedbackVisitIntentScore;
+                      return (
+                        <Pressable
+                          key={`visit-scale-${value}`}
+                          onPress={() => setFeedbackVisitIntentScore(value)}
+                          style={({ pressed }) => [
+                            styles.feedbackScaleButton,
+                            selected ? styles.feedbackScaleButtonSelected : styles.feedbackScaleButtonIdle,
+                            pressed && styles.pressed,
+                          ]}
+                        >
+                          <Text style={selected ? styles.feedbackScaleButtonTextSelected : styles.feedbackScaleButtonTextIdle}>
+                            {value}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  <View style={styles.feedbackScaleHintRow}>
+                    <Text style={styles.feedbackScaleHint}>そう思わない</Text>
+                    <Text style={styles.feedbackScaleHint}>強くそう思う</Text>
+                  </View>
+                </View>
+
+                <View style={styles.feedbackScaleGroup}>
+                  <Text style={styles.feedbackLabel}>この体験は、始める前の期待通りでしたか？</Text>
+                  <View style={styles.feedbackScaleRow}>
+                    {fiveScale.map((value) => {
+                      const selected = value === feedbackExpectationScore;
+                      return (
+                        <Pressable
+                          key={`expectation-scale-${value}`}
+                          onPress={() => setFeedbackExpectationScore(value)}
+                          style={({ pressed }) => [
+                            styles.feedbackScaleButton,
+                            selected ? styles.feedbackScaleButtonSelected : styles.feedbackScaleButtonIdle,
+                            pressed && styles.pressed,
+                          ]}
+                        >
+                          <Text style={selected ? styles.feedbackScaleButtonTextSelected : styles.feedbackScaleButtonTextIdle}>
+                            {value}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  <View style={styles.feedbackScaleHintRow}>
+                    <Text style={styles.feedbackScaleHint}>期待を下回った</Text>
+                    <Text style={styles.feedbackScaleHint}>期待を上回った</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Q6: 継続利用意向 */}
+              <View style={styles.feedbackCard}>
+                <Text style={styles.feedbackLabel}>また体験したいと思いますか？</Text>
                 <View style={styles.feedbackIntentRow}>
                   <Pressable
                     onPress={() => setFeedbackReuseIntent("again")}
@@ -3461,12 +3588,8 @@ export default function App() {
                     ]}
                   >
                     {feedbackReuseIntent === "again" ? <View style={styles.feedbackIntentDot} /> : null}
-                    <Text
-                      style={
-                        feedbackReuseIntent === "again" ? styles.feedbackIntentChipTextSelected : styles.feedbackIntentChipTextIdle
-                      }
-                    >
-                      また使いたい
+                    <Text style={feedbackReuseIntent === "again" ? styles.feedbackIntentChipTextSelected : styles.feedbackIntentChipTextIdle}>
+                      ぜひ使いたい
                     </Text>
                   </Pressable>
 
@@ -3479,13 +3602,7 @@ export default function App() {
                     ]}
                   >
                     {feedbackReuseIntent === "neutral" ? <View style={styles.feedbackIntentDot} /> : null}
-                    <Text
-                      style={
-                        feedbackReuseIntent === "neutral"
-                          ? styles.feedbackIntentChipTextSelected
-                          : styles.feedbackIntentChipTextIdle
-                      }
-                    >
+                    <Text style={feedbackReuseIntent === "neutral" ? styles.feedbackIntentChipTextSelected : styles.feedbackIntentChipTextIdle}>
                       どちらでもない
                     </Text>
                   </Pressable>
@@ -3499,32 +3616,29 @@ export default function App() {
                     ]}
                   >
                     {feedbackReuseIntent === "unlikely" ? <View style={styles.feedbackIntentDot} /> : null}
-                    <Text
-                      style={
-                        feedbackReuseIntent === "unlikely"
-                          ? styles.feedbackIntentChipTextSelected
-                          : styles.feedbackIntentChipTextIdle
-                      }
-                    >
+                    <Text style={feedbackReuseIntent === "unlikely" ? styles.feedbackIntentChipTextSelected : styles.feedbackIntentChipTextIdle}>
                       あまり思わない
                     </Text>
                   </Pressable>
                 </View>
               </View>
 
+              {/* Q7: 自由意見 */}
               <View style={styles.feedbackCard}>
                 <Text style={styles.feedbackLabel}>自由意見</Text>
+                <Text style={styles.setupResearchNote}>※ 印象に残ったこと・改善してほしいこと・その他なんでも</Text>
                 <TextInput
                   multiline
                   numberOfLines={4}
                   value={feedbackComment}
                   onChangeText={setFeedbackComment}
-                  placeholder="印象に残ったことや、もっとこうなると良いと思ったことがあれば教えてください"
+                  placeholder="体験してみての感想を自由に教えてください"
                   placeholderTextColor={palette.outlineVariant}
                   style={styles.feedbackTextInput}
                   textAlignVertical="top"
                 />
               </View>
+
             </View>
 
             <View style={styles.feedbackSubmitWrap}>
@@ -3549,10 +3663,14 @@ export default function App() {
 
           <View style={styles.feedbackFooter}>
             <View style={[styles.feedbackFooterInner, { width: contentWidth }]}>
-              <Text style={styles.feedbackFooterCopy}>© 2024 TOMOSHIBI. All rights reserved.</Text>
+              <Text style={styles.feedbackFooterCopy}>© 2026 TOMOSHIBI. All rights reserved.</Text>
               <View style={styles.feedbackFooterLinkRow}>
-                <Text style={styles.feedbackFooterLink}>Privacy</Text>
-                <Text style={styles.feedbackFooterLink}>Terms</Text>
+                <Pressable onPress={() => setShowPrivacyModal(true)}>
+                  <Text style={styles.feedbackFooterLink}>Privacy</Text>
+                </Pressable>
+                <Pressable onPress={() => setShowTermsModal(true)}>
+                  <Text style={styles.feedbackFooterLink}>Terms</Text>
+                </Pressable>
                 <Text style={styles.feedbackFooterLink}>Support</Text>
               </View>
             </View>
@@ -3571,7 +3689,7 @@ export default function App() {
           <Pressable onPress={() => setScreen("landing")} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
             <Ionicons name="arrow-back" size={22} color={palette.onBackground} />
           </Pressable>
-          <Text style={styles.setupBrand}>TOMOSHIBI</Text>
+          <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
           <View style={styles.setupTopSpacer} />
         </View>
 
@@ -3671,6 +3789,64 @@ export default function App() {
             </View>
 
             <View style={styles.setupBlock}>
+              <Text style={styles.setupLabel}>新しい場所に来たとき、どうしますか？</Text>
+              <Text style={styles.setupResearchNote}>※ 研究データとして活用します</Text>
+              <View style={styles.stackButtons}>
+                {explorationStyleOptions.map((option) => {
+                  const selected = selectedExplorationStyle === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() => setSelectedExplorationStyle(option)}
+                      style={({ pressed }) => [
+                        styles.familiarityButton,
+                        selected ? styles.familiaritySelected : styles.familiarityIdle,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Text style={selected ? styles.familiarityTextSelected : styles.familiarityTextIdle}>{option}</Text>
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={selected ? palette.onSecondaryContainer : palette.secondaryContainer}
+                        style={{ opacity: selected ? 1 : 0.25 }}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.setupBlock}>
+              <Text style={styles.setupLabel}>この体験に何を期待しますか？</Text>
+              <Text style={styles.setupResearchNote}>※ 研究データとして活用します</Text>
+              <View style={styles.stackButtons}>
+                {experienceExpectationOptions.map((option) => {
+                  const selected = selectedExperienceExpectation === option;
+                  return (
+                    <Pressable
+                      key={option}
+                      onPress={() => setSelectedExperienceExpectation(option)}
+                      style={({ pressed }) => [
+                        styles.familiarityButton,
+                        selected ? styles.familiaritySelected : styles.familiarityIdle,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Text style={selected ? styles.familiarityTextSelected : styles.familiarityTextIdle}>{option}</Text>
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={20}
+                        color={selected ? palette.onSecondaryContainer : palette.secondaryContainer}
+                        style={{ opacity: selected ? 1 : 0.25 }}
+                      />
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.setupBlock}>
               <Text style={styles.setupLabel}>どれくらいで回りたいですか？</Text>
               <View style={styles.durationScaleTextRow}>
                 <Text style={styles.durationHint}>短い時間</Text>
@@ -3726,6 +3902,91 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* プライバシーポリシー モーダル */}
+      <Modal
+        visible={showPrivacyModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPrivacyModal(false)}
+      >
+        <SafeAreaView style={styles.modalSafeArea}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>プライバシーポリシー</Text>
+            <Pressable onPress={() => setShowPrivacyModal(false)} style={({ pressed }) => [styles.modalCloseButton, pressed && styles.pressed]}>
+              <Ionicons name="close" size={24} color={palette.onBackground} />
+            </Pressable>
+          </View>
+          <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>
+            <Text style={styles.modalSectionTitle}>1. はじめに</Text>
+            <Text style={styles.modalBody}>本サービス「TOMOSHIBI」（以下「本サービス」）は、九州大学の学生が卒業研究の一環として開発・運営する実証実験アプリです。本ポリシーは、本サービスの利用を通じて収集する情報の取り扱いについて説明します。</Text>
+
+            <Text style={styles.modalSectionTitle}>2. 収集する情報</Text>
+            <Text style={styles.modalBody}>本サービスでは以下の情報を収集します。{"\n\n"}・あなたの立場（新入生・在学生など）{"\n"}・伊都キャンパスへの慣れ具合{"\n"}・探索スタイルの傾向{"\n"}・本体験への期待{"\n"}・希望する体験時間{"\n"}・体験後のフィードバック（評価・コメント）{"\n"}・匿名ユーザーID（自動生成）{"\n\n"}氏名・メールアドレス・電話番号・位置情報など、個人を特定できる情報は一切収集しません。</Text>
+
+            <Text style={styles.modalSectionTitle}>3. 利用目的</Text>
+            <Text style={styles.modalBody}>収集した情報は以下の目的にのみ使用します。{"\n\n"}・卒業論文・研究発表における統計的分析{"\n"}・本サービスおよび将来的なプロダクトの改善{"\n\n"}個人を特定する形での公表は行いません。</Text>
+
+            <Text style={styles.modalSectionTitle}>4. データの管理</Text>
+            <Text style={styles.modalBody}>収集したデータは Google LLC が提供する Firebase（Firestore）に保管されます。データは暗号化されて管理され、不正アクセスへの対策が講じられています。</Text>
+
+            <Text style={styles.modalSectionTitle}>5. 第三者への提供</Text>
+            <Text style={styles.modalBody}>収集した情報を、研究目的以外で第三者に提供・販売することはありません。研究論文での公表は統計的な形式に限り、個人の回答を特定できる形では行いません。</Text>
+
+            <Text style={styles.modalSectionTitle}>6. データの保持期間</Text>
+            <Text style={styles.modalBody}>収集したデータは、実証実験終了後 1 年間保持した後、適切に削除します。</Text>
+
+            <Text style={styles.modalSectionTitle}>7. 匿名性について</Text>
+            <Text style={styles.modalBody}>本サービスは Firebase の匿名認証を使用しています。アカウント登録や個人情報の入力は不要で、ユーザーはランダムに生成された匿名IDで管理されます。</Text>
+
+            <Text style={styles.modalSectionTitle}>8. ポリシーの変更</Text>
+            <Text style={styles.modalBody}>本ポリシーは予告なく変更されることがあります。変更後のポリシーは本アプリ内に掲載した時点で効力を生じます。</Text>
+
+            <Text style={styles.modalUpdated}>最終更新日：2026年4月</Text>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
+      {/* 利用規約 モーダル */}
+      <Modal
+        visible={showTermsModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowTermsModal(false)}
+      >
+        <SafeAreaView style={styles.modalSafeArea}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>利用規約</Text>
+            <Pressable onPress={() => setShowTermsModal(false)} style={({ pressed }) => [styles.modalCloseButton, pressed && styles.pressed]}>
+              <Ionicons name="close" size={24} color={palette.onBackground} />
+            </Pressable>
+          </View>
+          <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>
+            <Text style={styles.modalSectionTitle}>1. 本サービスについて</Text>
+            <Text style={styles.modalBody}>本サービス「TOMOSHIBI」は、九州大学 伊都キャンパスを舞台に、物語体験を通じてキャンパスを紹介する実証実験アプリです。本サービスは卒業研究を兼ねた研究目的で運営されています。</Text>
+
+            <Text style={styles.modalSectionTitle}>2. 参加への同意</Text>
+            <Text style={styles.modalBody}>本サービスの利用は任意です。体験を開始することで、以下の事項に同意したものとみなします。{"\n\n"}・収集したデータが卒業論文・研究発表に統計的に利用されること{"\n"}・匿名の状態でデータが保管・分析されること{"\n"}・参加はいつでも中止できること</Text>
+
+            <Text style={styles.modalSectionTitle}>3. 利用条件</Text>
+            <Text style={styles.modalBody}>本サービスは九州大学 伊都キャンパスでの実証実験を目的として提供されます。本来の目的の範囲内でご利用ください。</Text>
+
+            <Text style={styles.modalSectionTitle}>4. 禁止事項</Text>
+            <Text style={styles.modalBody}>以下の行為を禁止します。{"\n\n"}・虚偽の情報を意図的に入力すること{"\n"}・本サービスへの不正アクセスや改ざん{"\n"}・商業目的での利用{"\n"}・他の利用者の体験を妨害する行為</Text>
+
+            <Text style={styles.modalSectionTitle}>5. 知的財産権</Text>
+            <Text style={styles.modalBody}>本サービスのコンテンツ（テキスト・デザイン・物語など）に関する知的財産権は運営者に帰属します。無断での複製・転用を禁じます。</Text>
+
+            <Text style={styles.modalSectionTitle}>6. 免責事項</Text>
+            <Text style={styles.modalBody}>本サービスは実証実験版であり、予告なく内容の変更・機能の追加または削除・サービスの一時停止・終了を行う場合があります。これにより生じた損害について、運営者は責任を負いません。</Text>
+
+            <Text style={styles.modalSectionTitle}>7. 準拠法</Text>
+            <Text style={styles.modalBody}>本規約は日本法に準拠し、解釈されます。</Text>
+
+            <Text style={styles.modalUpdated}>最終更新日：2026年4月</Text>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+
       <StatusBar style="dark" />
       <View style={styles.landingAmbientLayer} pointerEvents="none">
         <View style={styles.landingAmbientOrbPrimary} />
@@ -3741,26 +4002,26 @@ export default function App() {
       >
         <View style={[styles.header, { width: contentWidth }]}>
           <View style={styles.brandRow}>
-            <Text style={styles.brandText}>TOMOSHIBI</Text>
+            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
           </View>
         </View>
 
         <Animated.View style={[styles.main, { width: contentWidth }, landingHeroAnimatedStyle]}>
           <View style={[styles.heroWrap, { height: heroHeight }]}>
-            <Image source={{ uri: heroImage }} style={styles.heroImage} resizeMode="cover" />
+            <Image source={landingHeroImage} style={styles.heroImage} resizeMode="cover" />
             <View style={styles.heroOverlay} />
             <View style={styles.heroTopTag}>
               <Ionicons name="walk-outline" size={15} color="#fdfdfd" />
               <Text style={styles.heroTopTagText}>伊都キャンパス探索ナビ</Text>
             </View>
             <View style={styles.heroBottomPanel}>
-              <Text style={styles.heroBottomTitle}>最初の一歩を、迷わず。</Text>
-              <Text style={styles.heroBottomBody}>地図、距離、物語をつないだ体験導線</Text>
+              <Text style={styles.heroBottomTitle}>九大を、物語で知る。</Text>
+              <Text style={styles.heroBottomBody}>その場で体感する、伊都キャンパス紹介体験</Text>
             </View>
           </View>
 
           <View style={styles.heroContent}>
-            <Text style={styles.heroEyebrow}>九州大学 伊都キャンパス向け</Text>
+            <Text style={styles.heroEyebrow}>九州大学 伊都キャンパス ｜ 実証実験</Text>
             <View style={styles.heroTitleBlock}>
               <Text
                 numberOfLines={1}
@@ -3782,11 +4043,11 @@ export default function App() {
                   { fontSize: landingHeroTitleFontSize, lineHeight: landingHeroTitleLineHeight },
                 ]}
               >
-                物語で歩く
+                物語で知る
               </Text>
             </View>
             <Text style={styles.heroBody}>
-              新入生実証向けの導線に最適化した体験です。現在地に合わせたルート案内で、迷わず伊都キャンパスを巡れます。
+              これは九大伊都キャンパスを舞台にした実証実験です。移動は不要 — その場にいながら、物語を通じて伊都キャンパスの各スポットを体験できます。
             </Text>
           </View>
 
@@ -3797,7 +4058,7 @@ export default function App() {
         <Animated.View style={[styles.landingJourneySection, { width: contentWidth }, landingCardsAnimatedStyle]}>
           <View style={styles.landingSectionHeader}>
             <Text style={styles.landingSectionTitle}>体験の流れ</Text>
-            <Text style={styles.landingSectionCaption}>到着から終了まで、自然に進める3ステップ</Text>
+            <Text style={styles.landingSectionCaption}>移動なしで進める、3ステップの物語体験</Text>
           </View>
 
           <View style={styles.journeyStack}>
@@ -3818,8 +4079,8 @@ export default function App() {
 
         <Animated.View style={[styles.features, { width: contentWidth }, landingCardsAnimatedStyle]}>
           <View style={styles.landingSectionHeader}>
-            <Text style={styles.landingSectionTitle}>この体験で得られること</Text>
-            <Text style={styles.landingSectionCaption}>ただ歩くだけでは終わらない導入体験</Text>
+            <Text style={styles.landingSectionTitle}>この体験でできること</Text>
+            <Text style={styles.landingSectionCaption}>歩くだけで終わらない、九大の楽しみ方</Text>
           </View>
 
           <View style={styles.featureStack}>
@@ -3840,10 +4101,10 @@ export default function App() {
         <View style={styles.footerWrap}>
           <View style={[styles.footerInner, { width: contentWidth }]}>
             <View style={styles.footerLinks}>
-              <Pressable style={({ pressed }) => [styles.footerLinkPressable, pressed && styles.pressed]}>
+              <Pressable onPress={() => setShowPrivacyModal(true)} style={({ pressed }) => [styles.footerLinkPressable, pressed && styles.pressed]}>
                 <Text style={styles.footerLink}>Privacy</Text>
               </Pressable>
-              <Pressable style={({ pressed }) => [styles.footerLinkPressable, pressed && styles.pressed]}>
+              <Pressable onPress={() => setShowTermsModal(true)} style={({ pressed }) => [styles.footerLinkPressable, pressed && styles.pressed]}>
                 <Text style={styles.footerLink}>Terms</Text>
               </Pressable>
             </View>
@@ -3866,7 +4127,7 @@ export default function App() {
           style={({ pressed }) => [styles.startButton, { width: contentWidth }, pressed && styles.pressed]}
           onPress={() => setScreen("setup")}
         >
-          <Text style={styles.startButtonText}>体験を始める</Text>
+          <Text style={styles.startButtonText}>冒険をはじめる</Text>
           <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
         </Pressable>
       </View>
@@ -3928,6 +4189,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
     color: palette.onBackground,
   },
+  brandLogo: {
+    height: 26,
+    width: 130,
+  },
   main: {
     paddingHorizontal: 0,
     marginBottom: 18,
@@ -3945,6 +4210,7 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     ...StyleSheet.absoluteFillObject,
+    ...(Platform.OS === "web" ? ({ objectPosition: "center bottom" } as object) : {}),
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -4453,6 +4719,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase",
   },
+  setupResearchNote: {
+    fontSize: 11,
+    color: palette.onSurfaceVariant,
+    marginTop: -6,
+    marginBottom: 8,
+    opacity: 0.7,
+  },
   userTypeSelectWrap: {
     gap: 8,
   },
@@ -4605,11 +4878,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     backgroundColor: "rgba(249,249,247,0.85)",
   },
   preparingTopSpacer: {
-    width: 92,
+    flex: 1,
     minHeight: 34,
   },
   preparingBrandRow: {
@@ -4625,7 +4898,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   preparingSkipButton: {
-    minWidth: 92,
+    flex: 1,
     minHeight: 34,
     paddingHorizontal: 10,
     borderRadius: 999,
@@ -4634,6 +4907,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.78)",
     alignItems: "center",
     justifyContent: "center",
+    maxWidth: 92,
   },
   preparingSkipButtonText: {
     color: "#3e4846",
@@ -4650,6 +4924,13 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
     position: "relative",
   },
+  preparingLoaderContainer: {
+    width: 260,
+    height: 260,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 42,
+  },
   preparingGlow: {
     position: "absolute",
     width: 260,
@@ -4663,8 +4944,6 @@ const styles = StyleSheet.create({
     height: 192,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 42,
-    transform: [{ translateY: 180 }],
   },
   preparingCircleOuter: {
     position: "absolute",
@@ -4825,7 +5104,9 @@ const styles = StyleSheet.create({
   },
   preparingFooter: {
     paddingBottom: 24,
+    paddingTop: 8,
     alignItems: "center",
+    gap: 12,
   },
   preparingFooterText: {
     fontSize: 10,
@@ -6281,5 +6562,53 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.9,
     transform: [{ scale: 0.98 }],
+  },
+  modalSafeArea: {
+    flex: 1,
+    backgroundColor: palette.background,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.outlineVariant,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: palette.onBackground,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalScroll: {
+    flex: 1,
+  },
+  modalContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    paddingBottom: 48,
+    gap: 8,
+  },
+  modalSectionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: palette.onBackground,
+    marginTop: 20,
+    marginBottom: 4,
+  },
+  modalBody: {
+    fontSize: 14,
+    color: palette.onSurfaceVariant,
+    lineHeight: 22,
+  },
+  modalUpdated: {
+    fontSize: 12,
+    color: palette.onSurfaceVariant,
+    marginTop: 32,
+    opacity: 0.6,
   },
 });
