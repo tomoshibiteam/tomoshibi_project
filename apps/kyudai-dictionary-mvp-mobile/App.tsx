@@ -444,16 +444,82 @@ type AdminWorldConfigPayload = {
   styleRules?: string;
   requiredKeywords?: string[];
   blockedKeywords?: string[];
+  landingTopTag?: string;
+  landingHeroPanelTitle?: string;
+  landingHeroPanelBody?: string;
+  landingEyebrow?: string;
+  landingHeroTitleLine1?: string;
+  landingHeroTitleLine2?: string;
+  landingHeroDescription?: string;
+  landingJourneyTitle?: string;
+  landingJourneyCaption?: string;
+  landingFeaturesTitle?: string;
+  landingFeaturesCaption?: string;
+  landingStartButton?: string;
+  setupTitle?: string;
+  setupSubtitle?: string;
+  setupUserTypeLabel?: string;
+  setupFamiliarityLabel?: string;
+  setupExplorationLabel?: string;
+  setupExpectationLabel?: string;
+  setupDurationLabel?: string;
+  setupDurationHintShort?: string;
+  setupDurationHintLong?: string;
+  setupResearchNote?: string;
+  setupStartButton?: string;
+  preparingTitle?: string;
+  preparingBody?: string;
+  preparingStatusDone?: string;
+  preparingStatusProgress?: string;
+  preparingStatusPending?: string;
+  preparingSkipButton?: string;
+  preparingFooter?: string;
+  readyChapterLabel?: string;
+  readyHeroLead?: string;
+  readySummaryTitle?: string;
+  readySummaryText?: string;
+  readyGeneratedStoryLabel?: string;
+  readyStartButton?: string;
+  readyTransitionTitle?: string;
+  readyTransitionBody?: string;
+  spotMapInfoLine1?: string;
+  spotMapInfoLine2?: string;
+  spotMapArrivedLabel?: string;
+  spotMapRestartLabel?: string;
+  spotSpeakerBadge?: string;
+  spotNextButton?: string;
+  spotBackToMapButton?: string;
+  spotFinishButton?: string;
+  spotNarratives?: string[];
   prologueBody?: string;
   prologueCta?: string;
   epilogueBody?: string;
   epilogueCta?: string;
+  feedbackHeroTitleLine1?: string;
+  feedbackHeroTitleLine2?: string;
+  feedbackHeroSubtitleLine1?: string;
+  feedbackHeroSubtitleLine2?: string;
+  feedbackQuestionOverall?: string;
+  feedbackQuestionGuidance?: string;
+  feedbackQuestionCampus?: string;
+  feedbackQuestionVisitIntent?: string;
+  feedbackQuestionExpectation?: string;
+  feedbackQuestionReuse?: string;
+  feedbackQuestionComment?: string;
+  feedbackCommentNote?: string;
+  feedbackSubmitButton?: string;
+  feedbackThanks?: string;
 };
 
 const normalizeText = (value: unknown): string | undefined => {
   if (typeof value !== "string") return undefined;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
+};
+
+const normalizeTextList = (value: unknown, maxItems: number): string[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  return value.slice(0, maxItems).map((item) => (typeof item === "string" ? item.trim() : ""));
 };
 
 const parseAdminWorldConfigPayload = (value: unknown): AdminWorldConfigPayload | null => {
@@ -470,10 +536,71 @@ const parseAdminWorldConfigPayload = (value: unknown): AdminWorldConfigPayload |
     blockedKeywords: Array.isArray(raw.blockedKeywords)
       ? raw.blockedKeywords.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
       : undefined,
+    landingTopTag: normalizeText(raw.landingTopTag),
+    landingHeroPanelTitle: normalizeText(raw.landingHeroPanelTitle),
+    landingHeroPanelBody: normalizeText(raw.landingHeroPanelBody),
+    landingEyebrow: normalizeText(raw.landingEyebrow),
+    landingHeroTitleLine1: normalizeText(raw.landingHeroTitleLine1),
+    landingHeroTitleLine2: normalizeText(raw.landingHeroTitleLine2),
+    landingHeroDescription: normalizeText(raw.landingHeroDescription),
+    landingJourneyTitle: normalizeText(raw.landingJourneyTitle),
+    landingJourneyCaption: normalizeText(raw.landingJourneyCaption),
+    landingFeaturesTitle: normalizeText(raw.landingFeaturesTitle),
+    landingFeaturesCaption: normalizeText(raw.landingFeaturesCaption),
+    landingStartButton: normalizeText(raw.landingStartButton),
+    setupTitle: normalizeText(raw.setupTitle),
+    setupSubtitle: normalizeText(raw.setupSubtitle),
+    setupUserTypeLabel: normalizeText(raw.setupUserTypeLabel),
+    setupFamiliarityLabel: normalizeText(raw.setupFamiliarityLabel),
+    setupExplorationLabel: normalizeText(raw.setupExplorationLabel),
+    setupExpectationLabel: normalizeText(raw.setupExpectationLabel),
+    setupDurationLabel: normalizeText(raw.setupDurationLabel),
+    setupDurationHintShort: normalizeText(raw.setupDurationHintShort),
+    setupDurationHintLong: normalizeText(raw.setupDurationHintLong),
+    setupResearchNote: normalizeText(raw.setupResearchNote),
+    setupStartButton: normalizeText(raw.setupStartButton),
+    preparingTitle: normalizeText(raw.preparingTitle),
+    preparingBody: normalizeText(raw.preparingBody),
+    preparingStatusDone: normalizeText(raw.preparingStatusDone),
+    preparingStatusProgress: normalizeText(raw.preparingStatusProgress),
+    preparingStatusPending: normalizeText(raw.preparingStatusPending),
+    preparingSkipButton: normalizeText(raw.preparingSkipButton),
+    preparingFooter: normalizeText(raw.preparingFooter),
+    readyChapterLabel: normalizeText(raw.readyChapterLabel),
+    readyHeroLead: normalizeText(raw.readyHeroLead),
+    readySummaryTitle: normalizeText(raw.readySummaryTitle),
+    readySummaryText: normalizeText(raw.readySummaryText),
+    readyGeneratedStoryLabel: normalizeText(raw.readyGeneratedStoryLabel),
+    readyStartButton: normalizeText(raw.readyStartButton),
+    readyTransitionTitle: normalizeText(raw.readyTransitionTitle),
+    readyTransitionBody: normalizeText(raw.readyTransitionBody),
+    spotMapInfoLine1: normalizeText(raw.spotMapInfoLine1),
+    spotMapInfoLine2: normalizeText(raw.spotMapInfoLine2),
+    spotMapArrivedLabel: normalizeText(raw.spotMapArrivedLabel),
+    spotMapRestartLabel: normalizeText(raw.spotMapRestartLabel),
+    spotSpeakerBadge: normalizeText(raw.spotSpeakerBadge),
+    spotNextButton: normalizeText(raw.spotNextButton),
+    spotBackToMapButton: normalizeText(raw.spotBackToMapButton),
+    spotFinishButton: normalizeText(raw.spotFinishButton),
+    spotNarratives: normalizeTextList(raw.spotNarratives, 6),
     prologueBody: normalizeText(raw.prologueBody),
     prologueCta: normalizeText(raw.prologueCta),
     epilogueBody: normalizeText(raw.epilogueBody),
     epilogueCta: normalizeText(raw.epilogueCta),
+    feedbackHeroTitleLine1: normalizeText(raw.feedbackHeroTitleLine1),
+    feedbackHeroTitleLine2: normalizeText(raw.feedbackHeroTitleLine2),
+    feedbackHeroSubtitleLine1: normalizeText(raw.feedbackHeroSubtitleLine1),
+    feedbackHeroSubtitleLine2: normalizeText(raw.feedbackHeroSubtitleLine2),
+    feedbackQuestionOverall: normalizeText(raw.feedbackQuestionOverall),
+    feedbackQuestionGuidance: normalizeText(raw.feedbackQuestionGuidance),
+    feedbackQuestionCampus: normalizeText(raw.feedbackQuestionCampus),
+    feedbackQuestionVisitIntent: normalizeText(raw.feedbackQuestionVisitIntent),
+    feedbackQuestionExpectation: normalizeText(raw.feedbackQuestionExpectation),
+    feedbackQuestionReuse: normalizeText(raw.feedbackQuestionReuse),
+    feedbackQuestionComment: normalizeText(raw.feedbackQuestionComment),
+    feedbackCommentNote: normalizeText(raw.feedbackCommentNote),
+    feedbackSubmitButton: normalizeText(raw.feedbackSubmitButton),
+    feedbackThanks: normalizeText(raw.feedbackThanks),
   };
 };
 
@@ -744,10 +871,19 @@ export default function App() {
       ? persistedFlowDraft.selectedExperienceExpectation
       : "場所を覚えたい",
   );
-  const spots = useMemo(
-    () => buildExperienceSpots(selectedFamiliarity, selectedDuration),
-    [selectedDuration, selectedFamiliarity],
-  );
+  const [adminWorldConfig, setAdminWorldConfig] = useState<AdminWorldConfigPayload | null>(null);
+  const spots = useMemo(() => {
+    const baseSpots = buildExperienceSpots(selectedFamiliarity, selectedDuration);
+    const adminSpotNarratives = adminWorldConfig?.spotNarratives ?? [];
+    return baseSpots.map((spot, index) => {
+      const overrideNarrative = adminSpotNarratives[index];
+      if (!overrideNarrative) return spot;
+      return {
+        ...spot,
+        scenarioTexts: [overrideNarrative],
+      };
+    });
+  }, [adminWorldConfig, selectedDuration, selectedFamiliarity]);
   const [landingBottomBarHeight, setLandingBottomBarHeight] = useState(0);
   const [readyBottomBarHeight, setReadyBottomBarHeight] = useState(0);
   const [setupBottomBarHeight, setSetupBottomBarHeight] = useState(0);
@@ -772,7 +908,6 @@ export default function App() {
   const [feedbackComment, setFeedbackComment] = useState(
     typeof persistedFlowDraft?.feedbackComment === "string" ? persistedFlowDraft.feedbackComment : "",
   );
-  const [adminWorldConfig, setAdminWorldConfig] = useState<AdminWorldConfigPayload | null>(null);
   const [liveCurrentLocation, setLiveCurrentLocation] = useState<Coordinate | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [webMapError, setWebMapError] = useState<string | null>(null);
@@ -824,12 +959,12 @@ export default function App() {
   const spotScenarioChars = useMemo(() => Array.from(currentSpotScenarioText), [currentSpotScenarioText]);
   const hasNextScenarioInSpot = spotScenarioSegmentIndex < spotScenarioTexts.length - 1;
   const spotNextButtonLabel = !isSpotTypingDone
-    ? "次へ"
+    ? adminWorldConfig?.spotNextButton || "次へ"
     : hasNextScenarioInSpot
-      ? "次へ"
+      ? adminWorldConfig?.spotNextButton || "次へ"
       : safeCurrentSpotIndex >= spots.length - 1
-        ? "エピローグへ"
-        : "マップに戻る";
+        ? adminWorldConfig?.spotFinishButton || "エピローグへ"
+        : adminWorldConfig?.spotBackToMapButton || "マップに戻る";
   const goalSpot = spots[spots.length - 1];
   const fallbackOrigin = useMemo<Coordinate>(() => {
     if (safeCurrentSpotIndex === 0) return currentLocation;
@@ -926,14 +1061,89 @@ export default function App() {
       activeRouteDots,
     };
   }, [activeTargetIndex, routeOrigin]);
+  const effectiveLandingTopTag = adminWorldConfig?.landingTopTag || "伊都キャンパス探索ナビ";
+  const effectiveLandingHeroPanelTitle = adminWorldConfig?.landingHeroPanelTitle || "九大を、物語で知る。";
+  const effectiveLandingHeroPanelBody = adminWorldConfig?.landingHeroPanelBody || "その場で体感する、伊都キャンパス紹介体験";
+  const effectiveLandingEyebrow = adminWorldConfig?.landingEyebrow || "九州大学 伊都キャンパス ｜ 実証実験";
+  const effectiveLandingHeroTitleLine1 = adminWorldConfig?.landingHeroTitleLine1 || "はじめての伊都を、";
+  const effectiveLandingHeroTitleLine2 = adminWorldConfig?.landingHeroTitleLine2 || "物語で知る";
+  const effectiveLandingHeroDescription =
+    adminWorldConfig?.landingHeroDescription ||
+    "これは九大伊都キャンパスを舞台にした実証実験です。移動は不要 — その場にいながら、物語を通じて伊都キャンパスの各スポットを体験できます。";
+  const effectiveLandingJourneyTitle = adminWorldConfig?.landingJourneyTitle || "体験の流れ";
+  const effectiveLandingJourneyCaption = adminWorldConfig?.landingJourneyCaption || "移動なしで進める、3ステップの物語体験";
+  const effectiveLandingFeaturesTitle = adminWorldConfig?.landingFeaturesTitle || "この体験でできること";
+  const effectiveLandingFeaturesCaption = adminWorldConfig?.landingFeaturesCaption || "歩くだけで終わらない、九大の楽しみ方";
+  const effectiveLandingStartButton = adminWorldConfig?.landingStartButton || "冒険をはじめる";
+
+  const effectiveSetupTitle = adminWorldConfig?.setupTitle || "体験の準備をしましょう";
+  const effectiveSetupSubtitle =
+    adminWorldConfig?.setupSubtitle ||
+    "いくつか教えてください。あなたに合った流れで、伊都キャンパスの体験を始めます。";
+  const effectiveSetupUserTypeLabel = adminWorldConfig?.setupUserTypeLabel || "あなたについて教えてください";
+  const effectiveSetupFamiliarityLabel = adminWorldConfig?.setupFamiliarityLabel || "伊都キャンパスはどれくらい慣れていますか？";
+  const effectiveSetupExplorationLabel = adminWorldConfig?.setupExplorationLabel || "新しい場所に来たとき、どうしますか？";
+  const effectiveSetupExpectationLabel = adminWorldConfig?.setupExpectationLabel || "この体験に何を期待しますか？";
+  const effectiveSetupDurationLabel = adminWorldConfig?.setupDurationLabel || "どれくらいで回りたいですか？";
+  const effectiveSetupDurationHintShort = adminWorldConfig?.setupDurationHintShort || "短い時間";
+  const effectiveSetupDurationHintLong = adminWorldConfig?.setupDurationHintLong || "じっくり";
+  const effectiveSetupResearchNote = adminWorldConfig?.setupResearchNote || "※ 研究データとして活用します";
+  const effectiveSetupStartButton = adminWorldConfig?.setupStartButton || "体験をつくる";
+
+  const effectivePreparingTitle = adminWorldConfig?.preparingTitle || "あなたにあった\n体験を整えています";
+  const effectivePreparingBody =
+    adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。";
+  const effectivePreparingStatusDone = adminWorldConfig?.preparingStatusDone || "条件を整理しています";
+  const effectivePreparingStatusProgress = adminWorldConfig?.preparingStatusProgress || "体験の流れを整えています";
+  const effectivePreparingStatusPending = adminWorldConfig?.preparingStatusPending || "最初の場所を準備しています";
+  const effectivePreparingSkipButton = adminWorldConfig?.preparingSkipButton || "次へ";
+  const effectivePreparingFooter = adminWorldConfig?.preparingFooter || "まもなく始まります";
+
   const readyStoryLead = "伊都キャンパス探索ルート";
   const readyStoryTone = readyStoryToneMap[selectedFamiliarity];
-  const effectiveReadyStoryLead = adminWorldConfig?.title || readyStoryLead;
+  const effectiveReadyChapterLabel = adminWorldConfig?.readyChapterLabel || "CHAPTER 01";
+  const effectiveReadyStoryLead = adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLead;
+  const effectiveReadySummaryTitle = adminWorldConfig?.readySummaryTitle || "体験の準備が整いました";
+  const effectiveReadyGeneratedStoryLabel = adminWorldConfig?.readyGeneratedStoryLabel || "生成された物語名";
+  const effectiveReadyStartButton = adminWorldConfig?.readyStartButton || "物語を始める";
+  const effectiveReadyTransitionTitle = adminWorldConfig?.readyTransitionTitle || "プロローグへ移動中";
+  const effectiveReadyTransitionBody = adminWorldConfig?.readyTransitionBody || "物語の扉をひらいています";
+
   const effectivePrologueNarrationText =
     adminWorldConfig?.prologueBody || adminWorldConfig?.description || defaultPrologueNarrationText;
   const effectivePrologueCtaText = adminWorldConfig?.prologueCta || "最初の場所へ向かう";
   const effectiveEpilogueNarrationText = adminWorldConfig?.epilogueBody || defaultEpilogueNarrationText;
   const effectiveEpilogueCtaText = adminWorldConfig?.epilogueCta || "体験を振り返る";
+
+  const effectiveSpotMapInfoLine1 = adminWorldConfig?.spotMapInfoLine1 || "次の目的地に向かいましょう。";
+  const effectiveSpotMapInfoLine2 = adminWorldConfig?.spotMapInfoLine2 || "到着したら物語が始まります。";
+  const effectiveSpotMapArrivedLabel = adminWorldConfig?.spotMapArrivedLabel || "このスポットに到着した";
+  const effectiveSpotMapRestartLabel = adminWorldConfig?.spotMapRestartLabel || "最初のスポットから始める";
+  const effectiveSpotSpeakerBadge = adminWorldConfig?.spotSpeakerBadge || "案内役";
+
+  const effectiveFeedbackHeroTitleLine1 = adminWorldConfig?.feedbackHeroTitleLine1 || "体験を終えて";
+  const effectiveFeedbackHeroTitleLine2 = adminWorldConfig?.feedbackHeroTitleLine2 || "どう感じましたか？";
+  const effectiveFeedbackHeroSubtitleLine1 =
+    adminWorldConfig?.feedbackHeroSubtitleLine1 || "最後に、今回の体験について教えてください。";
+  const effectiveFeedbackHeroSubtitleLine2 = adminWorldConfig?.feedbackHeroSubtitleLine2 || "今後の改善に活かします。";
+  const effectiveFeedbackQuestionOverall =
+    adminWorldConfig?.feedbackQuestionOverall || "体験全体の満足度を教えてください";
+  const effectiveFeedbackQuestionGuidance =
+    adminWorldConfig?.feedbackQuestionGuidance || "体験の内容はわかりやすかったですか？";
+  const effectiveFeedbackQuestionCampus =
+    adminWorldConfig?.feedbackQuestionCampus || "物語を通じて、伊都キャンパスへの興味が高まりましたか？";
+  const effectiveFeedbackQuestionVisitIntent =
+    adminWorldConfig?.feedbackQuestionVisitIntent || "体験後、実際にこのスポットを訪れてみたいと思いますか？";
+  const effectiveFeedbackQuestionExpectation =
+    adminWorldConfig?.feedbackQuestionExpectation || "この体験は、始める前の期待通りでしたか？";
+  const effectiveFeedbackQuestionReuse =
+    adminWorldConfig?.feedbackQuestionReuse || "また体験したいと思いますか？";
+  const effectiveFeedbackQuestionComment = adminWorldConfig?.feedbackQuestionComment || "自由意見";
+  const effectiveFeedbackCommentNote =
+    adminWorldConfig?.feedbackCommentNote || "※ 印象に残ったこと・改善してほしいこと・その他なんでも";
+  const effectiveFeedbackSubmitButton = adminWorldConfig?.feedbackSubmitButton || "送信して終了する";
+  const effectiveFeedbackThanks = adminWorldConfig?.feedbackThanks || "Thank you for your voice";
+
   const prologueNarrationChars = useMemo(
     () => Array.from(effectivePrologueNarrationText),
     [effectivePrologueNarrationText],
@@ -956,6 +1166,7 @@ export default function App() {
     [selectedDuration, spots],
   );
   const readyStorySynopsis = useMemo(() => {
+    if (adminWorldConfig?.readySummaryText) return adminWorldConfig.readySummaryText;
     if (adminWorldConfig?.description) return adminWorldConfig.description;
 
     const familiarityView: Record<Familiarity, string> = {
@@ -965,7 +1176,7 @@ export default function App() {
       よく来ている: "慣れた導線を深く読み解きながら",
     };
     return `${familiarityView[selectedFamiliarity]}伊都キャンパスを巡る物語です。各スポットで短いシナリオを受け取りながら、場所の背景と日常の使い方を自然に理解できる構成になっています。`;
-  }, [adminWorldConfig?.description, selectedFamiliarity]);
+  }, [adminWorldConfig?.description, adminWorldConfig?.readySummaryText, selectedFamiliarity]);
   const readyFamiliarityChipLabel = useMemo(() => {
     const familiarityLabelMap: Record<Familiarity, string> = {
       はじめて来た: "はじめて",
@@ -1984,11 +2195,26 @@ export default function App() {
         payload: {
           screen,
           worldConfig: adminWorldConfig,
+          simulationInputs: {
+            userType: selectedUserType,
+            familiarity: selectedFamiliarity,
+            duration: selectedDuration,
+            explorationStyle: selectedExplorationStyle,
+            experienceExpectation: selectedExperienceExpectation,
+          },
         },
       },
       "*",
     );
-  }, [adminWorldConfig, screen]);
+  }, [
+    adminWorldConfig,
+    screen,
+    selectedUserType,
+    selectedFamiliarity,
+    selectedDuration,
+    selectedExplorationStyle,
+    selectedExperienceExpectation,
+  ]);
 
   useEffect(() => {
     if (Platform.OS !== "web") return;
@@ -2699,30 +2925,27 @@ export default function App() {
               minimumFontScale={0.78}
               style={[styles.preparingTitle, { fontSize: preparingTitleFontSize, lineHeight: preparingTitleLineHeight }]}
             >
-              {"あなたにあった\n体験を整えています"}
+              {effectivePreparingTitle}
             </Text>
-            <Text style={styles.preparingBody}>
-              伊都キャンパスの空気や流れに合わせて、{"\n"}
-              これから歩く物語を準備しています。
-            </Text>
+            <Text style={styles.preparingBody}>{effectivePreparingBody}</Text>
           </View>
 
           <View style={[styles.preparingStatusWrap, { width: Math.min(contentWidth, 300) }]}>
             <View style={styles.statusRow}>
               <Ionicons name="checkmark-circle" size={21} color={palette.tertiaryContainer} />
-              <Text style={styles.statusDoneText}>条件を整理しています</Text>
+              <Text style={styles.statusDoneText}>{effectivePreparingStatusDone}</Text>
             </View>
 
             <View style={styles.statusRow}>
               <View style={styles.statusInProgressCircle}>
                 <Animated.View style={[styles.statusInProgressCore, preparingStatusCoreAnimatedStyle]} />
               </View>
-              <Text style={styles.statusProgressText}>体験の流れを整えています</Text>
+              <Text style={styles.statusProgressText}>{effectivePreparingStatusProgress}</Text>
             </View>
 
             <View style={[styles.statusRow, styles.statusPendingRow]}>
               <View style={styles.statusPendingCircle} />
-              <Text style={styles.statusPendingText}>最初の場所を準備しています</Text>
+              <Text style={styles.statusPendingText}>{effectivePreparingStatusPending}</Text>
             </View>
 
             <View style={styles.progressTrack}>
@@ -2733,9 +2956,9 @@ export default function App() {
 
         <View style={styles.preparingFooter}>
           <Pressable style={({ pressed }) => [styles.preparingSkipButton, pressed && styles.pressed]} onPress={() => setScreen("ready")}>
-            <Text style={styles.preparingSkipButtonText}>次へ</Text>
+            <Text style={styles.preparingSkipButtonText}>{effectivePreparingSkipButton}</Text>
           </Pressable>
-          <Text style={styles.preparingFooterText}>まもなく始まります</Text>
+          <Text style={styles.preparingFooterText}>{effectivePreparingFooter}</Text>
         </View>
       </SafeAreaView>
     );
@@ -2770,7 +2993,7 @@ export default function App() {
             <Image source={{ uri: readyImage }} style={styles.readyHeroImage} resizeMode="cover" />
             <View style={styles.readyHeroUniformShade} />
             <View style={styles.readyHeroTextWrap}>
-              <Text style={styles.readyChapterLabel}>CHAPTER 01</Text>
+              <Text style={styles.readyChapterLabel}>{effectiveReadyChapterLabel}</Text>
               <Text style={[styles.readyHeroLead, { fontSize: readyHeroTitleFontSize, lineHeight: readyHeroTitleLineHeight }]}>
                 {effectiveReadyStoryLead}
               </Text>
@@ -2783,11 +3006,11 @@ export default function App() {
           <Animated.View style={[styles.readySummarySection, { width: readySectionWidth }, readyCardsAnimatedStyle]}>
             <View style={styles.readySummaryTitleRow}>
               <View style={styles.readySummaryAccent} />
-              <Text style={styles.readySummaryTitle}>体験の準備が整いました</Text>
+              <Text style={styles.readySummaryTitle}>{effectiveReadySummaryTitle}</Text>
             </View>
             <Text style={styles.readySummaryText}>{readyStorySynopsis}</Text>
             <View style={styles.readyGeneratedStoryCard}>
-              <Text style={styles.readyGeneratedStoryLabel}>生成された物語名</Text>
+              <Text style={styles.readyGeneratedStoryLabel}>{effectiveReadyGeneratedStoryLabel}</Text>
               <Text style={styles.readyGeneratedStoryText}>
                 {effectiveReadyStoryLead}
                 {" "}
@@ -2865,7 +3088,7 @@ export default function App() {
             disabled={isReadyTransitioning}
           >
             <Text style={styles.readyMainCtaText}>
-              {isReadyTransitioning ? "物語を開いています" : "物語を始める"}
+              {isReadyTransitioning ? "物語を開いています" : effectiveReadyStartButton}
             </Text>
             <Ionicons name="arrow-forward" size={22} color={palette.onDarkButton} />
           </Pressable>
@@ -2878,8 +3101,8 @@ export default function App() {
               <View style={styles.readyTransitionIconWrap}>
                 <Ionicons name="sparkles" size={26} color={palette.tertiaryContainer} />
               </View>
-              <Text style={styles.readyTransitionTitle}>プロローグへ移動中</Text>
-              <Text style={styles.readyTransitionBody}>物語の扉をひらいています</Text>
+              <Text style={styles.readyTransitionTitle}>{effectiveReadyTransitionTitle}</Text>
+              <Text style={styles.readyTransitionBody}>{effectiveReadyTransitionBody}</Text>
               <View style={styles.readyTransitionTrack}>
                 <Animated.View style={[styles.readyTransitionFill, readyTransitionProgressAnimatedStyle]} />
               </View>
@@ -2976,8 +3199,8 @@ export default function App() {
               <View style={styles.readyTransitionIconWrap}>
                 <Ionicons name="sparkles" size={26} color={palette.tertiaryContainer} />
               </View>
-              <Text style={styles.readyTransitionTitle}>プロローグへ移動中</Text>
-              <Text style={styles.readyTransitionBody}>物語の扉をひらいています</Text>
+              <Text style={styles.readyTransitionTitle}>{effectiveReadyTransitionTitle}</Text>
+              <Text style={styles.readyTransitionBody}>{effectiveReadyTransitionBody}</Text>
               <View style={styles.readyTransitionTrack}>
                 <Animated.View style={[styles.readyTransitionFill, readyTransitionProgressAnimatedStyle]} />
               </View>
@@ -3218,10 +3441,7 @@ export default function App() {
 
                 <View style={styles.mapCardInfoRow}>
                   <Ionicons name="information-circle" size={22} color={palette.tertiaryContainer} />
-                  <Text style={styles.mapCardInfoText}>
-                    次の目的地に向かいましょう。{"\n"}
-                    到着したら物語が始まります。
-                  </Text>
+                  <Text style={styles.mapCardInfoText}>{`${effectiveSpotMapInfoLine1}\n${effectiveSpotMapInfoLine2}`}</Text>
                 </View>
               </View>
 
@@ -3237,7 +3457,7 @@ export default function App() {
                 >
                   <Ionicons name="book-outline" size={18} color={palette.onBackground} />
                   <Text style={styles.mapCardEnabledCtaText}>
-                    {isExperienceCompleted ? "最初のスポットから始める" : "このスポットに到着した"}
+                    {isExperienceCompleted ? effectiveSpotMapRestartLabel : effectiveSpotMapArrivedLabel}
                   </Text>
                 </Pressable>
               </View>
@@ -3287,7 +3507,7 @@ export default function App() {
 
             <View style={styles.spotBottomSheet}>
               <View style={styles.spotSpeakerBadge}>
-                <Text style={styles.spotSpeakerBadgeText}>案内役</Text>
+                <Text style={styles.spotSpeakerBadgeText}>{effectiveSpotSpeakerBadge}</Text>
               </View>
 
               <Pressable style={styles.spotScenarioPressArea} onPress={handleSpotScenarioTextPress}>
@@ -3424,19 +3644,18 @@ export default function App() {
                 ]}
                 numberOfLines={2}
               >
-                体験を終えて{"\n"}どう感じましたか？
+                {effectiveFeedbackHeroTitleLine1}
+                {"\n"}
+                {effectiveFeedbackHeroTitleLine2}
               </Text>
-              <Text style={styles.feedbackHeroSubtitle}>
-                最後に、今回の体験について教えてください。{"\n"}
-                今後の改善に活かします。
-              </Text>
+              <Text style={styles.feedbackHeroSubtitle}>{`${effectiveFeedbackHeroSubtitleLine1}\n${effectiveFeedbackHeroSubtitleLine2}`}</Text>
             </View>
 
             <View style={styles.feedbackSectionStack}>
 
               {/* Q1: 全体満足度 */}
               <View style={styles.feedbackCard}>
-                <Text style={styles.feedbackLabel}>体験全体の満足度を教えてください</Text>
+                <Text style={styles.feedbackLabel}>{effectiveFeedbackQuestionOverall}</Text>
                 <View style={styles.feedbackStarRow}>
                   {fiveScale.map((value) => {
                     const selected = feedbackOverallRating !== null && value <= feedbackOverallRating;
@@ -3460,7 +3679,7 @@ export default function App() {
               {/* Q2・Q3: ユーザビリティ・場所への関心 */}
               <View style={styles.feedbackCard}>
                 <View style={styles.feedbackScaleGroup}>
-                  <Text style={styles.feedbackLabel}>体験の内容はわかりやすかったですか？</Text>
+                  <Text style={styles.feedbackLabel}>{effectiveFeedbackQuestionGuidance}</Text>
                   <View style={styles.feedbackScaleRow}>
                     {fiveScale.map((value) => {
                       const selected = value === feedbackGuidanceScore;
@@ -3488,7 +3707,7 @@ export default function App() {
                 </View>
 
                 <View style={styles.feedbackScaleGroup}>
-                  <Text style={styles.feedbackLabel}>物語を通じて、伊都キャンパスへの興味が高まりましたか？</Text>
+                  <Text style={styles.feedbackLabel}>{effectiveFeedbackQuestionCampus}</Text>
                   <View style={styles.feedbackScaleRow}>
                     {fiveScale.map((value) => {
                       const selected = value === feedbackCampusScore;
@@ -3519,7 +3738,7 @@ export default function App() {
               {/* Q4・Q5: 行動意図・期待確認 */}
               <View style={styles.feedbackCard}>
                 <View style={styles.feedbackScaleGroup}>
-                  <Text style={styles.feedbackLabel}>体験後、実際にこのスポットを訪れてみたいと思いますか？</Text>
+                  <Text style={styles.feedbackLabel}>{effectiveFeedbackQuestionVisitIntent}</Text>
                   <View style={styles.feedbackScaleRow}>
                     {fiveScale.map((value) => {
                       const selected = value === feedbackVisitIntentScore;
@@ -3547,7 +3766,7 @@ export default function App() {
                 </View>
 
                 <View style={styles.feedbackScaleGroup}>
-                  <Text style={styles.feedbackLabel}>この体験は、始める前の期待通りでしたか？</Text>
+                  <Text style={styles.feedbackLabel}>{effectiveFeedbackQuestionExpectation}</Text>
                   <View style={styles.feedbackScaleRow}>
                     {fiveScale.map((value) => {
                       const selected = value === feedbackExpectationScore;
@@ -3577,7 +3796,7 @@ export default function App() {
 
               {/* Q6: 継続利用意向 */}
               <View style={styles.feedbackCard}>
-                <Text style={styles.feedbackLabel}>また体験したいと思いますか？</Text>
+                <Text style={styles.feedbackLabel}>{effectiveFeedbackQuestionReuse}</Text>
                 <View style={styles.feedbackIntentRow}>
                   <Pressable
                     onPress={() => setFeedbackReuseIntent("again")}
@@ -3625,8 +3844,8 @@ export default function App() {
 
               {/* Q7: 自由意見 */}
               <View style={styles.feedbackCard}>
-                <Text style={styles.feedbackLabel}>自由意見</Text>
-                <Text style={styles.setupResearchNote}>※ 印象に残ったこと・改善してほしいこと・その他なんでも</Text>
+                <Text style={styles.feedbackLabel}>{effectiveFeedbackQuestionComment}</Text>
+                <Text style={styles.setupResearchNote}>{effectiveFeedbackCommentNote}</Text>
                 <TextInput
                   multiline
                   numberOfLines={4}
@@ -3654,10 +3873,10 @@ export default function App() {
                 {isSubmittingFeedback ? (
                   <ActivityIndicator size="small" color={palette.onDarkButton} />
                 ) : (
-                  <Text style={styles.feedbackSubmitText}>送信して終了する</Text>
+                  <Text style={styles.feedbackSubmitText}>{effectiveFeedbackSubmitButton}</Text>
                 )}
               </Pressable>
-              <Text style={styles.feedbackThanks}>Thank you for your voice</Text>
+              <Text style={styles.feedbackThanks}>{effectiveFeedbackThanks}</Text>
             </View>
           </View>
 
@@ -3708,16 +3927,14 @@ export default function App() {
               minimumFontScale={0.64}
               style={[styles.setupTitle, { fontSize: setupTitleFontSize, lineHeight: setupTitleLineHeight }]}
             >
-              体験の準備をしましょう
+              {effectiveSetupTitle}
             </Text>
-            <Text style={styles.setupSubtitle}>
-              いくつか教えてください。あなたに合った流れで、伊都キャンパスの体験を始めます。
-            </Text>
+            <Text style={styles.setupSubtitle}>{effectiveSetupSubtitle}</Text>
           </Animated.View>
 
           <Animated.View style={[styles.setupFormSection, { width: contentWidth }, setupCardsAnimatedStyle]}>
             <View style={styles.setupBlock}>
-              <Text style={styles.setupLabel}>あなたについて教えてください</Text>
+              <Text style={styles.setupLabel}>{effectiveSetupUserTypeLabel}</Text>
               <View style={styles.userTypeSelectWrap}>
                 <Pressable
                   onPress={() => setIsUserTypeMenuOpen((prev) => !prev)}
@@ -3761,7 +3978,7 @@ export default function App() {
             </View>
 
             <View style={styles.setupBlock}>
-              <Text style={styles.setupLabel}>伊都キャンパスはどれくらい慣れていますか？</Text>
+              <Text style={styles.setupLabel}>{effectiveSetupFamiliarityLabel}</Text>
               <View style={styles.stackButtons}>
                 {familiarityOptions.map((option) => {
                   const selected = selectedFamiliarity === option;
@@ -3789,8 +4006,8 @@ export default function App() {
             </View>
 
             <View style={styles.setupBlock}>
-              <Text style={styles.setupLabel}>新しい場所に来たとき、どうしますか？</Text>
-              <Text style={styles.setupResearchNote}>※ 研究データとして活用します</Text>
+              <Text style={styles.setupLabel}>{effectiveSetupExplorationLabel}</Text>
+              <Text style={styles.setupResearchNote}>{effectiveSetupResearchNote}</Text>
               <View style={styles.stackButtons}>
                 {explorationStyleOptions.map((option) => {
                   const selected = selectedExplorationStyle === option;
@@ -3818,8 +4035,8 @@ export default function App() {
             </View>
 
             <View style={styles.setupBlock}>
-              <Text style={styles.setupLabel}>この体験に何を期待しますか？</Text>
-              <Text style={styles.setupResearchNote}>※ 研究データとして活用します</Text>
+              <Text style={styles.setupLabel}>{effectiveSetupExpectationLabel}</Text>
+              <Text style={styles.setupResearchNote}>{effectiveSetupResearchNote}</Text>
               <View style={styles.stackButtons}>
                 {experienceExpectationOptions.map((option) => {
                   const selected = selectedExperienceExpectation === option;
@@ -3847,10 +4064,10 @@ export default function App() {
             </View>
 
             <View style={styles.setupBlock}>
-              <Text style={styles.setupLabel}>どれくらいで回りたいですか？</Text>
+              <Text style={styles.setupLabel}>{effectiveSetupDurationLabel}</Text>
               <View style={styles.durationScaleTextRow}>
-                <Text style={styles.durationHint}>短い時間</Text>
-                <Text style={styles.durationHint}>じっくり</Text>
+                <Text style={styles.durationHint}>{effectiveSetupDurationHintShort}</Text>
+                <Text style={styles.durationHint}>{effectiveSetupDurationHintLong}</Text>
               </View>
               <View style={styles.durationRow}>
                 {durationOptions.map((option) => {
@@ -3892,7 +4109,7 @@ export default function App() {
             ]}
             onPress={handleSetupCreateExperiencePress}
           >
-            <Text style={styles.startButtonText}>体験をつくる</Text>
+            <Text style={styles.startButtonText}>{effectiveSetupStartButton}</Text>
             <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
           </Pressable>
         </View>
@@ -4012,16 +4229,16 @@ export default function App() {
             <View style={styles.heroOverlay} />
             <View style={styles.heroTopTag}>
               <Ionicons name="walk-outline" size={15} color="#fdfdfd" />
-              <Text style={styles.heroTopTagText}>伊都キャンパス探索ナビ</Text>
+              <Text style={styles.heroTopTagText}>{effectiveLandingTopTag}</Text>
             </View>
             <View style={styles.heroBottomPanel}>
-              <Text style={styles.heroBottomTitle}>九大を、物語で知る。</Text>
-              <Text style={styles.heroBottomBody}>その場で体感する、伊都キャンパス紹介体験</Text>
+              <Text style={styles.heroBottomTitle}>{effectiveLandingHeroPanelTitle}</Text>
+              <Text style={styles.heroBottomBody}>{effectiveLandingHeroPanelBody}</Text>
             </View>
           </View>
 
           <View style={styles.heroContent}>
-            <Text style={styles.heroEyebrow}>九州大学 伊都キャンパス ｜ 実証実験</Text>
+            <Text style={styles.heroEyebrow}>{effectiveLandingEyebrow}</Text>
             <View style={styles.heroTitleBlock}>
               <Text
                 numberOfLines={1}
@@ -4032,7 +4249,7 @@ export default function App() {
                   { fontSize: landingHeroTitleFontSize, lineHeight: landingHeroTitleLineHeight },
                 ]}
               >
-                はじめての伊都を、
+                {effectiveLandingHeroTitleLine1}
               </Text>
               <Text
                 numberOfLines={1}
@@ -4043,12 +4260,10 @@ export default function App() {
                   { fontSize: landingHeroTitleFontSize, lineHeight: landingHeroTitleLineHeight },
                 ]}
               >
-                物語で知る
+                {effectiveLandingHeroTitleLine2}
               </Text>
             </View>
-            <Text style={styles.heroBody}>
-              これは九大伊都キャンパスを舞台にした実証実験です。移動は不要 — その場にいながら、物語を通じて伊都キャンパスの各スポットを体験できます。
-            </Text>
+            <Text style={styles.heroBody}>{effectiveLandingHeroDescription}</Text>
           </View>
 
           <View style={styles.startArea}>
@@ -4057,8 +4272,8 @@ export default function App() {
 
         <Animated.View style={[styles.landingJourneySection, { width: contentWidth }, landingCardsAnimatedStyle]}>
           <View style={styles.landingSectionHeader}>
-            <Text style={styles.landingSectionTitle}>体験の流れ</Text>
-            <Text style={styles.landingSectionCaption}>移動なしで進める、3ステップの物語体験</Text>
+            <Text style={styles.landingSectionTitle}>{effectiveLandingJourneyTitle}</Text>
+            <Text style={styles.landingSectionCaption}>{effectiveLandingJourneyCaption}</Text>
           </View>
 
           <View style={styles.journeyStack}>
@@ -4079,8 +4294,8 @@ export default function App() {
 
         <Animated.View style={[styles.features, { width: contentWidth }, landingCardsAnimatedStyle]}>
           <View style={styles.landingSectionHeader}>
-            <Text style={styles.landingSectionTitle}>この体験でできること</Text>
-            <Text style={styles.landingSectionCaption}>歩くだけで終わらない、九大の楽しみ方</Text>
+            <Text style={styles.landingSectionTitle}>{effectiveLandingFeaturesTitle}</Text>
+            <Text style={styles.landingSectionCaption}>{effectiveLandingFeaturesCaption}</Text>
           </View>
 
           <View style={styles.featureStack}>
@@ -4127,7 +4342,7 @@ export default function App() {
           style={({ pressed }) => [styles.startButton, { width: contentWidth }, pressed && styles.pressed]}
           onPress={() => setScreen("setup")}
         >
-          <Text style={styles.startButtonText}>冒険をはじめる</Text>
+          <Text style={styles.startButtonText}>{effectiveLandingStartButton}</Text>
           <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
         </Pressable>
       </View>
