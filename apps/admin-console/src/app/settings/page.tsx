@@ -122,6 +122,9 @@ type AIPromptDraft = {
   additionalContext: string;
   outputLanguage: string;
   outputStyle: string;
+  step4OutlinePrompt: string;
+  step5NarrativePrompt: string;
+  step7RepairPrompt: string;
   outputTargets: AIOutputTarget[];
 };
 
@@ -141,6 +144,40 @@ type SimulatedStoryPayload = {
   spotNarratives?: string[];
   epilogueBody?: string;
 };
+
+type ProgramFlowDraft = {
+  step1: {
+    normalizeUserType: string;
+    normalizeFamiliarity: string;
+    normalizeDuration: string;
+  };
+  step2: {
+    spotCountLogic: string;
+    difficultyLogic: string;
+  };
+  step3: {
+    spotSelectionLogic: string;
+    routeOrderingLogic: string;
+  };
+  step6: {
+    jsonValidationLogic: string;
+    textValidationLogic: string;
+  };
+  step8: {
+    finalizeFormat: string;
+    persistAndDispatch: string;
+  };
+};
+
+type QuestGenerationStepId =
+  | "step1"
+  | "step2"
+  | "step3"
+  | "step4"
+  | "step5"
+  | "step6"
+  | "step7"
+  | "step8";
 
 type GenerationFlowStepKey =
   | "setup"
@@ -210,6 +247,22 @@ const AI_OUTPUT_TARGET_ITEMS: Array<{
   { key: "prologue", label: "プロローグ", description: "導入本文" },
   { key: "spot", label: "スポット文", description: "各スポット本文（最大6）" },
   { key: "epilogue", label: "エピローグ", description: "締め本文" },
+];
+
+const QUEST_GENERATION_STEPS: Array<{
+  id: QuestGenerationStepId;
+  label: string;
+  description: string;
+  kind: "program" | "ai";
+}> = [
+  { id: "step1", label: "1. 入力正規化", description: "入力値を内部形式へ変換", kind: "program" },
+  { id: "step2", label: "2. 体験設計", description: "スポット数と難易度を決定", kind: "program" },
+  { id: "step3", label: "3. ルート確定", description: "候補選定と巡回順を決定", kind: "program" },
+  { id: "step4", label: "4. 骨子生成", description: "物語骨子をAIで生成", kind: "ai" },
+  { id: "step5", label: "5. 本文生成", description: "各セクション本文をAIで生成", kind: "ai" },
+  { id: "step6", label: "6. 検証", description: "スキーマ/文言ルールを検証", kind: "program" },
+  { id: "step7", label: "7. 部分再生成", description: "NG箇所のみAIでリペア", kind: "ai" },
+  { id: "step8", label: "8. 最終確定", description: "最終JSONを確定し保存", kind: "program" },
 ];
 
 const INITIAL_TEXT_DRAFT: TextDraft = {
@@ -316,7 +369,37 @@ const INITIAL_AI_PROMPT_DRAFT: AIPromptDraft = {
   additionalContext: "九州大学 伊都キャンパス。研究目的のPoCとして利用。",
   outputLanguage: "日本語",
   outputStyle: "です・ます調、簡潔、1文を短めに保つ。",
+  step4OutlinePrompt:
+    "以下の条件で体験の骨子を作成してください。ユーザー={userType} / 習熟度={familiarity} / 時間={duration} / 期待={experienceExpectation}。出力は ready, prologue, spot構成のみ。",
+  step5NarrativePrompt:
+    "骨子に基づき ready, prologue, spot, epilogue の本文を作成してください。トーン={tone}。必須要素={requiredElements}。文体={outputStyle}。",
+  step7RepairPrompt:
+    "検証で失敗した項目のみ修正してください。禁止要素={forbiddenElements}。固定文言ポリシー={fixedTextPolicy}。他セクションは変更しない。",
   outputTargets: ["ready", "prologue", "spot", "epilogue"],
+};
+
+const INITIAL_PROGRAM_FLOW_DRAFT: ProgramFlowDraft = {
+  step1: {
+    normalizeUserType: "新入生/在学生/保護者/研究来訪者を内部カテゴリに正規化する。",
+    normalizeFamiliarity: "習熟度を4段階に正規化し、既定値は「まだあまり慣れていない」。",
+    normalizeDuration: "15-20 / 20-30 / 30-45 の3区分へ丸める。",
+  },
+  step2: {
+    spotCountLogic: "15-20分=4件, 20-30分=5件, 30-45分=6件。",
+    difficultyLogic: "不慣れなユーザーほど導線が明確なスポットを優先。",
+  },
+  step3: {
+    spotSelectionLogic: "必須スポットを先に確保し、残りをスコア順で採用。",
+    routeOrderingLogic: "移動負荷が低い順で並べ、最後に終点スポットを固定。",
+  },
+  step6: {
+    jsonValidationLogic: "出力JSONの必須キーと配列件数（spot最大6）を検証。",
+    textValidationLogic: "禁止語・文字数・重複率を検証し、失敗時はstep7へ。",
+  },
+  step8: {
+    finalizeFormat: "ready/prologue/spot/epilogue を1つのクエストJSONに統合。",
+    persistAndDispatch: "保存後に配信用イベントを発火し、プレビューへ反映。",
+  },
 };
 
 const DEFAULT_PREVIEW_SIMULATION_INPUTS: PreviewSimulationInputs = {
@@ -381,6 +464,7 @@ function buildSimulatedStoryPayload(
   aiPromptDraft: AIPromptDraft,
   previewInputs: PreviewSimulationInputs,
   fallbackSpotNarratives: string[],
+  programFlowDraft: ProgramFlowDraft,
 ): SimulatedStoryPayload {
   const userType = previewInputs.userType.trim() || DEFAULT_PREVIEW_SIMULATION_INPUTS.userType;
   const familiarity = previewInputs.familiarity.trim() || DEFAULT_PREVIEW_SIMULATION_INPUTS.familiarity;
@@ -414,7 +498,7 @@ function buildSimulatedStoryPayload(
 
   const readyHeroLead = `${duration} / ${familiarity}向けクエスト`;
   const readySummaryTitle = `${userType}向けシミュレーションを生成しました`;
-  const readySummaryText = `${familiarity}の来訪者向けに、${objective}を満たす導線を組み立てました。${requiredElements}を守りつつ、${tone}で案内します。`;
+  const readySummaryText = `${familiarity}の来訪者向けに、${objective}を満たす導線を組み立てました。${requiredElements}を守りつつ、${tone}で案内します。設計ルール: ${programFlowDraft.step2.spotCountLogic}`;
   const prologueBody = `${additionalContext}でのシミュレーションを開始します。\n探索スタイルは「${explorationStyle}」。\n期待「${experienceExpectation}」を満たすよう最初のスポットへ進みましょう。`;
   const epilogueBody = `クエスト完了です。今回の目的は「${experienceExpectation}」でした。\n達成度を確認し、必要に応じてセットアップ条件を変更して再試行してください。`;
 
@@ -454,13 +538,42 @@ function findFlowStepIndex(screen: PreviewScreen | null): number {
   return GENERATION_FLOW_STEPS.findIndex((step) => step.screens.includes(screen));
 }
 
+function renderPromptTemplate(
+  template: string,
+  previewInputs: PreviewSimulationInputs,
+  aiPromptDraft: AIPromptDraft,
+): string {
+  const replacements: Record<string, string> = {
+    userType: previewInputs.userType,
+    familiarity: previewInputs.familiarity,
+    duration: previewInputs.duration,
+    explorationStyle: previewInputs.explorationStyle,
+    experienceExpectation: previewInputs.experienceExpectation,
+    objective: aiPromptDraft.objective,
+    audience: aiPromptDraft.audience,
+    tone: aiPromptDraft.tone,
+    requiredElements: aiPromptDraft.requiredElements,
+    forbiddenElements: aiPromptDraft.forbiddenElements,
+    fixedTextPolicy: aiPromptDraft.fixedTextPolicy,
+    outputStyle: aiPromptDraft.outputStyle,
+  };
+
+  return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
+    const value = replacements[key];
+    if (typeof value !== "string") return match;
+    return value;
+  });
+}
+
 function readPersistedSettings(): {
   activeWorkspaceMode: WorkspaceMode;
   aiWorkspacePaneMode: AIWorkspacePaneMode;
+  activeQuestGenerationStep: QuestGenerationStepId;
   activeEditorTab: EditorTab;
   deviceMode: DeviceMode;
   textDraft: TextDraft;
   aiPromptDraft: AIPromptDraft;
+  programFlowDraft: ProgramFlowDraft;
 } | null {
   if (typeof window === "undefined") return null;
 
@@ -480,6 +593,11 @@ function readPersistedSettings(): {
       parsed.activeWorkspaceMode === "ai" ? "ai" : "cms";
     const aiWorkspacePaneMode: AIWorkspacePaneMode =
       parsed.aiWorkspacePaneMode === "simulation" ? "simulation" : "prompt";
+    const activeQuestGenerationStep: QuestGenerationStepId =
+      typeof parsed.activeQuestGenerationStep === "string" &&
+      QUEST_GENERATION_STEPS.some((step) => step.id === parsed.activeQuestGenerationStep)
+        ? (parsed.activeQuestGenerationStep as QuestGenerationStepId)
+        : "step1";
     const deviceMode: DeviceMode =
       parsed.deviceMode === "mobile" || parsed.deviceMode === "tablet"
         ? parsed.deviceMode
@@ -489,10 +607,12 @@ function readPersistedSettings(): {
       return {
         activeWorkspaceMode,
         aiWorkspacePaneMode,
+        activeQuestGenerationStep,
         activeEditorTab,
         deviceMode,
         textDraft: INITIAL_TEXT_DRAFT,
         aiPromptDraft: INITIAL_AI_PROMPT_DRAFT,
+        programFlowDraft: INITIAL_PROGRAM_FLOW_DRAFT,
       };
     }
 
@@ -533,13 +653,82 @@ function readPersistedSettings(): {
         })()
       : INITIAL_AI_PROMPT_DRAFT;
 
+    const programFlowDraft: ProgramFlowDraft = isRecord(parsed.programFlowDraft)
+      ? (() => {
+          const persistedProgramFlow = parsed.programFlowDraft;
+          const persistedStep1 = isRecord(persistedProgramFlow.step1) ? persistedProgramFlow.step1 : {};
+          const persistedStep2 = isRecord(persistedProgramFlow.step2) ? persistedProgramFlow.step2 : {};
+          const persistedStep3 = isRecord(persistedProgramFlow.step3) ? persistedProgramFlow.step3 : {};
+          const persistedStep6 = isRecord(persistedProgramFlow.step6) ? persistedProgramFlow.step6 : {};
+          const persistedStep8 = isRecord(persistedProgramFlow.step8) ? persistedProgramFlow.step8 : {};
+          return {
+            step1: {
+              normalizeUserType:
+                typeof persistedStep1.normalizeUserType === "string"
+                  ? persistedStep1.normalizeUserType
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step1.normalizeUserType,
+              normalizeFamiliarity:
+                typeof persistedStep1.normalizeFamiliarity === "string"
+                  ? persistedStep1.normalizeFamiliarity
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step1.normalizeFamiliarity,
+              normalizeDuration:
+                typeof persistedStep1.normalizeDuration === "string"
+                  ? persistedStep1.normalizeDuration
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step1.normalizeDuration,
+            },
+            step2: {
+              spotCountLogic:
+                typeof persistedStep2.spotCountLogic === "string"
+                  ? persistedStep2.spotCountLogic
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step2.spotCountLogic,
+              difficultyLogic:
+                typeof persistedStep2.difficultyLogic === "string"
+                  ? persistedStep2.difficultyLogic
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step2.difficultyLogic,
+            },
+            step3: {
+              spotSelectionLogic:
+                typeof persistedStep3.spotSelectionLogic === "string"
+                  ? persistedStep3.spotSelectionLogic
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step3.spotSelectionLogic,
+              routeOrderingLogic:
+                typeof persistedStep3.routeOrderingLogic === "string"
+                  ? persistedStep3.routeOrderingLogic
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step3.routeOrderingLogic,
+            },
+            step6: {
+              jsonValidationLogic:
+                typeof persistedStep6.jsonValidationLogic === "string"
+                  ? persistedStep6.jsonValidationLogic
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.jsonValidationLogic,
+              textValidationLogic:
+                typeof persistedStep6.textValidationLogic === "string"
+                  ? persistedStep6.textValidationLogic
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.textValidationLogic,
+            },
+            step8: {
+              finalizeFormat:
+                typeof persistedStep8.finalizeFormat === "string"
+                  ? persistedStep8.finalizeFormat
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step8.finalizeFormat,
+              persistAndDispatch:
+                typeof persistedStep8.persistAndDispatch === "string"
+                  ? persistedStep8.persistAndDispatch
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step8.persistAndDispatch,
+            },
+          };
+        })()
+      : INITIAL_PROGRAM_FLOW_DRAFT;
+
     return {
       activeWorkspaceMode,
       aiWorkspacePaneMode,
+      activeQuestGenerationStep,
       activeEditorTab,
       deviceMode,
       textDraft,
       aiPromptDraft,
+      programFlowDraft,
     };
   } catch {
     return null;
@@ -606,17 +795,22 @@ export default function SettingsPage() {
   const [aiWorkspacePaneMode, setAiWorkspacePaneMode] = useState<AIWorkspacePaneMode>(
     persistedSettings?.aiWorkspacePaneMode ?? "prompt",
   );
+  const [activeQuestGenerationStep, setActiveQuestGenerationStep] = useState<QuestGenerationStepId>(
+    persistedSettings?.activeQuestGenerationStep ?? "step1",
+  );
   const [activeEditorTab, setActiveEditorTab] = useState<EditorTab>(persistedSettings?.activeEditorTab ?? "landing");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>(persistedSettings?.deviceMode ?? "mobile");
   const [textDraft, setTextDraft] = useState<TextDraft>(persistedSettings?.textDraft ?? INITIAL_TEXT_DRAFT);
   const [aiPromptDraft, setAiPromptDraft] = useState<AIPromptDraft>(
     persistedSettings?.aiPromptDraft ?? INITIAL_AI_PROMPT_DRAFT,
   );
+  const [programFlowDraft, setProgramFlowDraft] = useState<ProgramFlowDraft>(
+    persistedSettings?.programFlowDraft ?? INITIAL_PROGRAM_FLOW_DRAFT,
+  );
   const [committedPromptSnapshot, setCommittedPromptSnapshot] = useState<string>("");
   const [previewSimulationInputs, setPreviewSimulationInputs] = useState<PreviewSimulationInputs>(
     DEFAULT_PREVIEW_SIMULATION_INPUTS,
   );
-  const [aiPromptCopied, setAiPromptCopied] = useState(false);
 
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen | null>(null);
   const [previewScale, setPreviewScale] = useState(1);
@@ -698,13 +892,27 @@ export default function SettingsPage() {
   );
 
   const simulatedStoryPayload = useMemo(
-    () => buildSimulatedStoryPayload(aiPromptDraft, previewSimulationInputs, textDraft.spot.narratives),
-    [aiPromptDraft, previewSimulationInputs, textDraft.spot.narratives],
+    () =>
+      buildSimulatedStoryPayload(
+        aiPromptDraft,
+        previewSimulationInputs,
+        textDraft.spot.narratives,
+        programFlowDraft,
+      ),
+    [aiPromptDraft, previewSimulationInputs, textDraft.spot.narratives, programFlowDraft],
   );
 
   const aiSimulationWorldConfigPayload = useMemo(() => {
     return {
       ...worldConfigPayload,
+      questGenerationConfig: {
+        program: programFlowDraft,
+        aiPrompts: {
+          step4: aiPromptDraft.step4OutlinePrompt,
+          step5: aiPromptDraft.step5NarrativePrompt,
+          step7: aiPromptDraft.step7RepairPrompt,
+        },
+      },
       ...(simulatedStoryPayload.readyHeroLead
         ? { readyHeroLead: simulatedStoryPayload.readyHeroLead }
         : {}),
@@ -724,7 +932,7 @@ export default function SettingsPage() {
         ? { epilogueBody: simulatedStoryPayload.epilogueBody }
         : {}),
     };
-  }, [worldConfigPayload, simulatedStoryPayload]);
+  }, [worldConfigPayload, programFlowDraft, aiPromptDraft, simulatedStoryPayload]);
 
   const effectivePreviewPayload =
     activeWorkspaceMode === "ai" && aiWorkspacePaneMode === "simulation"
@@ -756,10 +964,12 @@ export default function SettingsPage() {
         JSON.stringify({
           activeWorkspaceMode,
           aiWorkspacePaneMode,
+          activeQuestGenerationStep,
           activeEditorTab,
           deviceMode,
           textDraft,
           aiPromptDraft,
+          programFlowDraft,
         }),
       );
     } catch {
@@ -768,10 +978,12 @@ export default function SettingsPage() {
   }, [
     activeWorkspaceMode,
     aiWorkspacePaneMode,
+    activeQuestGenerationStep,
     activeEditorTab,
     deviceMode,
     textDraft,
     aiPromptDraft,
+    programFlowDraft,
   ]);
 
   useEffect(() => {
@@ -954,6 +1166,56 @@ export default function SettingsPage() {
     setAiPromptDraft((prev) => ({ ...prev, [key]: value }));
   };
 
+  const updateProgramStep1Field = (
+    key: keyof ProgramFlowDraft["step1"],
+    value: string,
+  ) => {
+    setProgramFlowDraft((prev) => ({
+      ...prev,
+      step1: { ...prev.step1, [key]: value },
+    }));
+  };
+
+  const updateProgramStep2Field = (
+    key: keyof ProgramFlowDraft["step2"],
+    value: string,
+  ) => {
+    setProgramFlowDraft((prev) => ({
+      ...prev,
+      step2: { ...prev.step2, [key]: value },
+    }));
+  };
+
+  const updateProgramStep3Field = (
+    key: keyof ProgramFlowDraft["step3"],
+    value: string,
+  ) => {
+    setProgramFlowDraft((prev) => ({
+      ...prev,
+      step3: { ...prev.step3, [key]: value },
+    }));
+  };
+
+  const updateProgramStep6Field = (
+    key: keyof ProgramFlowDraft["step6"],
+    value: string,
+  ) => {
+    setProgramFlowDraft((prev) => ({
+      ...prev,
+      step6: { ...prev.step6, [key]: value },
+    }));
+  };
+
+  const updateProgramStep8Field = (
+    key: keyof ProgramFlowDraft["step8"],
+    value: string,
+  ) => {
+    setProgramFlowDraft((prev) => ({
+      ...prev,
+      step8: { ...prev.step8, [key]: value },
+    }));
+  };
+
   const toggleAIPromptTarget = (target: AIOutputTarget) => {
     setAiPromptDraft((prev) => {
       const hasTarget = prev.outputTargets.includes(target);
@@ -971,69 +1233,37 @@ export default function SettingsPage() {
     });
   };
 
+  const step4PromptPreview = useMemo(
+    () => renderPromptTemplate(aiPromptDraft.step4OutlinePrompt, previewSimulationInputs, aiPromptDraft),
+    [aiPromptDraft, previewSimulationInputs],
+  );
+  const step5PromptPreview = useMemo(
+    () => renderPromptTemplate(aiPromptDraft.step5NarrativePrompt, previewSimulationInputs, aiPromptDraft),
+    [aiPromptDraft, previewSimulationInputs],
+  );
+  const step7PromptPreview = useMemo(
+    () => renderPromptTemplate(aiPromptDraft.step7RepairPrompt, previewSimulationInputs, aiPromptDraft),
+    [aiPromptDraft, previewSimulationInputs],
+  );
+
   const generatedAIPrompt = useMemo(() => {
     const targetLabels = AI_OUTPUT_TARGET_ITEMS
       .filter((item) => aiPromptDraft.outputTargets.includes(item.key))
       .map((item) => item.label)
       .join(" / ");
-
-    const targetSchemaLines = [
-      aiPromptDraft.outputTargets.includes("ready")
-        ? '  "ready": { "heroLead": "...", "summaryTitle": "...", "summaryText": "..." },'
-        : "",
-      aiPromptDraft.outputTargets.includes("prologue")
-        ? '  "prologue": { "body": "..." },'
-        : "",
-      aiPromptDraft.outputTargets.includes("spot")
-        ? '  "spot": { "narratives": ["...", "...", "...", "...", "...", "..."] },'
-        : "",
-      aiPromptDraft.outputTargets.includes("epilogue")
-        ? '  "epilogue": { "body": "..." },'
-        : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
-
     return [
-      "あなたは体験シナリオ生成アシスタントです。",
-      `生成対象: ${targetLabels}`,
+      `対象: ${targetLabels || "未選択"}`,
       "",
-      "【目的】",
-      aiPromptDraft.objective.trim(),
+      "[STEP4 骨子生成]",
+      step4PromptPreview,
       "",
-      "【対象ユーザー】",
-      aiPromptDraft.audience.trim(),
+      "[STEP5 本文生成]",
+      step5PromptPreview,
       "",
-      "【トーン】",
-      aiPromptDraft.tone.trim(),
-      "",
-      "【必須要素】",
-      aiPromptDraft.requiredElements.trim(),
-      "",
-      "【禁止要素】",
-      aiPromptDraft.forbiddenElements.trim(),
-      "",
-      "【固定文言ポリシー】",
-      aiPromptDraft.fixedTextPolicy.trim(),
-      "",
-      "【ルート条件】",
-      aiPromptDraft.routeDesign.trim(),
-      "",
-      "【追加コンテキスト】",
-      aiPromptDraft.additionalContext.trim(),
-      "",
-      "【出力要件】",
-      `- 言語: ${aiPromptDraft.outputLanguage.trim()}`,
-      `- 文体: ${aiPromptDraft.outputStyle.trim()}`,
-      "- JSONのみを返してください。余計な説明文は不要です。",
-      "- 事実不明な内容は創作せず、中立的な記述にしてください。",
-      "",
-      "【JSON形式】",
-      "{",
-      targetSchemaLines,
-      "}",
+      "[STEP7 部分再生成]",
+      step7PromptPreview,
     ].join("\n");
-  }, [aiPromptDraft]);
+  }, [aiPromptDraft.outputTargets, step4PromptPreview, step5PromptPreview, step7PromptPreview]);
 
   const runSimulation = useCallback(() => {
     setCommittedPromptSnapshot(generatedAIPrompt);
@@ -1058,25 +1288,12 @@ export default function SettingsPage() {
   const simulationPromptSource = committedPromptSnapshot || generatedAIPrompt;
   const currentFlowStepIndex = findFlowStepIndex(previewScreen);
 
-  const showPromptPreviewPane =
-    activeWorkspaceMode === "ai" && aiWorkspacePaneMode === "prompt";
   const isAISimulationActive =
     activeWorkspaceMode === "ai" && aiWorkspacePaneMode === "simulation";
   const rightPaneTitle = isAISimulationActive ? "Simulation Preview" : "Live Preview";
   const rightPaneSubtitle = isAISimulationActive
     ? `現在: ${previewScreen ?? "未接続"} / 合成結果をアプリUIで確認`
     : `現在: ${previewScreen ?? "未接続"}`;
-
-  const copyGeneratedPrompt = useCallback(async () => {
-    if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return;
-    try {
-      await navigator.clipboard.writeText(generatedAIPrompt);
-      setAiPromptCopied(true);
-      window.setTimeout(() => setAiPromptCopied(false), 1200);
-    } catch {
-      // no-op
-    }
-  }, [generatedAIPrompt]);
 
   return (
     <main className="h-screen overflow-hidden bg-[#f9f9f7] text-[#2d3432]" style={{ backgroundImage: "none" }}>
@@ -1318,54 +1535,285 @@ export default function SettingsPage() {
           ) : null}
                 </>
               ) : aiWorkspacePaneMode === "prompt" ? (
-                <div className="max-w-none space-y-8 xl:max-w-4xl">
+                <div className="max-w-none space-y-6 xl:max-w-5xl">
                   <div>
-                    <h3 className="mb-2 text-2xl font-bold text-[#2d3432]">AI生成プロンプト作成</h3>
+                    <h3 className="mb-2 text-2xl font-bold text-[#2d3432]">クエスト生成フロー管理</h3>
                     <p className="text-[15px] leading-relaxed text-[#5a605e]">
-                      生成に必要な項目を入力します。シミュレーション時の条件変更は、右側のアプリプレビュー内（セットアップ画面）で行います。
+                      1〜8の各ステップを編集します。4/5/7はAIプロンプト、1/2/3/6/8はプログラム設定です。
                     </p>
                   </div>
 
-                  <div className="rounded-xl border border-[#dee4e0] bg-white p-4">
-                    <p className="mb-3 text-xs font-bold tracking-wider text-[#5a605e] uppercase">生成対象</p>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      {AI_OUTPUT_TARGET_ITEMS.map((item) => {
-                        const selected = aiPromptDraft.outputTargets.includes(item.key);
+                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
+                    <aside className="space-y-2 rounded-xl border border-[#dee4e0] bg-white p-3">
+                      {QUEST_GENERATION_STEPS.map((step) => {
+                        const isActive = activeQuestGenerationStep === step.id;
                         return (
                           <button
-                            key={item.key}
+                            key={step.id}
                             type="button"
-                            onClick={() => toggleAIPromptTarget(item.key)}
+                            onClick={() => setActiveQuestGenerationStep(step.id)}
                             className={[
-                              "rounded-lg border px-3 py-2 text-left transition-colors",
-                              selected
+                              "w-full rounded-lg border px-3 py-2 text-left transition-colors",
+                              isActive
                                 ? "border-[#f5ce53] bg-[#fff7e2]"
                                 : "border-[#dee4e0] bg-[#f9f9f7] hover:border-[#f5ce53]/70",
                             ].join(" ")}
                           >
-                            <p className="text-sm font-semibold text-[#2d3432]">{item.label}</p>
-                            <p className="text-[11px] text-[#5a605e]">{item.description}</p>
+                            <p className="text-sm font-semibold text-[#2d3432]">{step.label}</p>
+                            <p className="text-[11px] text-[#5a605e]">{step.description}</p>
+                            <p className="mt-1 text-[10px] font-semibold text-[#5a605e] uppercase">
+                              {step.kind === "ai" ? "AI" : "Program"}
+                            </p>
                           </button>
                         );
                       })}
+                    </aside>
+
+                    <div className="space-y-6">
+                      {activeQuestGenerationStep === "step1" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 1: 入力正規化</h4>
+                          <TextAreaField
+                            label="ユーザータイプ正規化ルール"
+                            rows={4}
+                            value={programFlowDraft.step1.normalizeUserType}
+                            onChange={(value) => updateProgramStep1Field("normalizeUserType", value)}
+                          />
+                          <TextAreaField
+                            label="習熟度正規化ルール"
+                            rows={4}
+                            value={programFlowDraft.step1.normalizeFamiliarity}
+                            onChange={(value) => updateProgramStep1Field("normalizeFamiliarity", value)}
+                          />
+                          <TextAreaField
+                            label="時間正規化ルール"
+                            rows={3}
+                            value={programFlowDraft.step1.normalizeDuration}
+                            onChange={(value) => updateProgramStep1Field("normalizeDuration", value)}
+                          />
+                        </div>
+                      ) : null}
+
+                      {activeQuestGenerationStep === "step2" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 2: 体験設計</h4>
+                          <TextAreaField
+                            label="スポット数ロジック"
+                            rows={4}
+                            value={programFlowDraft.step2.spotCountLogic}
+                            onChange={(value) => updateProgramStep2Field("spotCountLogic", value)}
+                          />
+                          <TextAreaField
+                            label="難易度ロジック"
+                            rows={4}
+                            value={programFlowDraft.step2.difficultyLogic}
+                            onChange={(value) => updateProgramStep2Field("difficultyLogic", value)}
+                          />
+                        </div>
+                      ) : null}
+
+                      {activeQuestGenerationStep === "step3" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 3: ルート確定</h4>
+                          <TextAreaField
+                            label="スポット選定ロジック"
+                            rows={4}
+                            value={programFlowDraft.step3.spotSelectionLogic}
+                            onChange={(value) => updateProgramStep3Field("spotSelectionLogic", value)}
+                          />
+                          <TextAreaField
+                            label="巡回順ロジック"
+                            rows={4}
+                            value={programFlowDraft.step3.routeOrderingLogic}
+                            onChange={(value) => updateProgramStep3Field("routeOrderingLogic", value)}
+                          />
+                        </div>
+                      ) : null}
+
+                      {activeQuestGenerationStep === "step4" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 4: 骨子生成（AI）</h4>
+                          <TextAreaField
+                            label="目的"
+                            rows={3}
+                            value={aiPromptDraft.objective}
+                            onChange={(value) => updateAIPromptField("objective", value)}
+                          />
+                          <TextAreaField
+                            label="対象ユーザー"
+                            rows={3}
+                            value={aiPromptDraft.audience}
+                            onChange={(value) => updateAIPromptField("audience", value)}
+                          />
+                          <TextAreaField
+                            label="骨子生成プロンプトテンプレート"
+                            rows={5}
+                            helper="利用可能な変数: {userType}, {familiarity}, {duration}, {explorationStyle}, {experienceExpectation}"
+                            value={aiPromptDraft.step4OutlinePrompt}
+                            onChange={(value) => updateAIPromptField("step4OutlinePrompt", value)}
+                          />
+                          <div>
+                            <p className="mb-2 block text-sm font-semibold tracking-wider text-[#2d3432]">
+                              プロンプトプレビュー
+                            </p>
+                            <textarea
+                              readOnly
+                              rows={7}
+                              value={step4PromptPreview}
+                              className="w-full resize-none rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4 text-[13px] leading-[1.6] text-[#2d3432] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {activeQuestGenerationStep === "step5" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 5: 本文生成（AI）</h4>
+                          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                            <TextAreaField
+                              label="トーン"
+                              rows={3}
+                              value={aiPromptDraft.tone}
+                              onChange={(value) => updateAIPromptField("tone", value)}
+                            />
+                            <TextAreaField
+                              label="必須要素"
+                              rows={3}
+                              value={aiPromptDraft.requiredElements}
+                              onChange={(value) => updateAIPromptField("requiredElements", value)}
+                            />
+                            <InputField
+                              label="出力文体"
+                              value={aiPromptDraft.outputStyle}
+                              onChange={(value) => updateAIPromptField("outputStyle", value)}
+                            />
+                            <InputField
+                              label="出力言語"
+                              value={aiPromptDraft.outputLanguage}
+                              onChange={(value) => updateAIPromptField("outputLanguage", value)}
+                            />
+                          </div>
+                          <div className="rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-3">
+                            <p className="mb-2 text-xs font-bold tracking-wider text-[#5a605e] uppercase">生成対象</p>
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                              {AI_OUTPUT_TARGET_ITEMS.map((item) => {
+                                const selected = aiPromptDraft.outputTargets.includes(item.key);
+                                return (
+                                  <button
+                                    key={item.key}
+                                    type="button"
+                                    onClick={() => toggleAIPromptTarget(item.key)}
+                                    className={[
+                                      "rounded-lg border px-3 py-2 text-left transition-colors",
+                                      selected
+                                        ? "border-[#f5ce53] bg-[#fff7e2]"
+                                        : "border-[#dee4e0] bg-white hover:border-[#f5ce53]/70",
+                                    ].join(" ")}
+                                  >
+                                    <p className="text-sm font-semibold text-[#2d3432]">{item.label}</p>
+                                    <p className="text-[11px] text-[#5a605e]">{item.description}</p>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <TextAreaField
+                            label="本文生成プロンプトテンプレート"
+                            rows={5}
+                            helper="利用可能な変数: {tone}, {requiredElements}, {outputStyle}, {forbiddenElements}"
+                            value={aiPromptDraft.step5NarrativePrompt}
+                            onChange={(value) => updateAIPromptField("step5NarrativePrompt", value)}
+                          />
+                          <div>
+                            <p className="mb-2 block text-sm font-semibold tracking-wider text-[#2d3432]">
+                              プロンプトプレビュー
+                            </p>
+                            <textarea
+                              readOnly
+                              rows={7}
+                              value={step5PromptPreview}
+                              className="w-full resize-none rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4 text-[13px] leading-[1.6] text-[#2d3432] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {activeQuestGenerationStep === "step6" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 6: 検証</h4>
+                          <TextAreaField
+                            label="JSON検証ロジック"
+                            rows={4}
+                            value={programFlowDraft.step6.jsonValidationLogic}
+                            onChange={(value) => updateProgramStep6Field("jsonValidationLogic", value)}
+                          />
+                          <TextAreaField
+                            label="テキスト検証ロジック"
+                            rows={4}
+                            value={programFlowDraft.step6.textValidationLogic}
+                            onChange={(value) => updateProgramStep6Field("textValidationLogic", value)}
+                          />
+                        </div>
+                      ) : null}
+
+                      {activeQuestGenerationStep === "step7" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 7: 部分再生成（AI）</h4>
+                          <TextAreaField
+                            label="禁止要素"
+                            rows={3}
+                            value={aiPromptDraft.forbiddenElements}
+                            onChange={(value) => updateAIPromptField("forbiddenElements", value)}
+                          />
+                          <TextAreaField
+                            label="固定文言ポリシー"
+                            rows={3}
+                            value={aiPromptDraft.fixedTextPolicy}
+                            onChange={(value) => updateAIPromptField("fixedTextPolicy", value)}
+                          />
+                          <TextAreaField
+                            label="部分再生成プロンプトテンプレート"
+                            rows={5}
+                            helper="利用可能な変数: {forbiddenElements}, {fixedTextPolicy}, {tone}"
+                            value={aiPromptDraft.step7RepairPrompt}
+                            onChange={(value) => updateAIPromptField("step7RepairPrompt", value)}
+                          />
+                          <div>
+                            <p className="mb-2 block text-sm font-semibold tracking-wider text-[#2d3432]">
+                              プロンプトプレビュー
+                            </p>
+                            <textarea
+                              readOnly
+                              rows={7}
+                              value={step7PromptPreview}
+                              className="w-full resize-none rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4 text-[13px] leading-[1.6] text-[#2d3432] focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {activeQuestGenerationStep === "step8" ? (
+                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
+                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 8: 最終確定</h4>
+                          <TextAreaField
+                            label="最終フォーマット"
+                            rows={4}
+                            value={programFlowDraft.step8.finalizeFormat}
+                            onChange={(value) => updateProgramStep8Field("finalizeFormat", value)}
+                          />
+                          <TextAreaField
+                            label="保存・配信処理"
+                            rows={4}
+                            value={programFlowDraft.step8.persistAndDispatch}
+                            onChange={(value) => updateProgramStep8Field("persistAndDispatch", value)}
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <TextAreaField label="目的" rows={3} value={aiPromptDraft.objective} onChange={(value) => updateAIPromptField("objective", value)} />
-                    <TextAreaField label="対象ユーザー" rows={3} value={aiPromptDraft.audience} onChange={(value) => updateAIPromptField("audience", value)} />
-                    <TextAreaField label="トーン" rows={3} value={aiPromptDraft.tone} onChange={(value) => updateAIPromptField("tone", value)} />
-                    <TextAreaField label="必須要素" rows={3} value={aiPromptDraft.requiredElements} onChange={(value) => updateAIPromptField("requiredElements", value)} />
-                    <TextAreaField label="禁止要素" rows={3} value={aiPromptDraft.forbiddenElements} onChange={(value) => updateAIPromptField("forbiddenElements", value)} />
-                    <TextAreaField label="固定文言ポリシー" rows={3} value={aiPromptDraft.fixedTextPolicy} onChange={(value) => updateAIPromptField("fixedTextPolicy", value)} />
-                    <TextAreaField label="ルート条件" rows={3} value={aiPromptDraft.routeDesign} onChange={(value) => updateAIPromptField("routeDesign", value)} />
-                    <TextAreaField label="追加コンテキスト" rows={3} value={aiPromptDraft.additionalContext} onChange={(value) => updateAIPromptField("additionalContext", value)} />
-                    <InputField label="出力言語" value={aiPromptDraft.outputLanguage} onChange={(value) => updateAIPromptField("outputLanguage", value)} />
-                    <InputField label="出力文体" value={aiPromptDraft.outputStyle} onChange={(value) => updateAIPromptField("outputStyle", value)} />
-                  </div>
-
                   <div className="rounded-xl border border-[#dee4e0] bg-white px-4 py-3 text-sm text-[#5a605e]">
-                    「シミュレーションモード」開始後は、右側プレビュー操作に応じて生成フローが進みます。
+                    シミュレーション開始後は、右側プレビュー操作に応じて左側の生成フロー進行がハイライトされます。
                   </div>
 
                   <div className="flex justify-end">
@@ -1471,150 +1919,109 @@ export default function SettingsPage() {
               : "w-[clamp(360px,38vw,520px)] min-w-[360px] max-w-[520px]",
           ].join(" ")}
         >
-          {showPromptPreviewPane ? (
-            <>
-              <div className="sticky top-0 z-20 h-14 border-b border-[#dee4e0] bg-[#f9f9f7]/70 px-3 backdrop-blur-sm sm:px-4">
-                <div className="flex h-full items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#2d3432]">Prompt Preview</h4>
-                    <p className="text-[11px] text-[#5a605e]">左カラム入力に応じて即時更新</p>
+          <>
+            <div className="sticky top-0 z-20 h-14 border-b border-[#dee4e0] bg-[#f9f9f7]/70 px-3 backdrop-blur-sm sm:px-4">
+              <div className="flex h-full items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-semibold text-[#2d3432]">{rightPaneTitle}</h4>
+                  <p className="text-[11px] text-[#5a605e]">{rightPaneSubtitle}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isAISimulationActive ? (
+                    <button
+                      type="button"
+                      onClick={returnToPromptBuilder}
+                      className="rounded-lg border border-[#dee4e0] bg-white px-2.5 py-1 text-xs font-semibold text-[#2d3432] hover:border-[#f5ce53]"
+                    >
+                      プロンプト編集へ
+                    </button>
+                  ) : null}
+                  <div className="rounded-full bg-[#dee4e0] p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setDeviceMode("mobile")}
+                      className={[
+                        "rounded-full p-1",
+                        deviceMode === "mobile"
+                          ? "bg-white text-[#2d3432] shadow-sm"
+                          : "text-[#5a605e] hover:text-[#2d3432]",
+                      ].join(" ")}
+                    >
+                      <MaterialIcon className="text-[20px]" name="phone_iphone" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeviceMode("tablet")}
+                      className={[
+                        "rounded-full p-1",
+                        deviceMode === "tablet"
+                          ? "bg-white text-[#2d3432] shadow-sm"
+                          : "text-[#5a605e] hover:text-[#2d3432]",
+                      ].join(" ")}
+                    >
+                      <MaterialIcon className="text-[20px]" name="open_in_full" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={copyGeneratedPrompt}
-                    className="inline-flex items-center gap-1 rounded-lg border border-[#dee4e0] bg-white px-2.5 py-1 text-xs font-semibold text-[#2d3432] hover:border-[#f5ce53]"
-                  >
-                    <MaterialIcon className="text-sm" name="content_copy" />
-                    {aiPromptCopied ? "コピー済み" : "コピー"}
-                  </button>
                 </div>
               </div>
+            </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
-                <textarea
-                  readOnly
-                  value={generatedAIPrompt}
-                  rows={28}
-                  className="h-full min-h-[420px] w-full resize-none rounded-2xl border border-[#dee4e0] bg-white p-4 text-[12px] leading-[1.65] text-[#2d3432] focus:outline-none"
+            <div
+              ref={previewViewportRef}
+              className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-2 py-3 sm:px-2.5 sm:py-4 xl:px-3 xl:py-4"
+            >
+              <div
+                className="relative flex flex-shrink-0 flex-col overflow-hidden rounded-[2.5rem] border-[8px] border-[#dee4e0] bg-white shadow-[0_20px_40px_rgba(26,28,32,0.08)]"
+                style={{
+                  width: previewBaseSize.width,
+                  height: previewBaseSize.height,
+                  transform: `scale(${previewScale})`,
+                  transformOrigin: "center center",
+                }}
+              >
+                <div className="absolute left-0 top-0 z-50 flex h-6 w-full items-center justify-between px-4 pt-1">
+                  <span className="text-[10px] font-medium text-[#2d3432]">9:41</span>
+                  <div className="flex gap-1">
+                    <MaterialIcon className="text-[12px] text-[#2d3432]" name="radio_button_checked" />
+                    <MaterialIcon className="text-[12px] text-[#2d3432]" name="network" />
+                    <MaterialIcon className="text-[12px] text-[#2d3432]" name="bolt" />
+                  </div>
+                </div>
+
+                <iframe
+                  ref={previewFrameRef}
+                  title="Kyudai MVP live preview"
+                  src={previewAppUrl}
+                  onLoad={postWorldConfigToPreview}
+                  className="h-full w-full border-0 bg-[#f9f9f7] pt-6"
+                  allow="camera; geolocation"
                 />
               </div>
+            </div>
 
-              <div className="border-t border-[#dee4e0] bg-[#f9f9f7]/90 px-3 py-2 sm:px-4">
+            <div className="border-t border-[#dee4e0] bg-[#f9f9f7]/90 px-2 py-1.5 sm:px-3 sm:py-2">
+              <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={runSimulation}
-                  className="flex w-full items-center justify-center gap-1 rounded-lg bg-[#1a1c20] px-3 py-2 text-xs font-semibold text-[#f7f7fd] hover:bg-[#2d3432]"
+                  onClick={() => navigatePreview("back")}
+                  disabled={!canGoPreviewBack}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-[#dee4e0] bg-white px-3 py-1 text-xs font-semibold text-[#2d3432] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <MaterialIcon name="science" className="text-sm" />
-                  シミュレーションモードを開始
+                  <MaterialIcon name="arrow_back" className="text-sm" />
+                  前に戻る
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigatePreview("forward")}
+                  disabled={!canGoPreviewForward}
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#1a1c20] px-3 py-1 text-xs font-semibold text-[#f7f7fd] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  次に進む
+                  <MaterialIcon name="arrow_forward" className="text-sm" />
                 </button>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="sticky top-0 z-20 h-14 border-b border-[#dee4e0] bg-[#f9f9f7]/70 px-3 backdrop-blur-sm sm:px-4">
-                <div className="flex h-full items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#2d3432]">{rightPaneTitle}</h4>
-                    <p className="text-[11px] text-[#5a605e]">{rightPaneSubtitle}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {isAISimulationActive ? (
-                      <button
-                        type="button"
-                        onClick={returnToPromptBuilder}
-                        className="rounded-lg border border-[#dee4e0] bg-white px-2.5 py-1 text-xs font-semibold text-[#2d3432] hover:border-[#f5ce53]"
-                      >
-                        プロンプト編集へ
-                      </button>
-                    ) : null}
-                    <div className="rounded-full bg-[#dee4e0] p-0.5">
-                      <button
-                        type="button"
-                        onClick={() => setDeviceMode("mobile")}
-                        className={[
-                          "rounded-full p-1",
-                          deviceMode === "mobile"
-                            ? "bg-white text-[#2d3432] shadow-sm"
-                            : "text-[#5a605e] hover:text-[#2d3432]",
-                        ].join(" ")}
-                      >
-                        <MaterialIcon className="text-[20px]" name="phone_iphone" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeviceMode("tablet")}
-                        className={[
-                          "rounded-full p-1",
-                          deviceMode === "tablet"
-                            ? "bg-white text-[#2d3432] shadow-sm"
-                            : "text-[#5a605e] hover:text-[#2d3432]",
-                        ].join(" ")}
-                      >
-                        <MaterialIcon className="text-[20px]" name="open_in_full" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                ref={previewViewportRef}
-                className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-2 py-3 sm:px-2.5 sm:py-4 xl:px-3 xl:py-4"
-              >
-                <div
-                  className="relative flex flex-shrink-0 flex-col overflow-hidden rounded-[2.5rem] border-[8px] border-[#dee4e0] bg-white shadow-[0_20px_40px_rgba(26,28,32,0.08)]"
-                  style={{
-                    width: previewBaseSize.width,
-                    height: previewBaseSize.height,
-                    transform: `scale(${previewScale})`,
-                    transformOrigin: "center center",
-                  }}
-                >
-                  <div className="absolute left-0 top-0 z-50 flex h-6 w-full items-center justify-between px-4 pt-1">
-                    <span className="text-[10px] font-medium text-[#2d3432]">9:41</span>
-                    <div className="flex gap-1">
-                      <MaterialIcon className="text-[12px] text-[#2d3432]" name="radio_button_checked" />
-                      <MaterialIcon className="text-[12px] text-[#2d3432]" name="network" />
-                      <MaterialIcon className="text-[12px] text-[#2d3432]" name="bolt" />
-                    </div>
-                  </div>
-
-                  <iframe
-                    ref={previewFrameRef}
-                    title="Kyudai MVP live preview"
-                    src={previewAppUrl}
-                    onLoad={postWorldConfigToPreview}
-                    className="h-full w-full border-0 bg-[#f9f9f7] pt-6"
-                    allow="camera; geolocation"
-                  />
-                </div>
-              </div>
-
-              <div className="border-t border-[#dee4e0] bg-[#f9f9f7]/90 px-2 py-1.5 sm:px-3 sm:py-2">
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => navigatePreview("back")}
-                    disabled={!canGoPreviewBack}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg border border-[#dee4e0] bg-white px-3 py-1 text-xs font-semibold text-[#2d3432] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <MaterialIcon name="arrow_back" className="text-sm" />
-                    前に戻る
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigatePreview("forward")}
-                    disabled={!canGoPreviewForward}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#1a1c20] px-3 py-1 text-xs font-semibold text-[#f7f7fd] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    次に進む
-                    <MaterialIcon name="arrow_forward" className="text-sm" />
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+            </div>
+          </>
         </aside>
       </div>
     </main>
