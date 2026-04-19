@@ -85,30 +85,21 @@ type Spot = {
 
 const spotCatalog: Spot[] = [
   {
-    id: "big-orange",
-    name: "Big Orange",
-    coordinate: { latitude: 33.59895, longitude: 130.2169 },
-    scenarioTexts: [
-      "ここはBig Orange。今日の物語が開く最初の場所です。",
-      "ただの建物ではなく、これから始まる日々の交差点として、この場所を覚えておきましょう。",
-    ],
-  },
-  {
     id: "center-zone",
     name: "Center Zone",
     coordinate: { latitude: 33.5978, longitude: 130.2204 },
     scenarioTexts: [
-      "ここでは、学びと日常がすれ違いながら重なっていきます。",
-      "流れの中にある小さな変化を感じながら、次の景色へ進みましょう。",
+      "センターゾーンは、講義棟と生活導線が重なる伊都キャンパスの基点です。",
+      "朝の移動、昼の休憩、夕方の帰路。時間帯で表情が変わる流れを、ここで読み解きましょう。",
     ],
   },
   {
-    id: "central-library",
-    name: "中央図書館",
-    coordinate: { latitude: 33.5961, longitude: 130.2184 },
+    id: "big-orange",
+    name: "Big Orange",
+    coordinate: { latitude: 33.59895, longitude: 130.2169 },
     scenarioTexts: [
-      "知の入口に立ちました。ここには多くの選択肢が静かに並んでいます。",
-      "静かな時間が、あなたの物語の奥行きを少しずつ深くしてくれます。",
+      "ビッグオレンジは、案内・食事・待ち合わせが集まる生活拠点です。",
+      "迷ったときの再集合地点として覚えておくと、キャンパス内の移動が安定します。",
     ],
   },
   {
@@ -116,8 +107,17 @@ const spotCatalog: Spot[] = [
     name: "Innovation Plaza",
     coordinate: { latitude: 33.59735, longitude: 130.2192 },
     scenarioTexts: [
-      "ここはInnovation Plaza。学びのアイデアが実験へ変わる結節点です。",
-      "新しい視点を持つ人たちが行き交う場所として、今日の物語にも変化を与えています。",
+      "Innovation Plazaでは、授業のアイデアが試作と対話へ変わっていきます。",
+      "展示や発表の痕跡を追うと、研究が社会へ出ていく手前の熱量が見えてきます。",
+    ],
+  },
+  {
+    id: "central-library",
+    name: "中央図書館",
+    coordinate: { latitude: 33.5961, longitude: 130.2184 },
+    scenarioTexts: [
+      "中央図書館は、静かな集中と調べものの速度を両立させる知の中枢です。",
+      "紙の資料と電子ジャーナルを行き来しながら、問いを深める作法がここにあります。",
     ],
   },
   {
@@ -125,8 +125,8 @@ const spotCatalog: Spot[] = [
     name: "Research Commons",
     coordinate: { latitude: 33.59645, longitude: 130.2171 },
     scenarioTexts: [
-      "Research Commonsでは、分野を越えた対話が静かに進んでいます。",
-      "慣れた景色の中にも、見方を変えると新しい物語の入口が見えてきます。",
+      "Research Commonsでは、分野を越えた研究者同士の相談が日常的に生まれます。",
+      "壁のポスター1枚から共同研究が始まることもある。ここは発見が連鎖する場です。",
     ],
   },
   {
@@ -134,8 +134,8 @@ const spotCatalog: Spot[] = [
     name: "West Gate",
     coordinate: { latitude: 33.5952, longitude: 130.2159 },
     scenarioTexts: [
-      "ここが今日の終点です。歩いた景色が、ひとつの記憶として結ばれます。",
-      "ここまでの道のりが、明日からのキャンパス生活を静かに照らしていくはずです。",
+      "West Gateは、キャンパスの知と外の街をつなぐ出口です。",
+      "6地点で拾った視点を一本に束ねて、次の行動へ持ち帰りましょう。",
     ],
   },
 ];
@@ -145,8 +145,69 @@ const spotCatalogMap = spotCatalog.reduce<Record<string, Spot>>((acc, spot) => {
   return acc;
 }, {});
 
-const START_SPOT_ID: Spot["id"] = "big-orange";
+const START_SPOT_ID: Spot["id"] = "center-zone";
 const GOAL_SPOT_ID: Spot["id"] = "west-gate";
+const FIXED_CENTER_ZONE_ROUTE_IDS: Spot["id"][] = [
+  "center-zone",
+  "big-orange",
+  "innovation-plaza",
+  "central-library",
+  "research-commons",
+  "west-gate",
+];
+
+type StoryArcPhase = "起" | "承" | "転" | "結";
+type StoryArcMeta = {
+  phase: StoryArcPhase;
+  beat: string;
+  mapLead: string;
+  trivia: string;
+};
+
+const storyArcMetaMap: Record<Spot["id"], StoryArcMeta> = {
+  "center-zone": {
+    phase: "起",
+    beat: "交差点の起点",
+    mapLead: "まずは人の流れを観測して、伊都キャンパスの基準線をつくります。",
+    trivia: "講義棟群の結節点として、移動導線を把握しやすいエリアです。",
+  },
+  "big-orange": {
+    phase: "承",
+    beat: "日常導線の鍵",
+    mapLead: "生活機能が集まる拠点を押さえ、迷わない回遊の土台を固めます。",
+    trivia: "案内・食事・待ち合わせが重なるため、再集合ポイントとして有効です。",
+  },
+  "innovation-plaza": {
+    phase: "承",
+    beat: "挑戦の実験場",
+    mapLead: "学びが実践へ切り替わる現場を通り、視点を一段上げます。",
+    trivia: "展示や試作の更新が多く、時期で見えるテーマが変わります。",
+  },
+  "central-library": {
+    phase: "転",
+    beat: "知の深部へ",
+    mapLead: "静かな空間へ移り、情報を集める段階から問いを磨く段階へ進みます。",
+    trivia: "紙資料と電子資料の両輪で、短時間でも調査密度を高めやすい拠点です。",
+  },
+  "research-commons": {
+    phase: "転",
+    beat: "分野横断の火花",
+    mapLead: "研究の対話が生まれる場所で、物語の核心となる視点を接続します。",
+    trivia: "異分野の会話から新規テーマが立ち上がる、共創型の学習空間です。",
+  },
+  "west-gate": {
+    phase: "結",
+    beat: "外へ持ち帰る結末",
+    mapLead: "キャンパス内部で得た発見を、日常行動へ持ち帰る終着点です。",
+    trivia: "移動の出口として、学内の学びを次の場所へ運ぶスイッチになります。",
+  },
+};
+const fallbackStoryArcMeta: StoryArcMeta = {
+  phase: "承",
+  beat: "探索中",
+  mapLead: "次の視点へ進みます。",
+  trivia: "周囲の導線や人の流れを観測し、現在地の意味を掴んでください。",
+};
 
 const GOOGLE_MAPS_WEB_API_KEY =
   process.env.EXPO_PUBLIC_GOOGLE_MAPS_WEB_API_KEY ??
@@ -369,15 +430,15 @@ const experienceExpectationOptions: ExperienceExpectation[] = [
 ];
 
 const durationSpotCountMap: Record<Duration, number> = {
-  "15〜20分": 4,
-  "20〜30分": 5,
+  "15〜20分": 5,
+  "20〜30分": 6,
   "30〜45分": 6,
 };
 const familiarityMiddleSpotPriority: Record<Familiarity, Spot["id"][]> = {
-  はじめて来た: ["center-zone", "central-library", "innovation-plaza", "research-commons"],
-  まだあまり慣れていない: ["center-zone", "innovation-plaza", "central-library", "research-commons"],
-  何度か来たことがある: ["innovation-plaza", "central-library", "research-commons", "center-zone"],
-  よく来ている: ["research-commons", "innovation-plaza", "central-library", "center-zone"],
+  はじめて来た: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
+  まだあまり慣れていない: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
+  何度か来たことがある: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
+  よく来ている: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
 };
 
 const buildExperienceSpots = (selectedFamiliarity: Familiarity, selectedDuration: Duration): Spot[] => {
@@ -387,9 +448,9 @@ const buildExperienceSpots = (selectedFamiliarity: Familiarity, selectedDuration
   const targetCount = Math.max(2, Math.min(durationSpotCountMap[selectedDuration], spotCatalog.length));
   const middleTargetCount = Math.max(0, targetCount - 2);
   const familiarityPriority = familiarityMiddleSpotPriority[selectedFamiliarity];
-  const fallbackMiddleIds = spotCatalog
-    .map((spot) => spot.id)
-    .filter((spotId) => spotId !== startSpot.id && spotId !== goalSpot.id);
+  const fallbackMiddleIds = FIXED_CENTER_ZONE_ROUTE_IDS.filter(
+    (spotId) => spotId !== startSpot.id && spotId !== goalSpot.id,
+  );
   const middleIds = Array.from(new Set([...familiarityPriority, ...fallbackMiddleIds]))
     .filter((spotId) => spotId !== startSpot.id && spotId !== goalSpot.id)
     .slice(0, middleTargetCount);
@@ -437,11 +498,65 @@ type PersistedFlowDraft = {
   feedbackComment?: string;
 };
 
+type ProgramFlowConfig = {
+  step1?: {
+    normalizeUserType?: string;
+    normalizeFamiliarity?: string;
+    normalizeDuration?: string;
+  };
+  step2?: {
+    spotCountRule?: string;
+    mobilityConstraintRule?: string;
+  };
+  step3?: {
+    candidateSelectionRule?: string;
+    routeOrderingRule?: string;
+    spotDbLinkPolicy?: string;
+    candidateSpotPoolIds?: string;
+  };
+  step5?: {
+    narrativeContainerSpec?: string;
+    slotInjectionPolicy?: string;
+  };
+  step6?: {
+    worldSetting?: string;
+    characterProfile?: string;
+    characterRole?: string;
+    storyArcFor4Spots?: string;
+    storyArcFor5Spots?: string;
+    storyArcFor6Spots?: string;
+    conversationFlow?: string;
+  };
+  step7?: {
+    validationRuleSet?: string;
+    fallbackPolicy?: string;
+  };
+  step8?: {
+    finalizeFormat?: string;
+    persistAndDispatch?: string;
+  };
+};
+
+type AIPromptConfig = {
+  step4RouteOptimization?: string;
+  step6InsertionGeneration?: string;
+  step7MinimalRepair?: string;
+};
+
+type QuestGenerationConfig = {
+  program?: ProgramFlowConfig;
+  aiPrompts?: AIPromptConfig;
+};
+
 type AdminWorldConfigPayload = {
   title?: string;
   description?: string;
+  audience?: string;
   tone?: string;
   styleRules?: string;
+  outputLanguage?: string;
+  routeDesign?: string;
+  fixedTextPolicy?: string;
   requiredKeywords?: string[];
   blockedKeywords?: string[];
   landingTopTag?: string;
@@ -509,6 +624,83 @@ type AdminWorldConfigPayload = {
   feedbackCommentNote?: string;
   feedbackSubmitButton?: string;
   feedbackThanks?: string;
+  questGenerationConfig?: QuestGenerationConfig;
+};
+
+type GeneratedQuestSpot = {
+  id: string;
+  name?: string;
+  overview?: string;
+  rationale?: string;
+  scenarioTexts: string[];
+  lat?: number;
+  lng?: number;
+};
+
+type GeneratedQuestPayload = {
+  generatedStoryName?: string;
+  storyTone?: string;
+  readyHeroLead?: string;
+  readySummaryTitle?: string;
+  readySummaryText?: string;
+  prologueBody?: string;
+  epilogueBody?: string;
+  spots: GeneratedQuestSpot[];
+};
+
+type GeneratedQuestStep = {
+  id: string;
+  label: string;
+  status: "completed" | "fallback";
+  detail: string;
+};
+
+type QuestGenerationApiResponse = {
+  ok: boolean;
+  quest?: GeneratedQuestPayload;
+  steps?: GeneratedQuestStep[];
+  stepTraces?: Array<{
+    id?: string;
+    program?: string;
+    inputVars?: Record<string, unknown>;
+    outputVars?: Record<string, unknown>;
+    aiPrompt?: {
+      provider?: string;
+      model?: string;
+      temperature?: number;
+      systemPrompt?: string;
+      userPrompt?: string;
+    };
+  }>;
+  generatedAt?: string;
+  executedUntilStep?: string;
+  error?: string;
+};
+
+const createQuestRequestId = () =>
+  `kyudai-web-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+const clipForBrowserLog = (value: string, maxLength = 1200) => {
+  if (value.length <= maxLength) return value;
+  return `${value.slice(0, maxLength)}... [truncated ${value.length - maxLength} chars]`;
+};
+
+const emitPreviewDebugLog = (event: string, payload?: Record<string, unknown>) => {
+  if (Platform.OS !== "web") return;
+  if (typeof window === "undefined") return;
+  if (window.parent === window) return;
+  window.parent.postMessage(
+    {
+      source: "kyudai-dictionary-mvp-mobile",
+      type: "tomoshibi-mobile:debug-log",
+      payload: {
+        event,
+        emittedAt: new Date().toISOString(),
+        ...(payload ? { data: payload } : {}),
+      },
+    },
+    "*",
+  );
 };
 
 const normalizeText = (value: unknown): string | undefined => {
@@ -517,9 +709,98 @@ const normalizeText = (value: unknown): string | undefined => {
   return normalized.length > 0 ? normalized : undefined;
 };
 
+const normalizeFiniteNumber = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
+};
+
+const asRecord = (value: unknown): Record<string, unknown> | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+};
+
 const normalizeTextList = (value: unknown, maxItems: number): string[] | undefined => {
   if (!Array.isArray(value)) return undefined;
   return value.slice(0, maxItems).map((item) => (typeof item === "string" ? item.trim() : ""));
+};
+
+const normalizeQuestGenerationConfig = (value: unknown): QuestGenerationConfig | undefined => {
+  const root = asRecord(value);
+  if (!root) return undefined;
+
+  const rawProgram = asRecord(root.program);
+  const rawPrompts = asRecord(root.aiPrompts);
+  const rawStep1 = asRecord(rawProgram?.step1);
+  const rawStep2 = asRecord(rawProgram?.step2);
+  const rawStep3 = asRecord(rawProgram?.step3);
+  const rawStep5 = asRecord(rawProgram?.step5);
+  const rawStep6 = asRecord(rawProgram?.step6);
+  const rawStep7 = asRecord(rawProgram?.step7);
+  const rawStep8 = asRecord(rawProgram?.step8);
+
+  return {
+    program: {
+      step1: rawStep1
+        ? {
+            normalizeUserType: normalizeText(rawStep1.normalizeUserType),
+            normalizeFamiliarity: normalizeText(rawStep1.normalizeFamiliarity),
+            normalizeDuration: normalizeText(rawStep1.normalizeDuration),
+          }
+        : undefined,
+      step2: rawStep2
+        ? {
+            spotCountRule: normalizeText(rawStep2.spotCountRule),
+            mobilityConstraintRule: normalizeText(rawStep2.mobilityConstraintRule),
+          }
+        : undefined,
+      step3: rawStep3
+        ? {
+            candidateSelectionRule: normalizeText(rawStep3.candidateSelectionRule),
+            routeOrderingRule: normalizeText(rawStep3.routeOrderingRule),
+            spotDbLinkPolicy: normalizeText(rawStep3.spotDbLinkPolicy),
+            candidateSpotPoolIds: normalizeText(rawStep3.candidateSpotPoolIds),
+          }
+        : undefined,
+      step5: rawStep5
+        ? {
+            narrativeContainerSpec: normalizeText(rawStep5.narrativeContainerSpec),
+            slotInjectionPolicy: normalizeText(rawStep5.slotInjectionPolicy),
+          }
+        : undefined,
+      step6: rawStep6
+        ? {
+            worldSetting: normalizeText(rawStep6.worldSetting),
+            characterProfile: normalizeText(rawStep6.characterProfile),
+            characterRole: normalizeText(rawStep6.characterRole),
+            storyArcFor4Spots: normalizeText(rawStep6.storyArcFor4Spots),
+            storyArcFor5Spots: normalizeText(rawStep6.storyArcFor5Spots),
+            storyArcFor6Spots: normalizeText(rawStep6.storyArcFor6Spots),
+            conversationFlow: normalizeText(rawStep6.conversationFlow),
+          }
+        : undefined,
+      step7: rawStep7
+        ? {
+            validationRuleSet: normalizeText(rawStep7.validationRuleSet),
+            fallbackPolicy: normalizeText(rawStep7.fallbackPolicy),
+          }
+        : undefined,
+      step8: rawStep8
+        ? {
+            finalizeFormat: normalizeText(rawStep8.finalizeFormat),
+            persistAndDispatch: normalizeText(rawStep8.persistAndDispatch),
+          }
+        : undefined,
+    },
+    aiPrompts: {
+      step4RouteOptimization: normalizeText(rawPrompts?.step4RouteOptimization),
+      step6InsertionGeneration: normalizeText(rawPrompts?.step6InsertionGeneration),
+      step7MinimalRepair: normalizeText(rawPrompts?.step7MinimalRepair),
+    },
+  };
 };
 
 const parseAdminWorldConfigPayload = (value: unknown): AdminWorldConfigPayload | null => {
@@ -528,8 +809,12 @@ const parseAdminWorldConfigPayload = (value: unknown): AdminWorldConfigPayload |
   return {
     title: normalizeText(raw.title),
     description: normalizeText(raw.description),
+    audience: normalizeText(raw.audience),
     tone: normalizeText(raw.tone),
     styleRules: normalizeText(raw.styleRules),
+    outputLanguage: normalizeText(raw.outputLanguage),
+    routeDesign: normalizeText(raw.routeDesign),
+    fixedTextPolicy: normalizeText(raw.fixedTextPolicy),
     requiredKeywords: Array.isArray(raw.requiredKeywords)
       ? raw.requiredKeywords.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
       : undefined,
@@ -601,6 +886,7 @@ const parseAdminWorldConfigPayload = (value: unknown): AdminWorldConfigPayload |
     feedbackCommentNote: normalizeText(raw.feedbackCommentNote),
     feedbackSubmitButton: normalizeText(raw.feedbackSubmitButton),
     feedbackThanks: normalizeText(raw.feedbackThanks),
+    questGenerationConfig: normalizeQuestGenerationConfig(raw.questGenerationConfig),
   };
 };
 
@@ -682,6 +968,167 @@ const readPersistedFlowDraft = (): PersistedFlowDraft | null => {
   }
 };
 
+const DEFAULT_QUEST_API_PATH = "/api/kyudai-mvp/quest/generate";
+
+const resolveQuestApiUrl = () => {
+  const explicit = normalizeText(process.env.EXPO_PUBLIC_KYUDAI_QUEST_API_URL);
+  if (explicit) return explicit;
+
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    try {
+      const referrer = normalizeText(document.referrer);
+      if (referrer) {
+        const origin = new URL(referrer).origin;
+        return `${origin}${DEFAULT_QUEST_API_PATH}`;
+      }
+      const origin = window.location.origin;
+      if (origin.includes(":8082")) {
+        return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
+      }
+      return `${origin}${DEFAULT_QUEST_API_PATH}`;
+    } catch {
+      return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
+    }
+  }
+
+  return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
+};
+
+const requestGeneratedQuest = async (input: {
+  simulationInputs: {
+    userType: UserType;
+    familiarity: Familiarity;
+    duration: Duration;
+    explorationStyle: ExplorationStyle;
+    experienceExpectation: ExperienceExpectation;
+  };
+  worldConfig: AdminWorldConfigPayload | null;
+}) => {
+  const endpoint = resolveQuestApiUrl();
+  const requestId = createQuestRequestId();
+  const startedAt = Date.now();
+  const requestBody = {
+    simulationInputs: input.simulationInputs,
+    worldConfig: input.worldConfig,
+  };
+
+  console.groupCollapsed(`[kyudai-mvp][${requestId}] generation.request`);
+  console.info("endpoint", endpoint);
+  console.info("simulationInputs", input.simulationInputs);
+  console.info("worldConfigKeys", input.worldConfig ? Object.keys(input.worldConfig) : []);
+  console.info("hasQuestGenerationConfig", Boolean(input.worldConfig?.questGenerationConfig));
+  console.groupEnd();
+  emitPreviewDebugLog("generation.request", {
+    requestId,
+    endpoint,
+    simulationInputs: input.simulationInputs,
+    worldConfigKeys: input.worldConfig ? Object.keys(input.worldConfig) : [],
+    hasQuestGenerationConfig: Boolean(input.worldConfig?.questGenerationConfig),
+  });
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-request-id": requestId,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  const rawText = await response.text();
+  let payload: QuestGenerationApiResponse | null = null;
+  try {
+    payload = JSON.parse(rawText) as QuestGenerationApiResponse;
+  } catch {
+    payload = null;
+  }
+
+  if (!payload) {
+    console.error(`[kyudai-mvp][${requestId}] generation.response.parse_error`, {
+      status: response.status,
+      statusText: response.statusText,
+      elapsedMs: Date.now() - startedAt,
+      rawTextPreview: clipForBrowserLog(rawText, 3000),
+    });
+    emitPreviewDebugLog("generation.response.parse_error", {
+      requestId,
+      status: response.status,
+      statusText: response.statusText,
+      elapsedMs: Date.now() - startedAt,
+      rawTextPreview: clipForBrowserLog(rawText, 1200),
+    });
+    throw new Error("クエスト生成APIのレスポンスJSON解析に失敗しました。");
+  }
+
+  if (!response.ok || !payload.ok || !payload.quest) {
+    console.error(`[kyudai-mvp][${requestId}] generation.response.error`, {
+      status: response.status,
+      statusText: response.statusText,
+      elapsedMs: Date.now() - startedAt,
+      payload,
+    });
+    emitPreviewDebugLog("generation.response.error", {
+      requestId,
+      status: response.status,
+      statusText: response.statusText,
+      elapsedMs: Date.now() - startedAt,
+      payload,
+    });
+    throw new Error(payload.error || "クエスト生成APIの実行に失敗しました。");
+  }
+
+  const steps = Array.isArray(payload.steps) ? payload.steps : [];
+  const stepTraces = Array.isArray(payload.stepTraces) ? payload.stepTraces : [];
+  console.group(`[kyudai-mvp][${requestId}] generation.response.success`);
+  console.info("meta", {
+    status: response.status,
+    elapsedMs: Date.now() - startedAt,
+    generatedAt: payload.generatedAt ?? null,
+    executedUntilStep: payload.executedUntilStep ?? null,
+    stepsCount: steps.length,
+    stepTracesCount: stepTraces.length,
+  });
+  if (steps.length > 0) {
+    console.table(
+      steps.map((step) => ({
+        id: step.id,
+        label: step.label,
+        status: step.status,
+        detail: step.detail,
+      })),
+    );
+    console.info("steps.detail", steps);
+  }
+  if (stepTraces.length > 0) {
+    console.info("stepTraces.detail", stepTraces);
+  }
+  console.info("ready.output", {
+    generatedStoryName: payload.quest.generatedStoryName,
+    readyHeroLead: payload.quest.readyHeroLead,
+    readySummaryTitle: payload.quest.readySummaryTitle,
+    readySummaryText: payload.quest.readySummaryText,
+    spotsCount: Array.isArray(payload.quest.spots) ? payload.quest.spots.length : 0,
+    spotIds: Array.isArray(payload.quest.spots) ? payload.quest.spots.map((spot) => spot.id) : [],
+  });
+  console.groupEnd();
+  emitPreviewDebugLog("generation.response.success", {
+    requestId,
+    status: response.status,
+    elapsedMs: Date.now() - startedAt,
+    generatedAt: payload.generatedAt ?? null,
+    steps: steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail })),
+    ready: {
+      generatedStoryName: payload.quest.generatedStoryName,
+      readyHeroLead: payload.quest.readyHeroLead,
+      readySummaryTitle: payload.quest.readySummaryTitle,
+      readySummaryText: payload.quest.readySummaryText,
+      spotIds: Array.isArray(payload.quest.spots) ? payload.quest.spots.map((spot) => spot.id) : [],
+    },
+  });
+
+  return payload;
+};
+
 type FeatureCard = {
   id: string;
   title: string;
@@ -744,57 +1191,112 @@ const journeySteps: JourneyStep[] = [
   {
     id: "journey-ready",
     title: "あなた専用のシナリオを生成",
-    body: "立場やキャンパスの慣れ具合をもとに、あなたにぴったりの語り口とスポット順を自動で用意します。",
+    body: "入力条件をもとに、Center Zone起点の6スポットを起承転結に沿って構成します。",
     icon: "sparkles-outline",
     badge: "STEP 1",
   },
   {
     id: "journey-walk",
-    title: "各スポットの物語を順番に体験",
-    body: "移動は不要。ボタンを進めるだけで、伊都キャンパスの各スポットを物語とともに巡れます。",
+    title: "ルートを順番にたどる",
+    body: "地図と到着演出を使い、6地点の導線を無理なく確認しながら進めます。",
     icon: "book-outline",
     badge: "STEP 2",
   },
   {
     id: "journey-story",
-    title: "スポットごとに物語と解説が展開",
-    body: "各スポットで、その場所ならではの背景や文脈を短いシナリオで体感できます。",
+    title: "豆知識が物語に変わる",
+    body: "各スポットの具体情報を短いシナリオへ変換し、最後にWest Gateで全体を接続します。",
     icon: "map-outline",
     badge: "STEP 3",
   },
 ];
 
 const readyStoryToneMap: Record<Familiarity, string> = {
-  はじめて来た: "はじまりの章",
-  まだあまり慣れていない: "案内の章",
-  何度か来たことがある: "再発見の章",
-  よく来ている: "深掘りの章",
+  はじめて来た: "起承転結の案内編",
+  まだあまり慣れていない: "観測と発見の実地編",
+  何度か来たことがある: "再解釈の深掘り編",
+  よく来ている: "知の接続を磨く編",
 };
 
 const readyDurationLabelMap: Record<Duration, string> = {
-  "15〜20分": "短時間で集中",
-  "20〜30分": "バランス良く巡る",
-  "30〜45分": "じっくり体験",
+  "15〜20分": "要点を速く巡る",
+  "20〜30分": "6地点を標準速度で巡る",
+  "30〜45分": "6地点を深く味わう",
 };
 
 const readySpotOverviewMap: Record<Spot["id"], string> = {
-  "big-orange": "全ての物語が始まる場所。インフォメーションと建築があなたを迎えます。",
-  "center-zone": "学生たちの活気あふれる学びの心臓部。講義棟が立ち並ぶエリアです。",
-  "central-library": "静寂と知性が同居する空間。広大な知識のアーカイブが広がります。",
-  "innovation-plaza": "学際的な挑戦が交差する実践拠点。新しい発想の入口として機能します。",
-  "research-commons": "研究者と学生の対話が生まれる空間。高度な学びの気配を感じられるエリアです。",
-  "west-gate": "キャンパスの広がりを感じる西の玄関口。ここから次の旅路へ。",
+  "center-zone": "講義棟群への導線が交わる基点。まず人の流れを読み解く導入地点です。",
+  "big-orange": "案内・食事・待ち合わせが集約された生活拠点。迷った時の再集合ポイントです。",
+  "innovation-plaza": "学びを試作へ変える実験拠点。展示や発表から挑戦の文脈を拾えます。",
+  "central-library": "静寂と探索が共存する知の中枢。紙と電子の資料を横断して問いを深めます。",
+  "research-commons": "異分野の対話が立ち上がる共創空間。研究がつながる瞬間を観測できます。",
+  "west-gate": "学内で得た視点を外へ持ち帰る終着点。6地点の経験を日常へ接続します。",
 };
 
 const defaultPrologueNarrationText =
-  "あなたが今日歩くこの場所には、\nまだ気づいていない物語が眠っています。\nいつもの景色を、少し違う目線で辿ってみましょう。";
+  "九州大学伊都キャンパスが建っているこの場所には、\n大学ができるよりずっと前から、人が集まり、物が行き交い、何かが作られ、残されてきた時間がある。\n\nその流れを、ひとつのファイルにまとめようとした人がいた。\n昔この地域で起きていたことを、\n今のキャンパスの場所と一枚ずつ結びつけて読めるようにするためのファイルだ。\n\nけれど、そのファイルは完成しなかった。\n途中のページが抜けたまま、最後まで読めなくなっている。\n\nあなたはこれから、澪先輩と一緒に、その抜けたページを探しに行く。\n集めるのは、ただの紙ではない。\nそれぞれのページには、昔この地域で実際に起きていたことが書かれている。\n\n外から人や物が届いていたこと。\n人が集まり、やり取りが起きていたこと。\n何かを作る営みがあったこと。\nその跡が、今まで残っていること。\n\nページを集めて最後まで読めたとき、\nただキャンパスを歩くだけでは見えない、もうひとつの九州大学が見えてくる。\n\nなぜ今、ここに九州大学伊都キャンパスがあるのか。\nその答えを読むために、石ヶ原ファイルを完成させよう。";
 const defaultEpilogueNarrationText =
-  "歩いた景色も、立ち止まった場所も、\n今日の伊都キャンパスの記憶として残っていきます。\n最後に、今回の体験について教えてください。";
+  "石ヶ原ファイルは、ここで閉じられる。\n\nあなたが集めたページに書かれていたのは、\n昔この地域で本当に起きていたことだった。\n\n外から人や物が届いたこと。\n人が集まり、やり取りが生まれたこと。\n何かを作る営みがあったこと。\nその跡が、今まで残っていたこと。\n\n最後まで読んでわかるのは、\nそれが昔の出来事で終わっていない、ということだ。\n\n今、あなたが歩いている九州大学伊都キャンパスもまた、\nその続きの上にある。\n\nここは、何もない場所に突然できた大学ではない。\nもっと前から、人が来て、集まり、何かを生み出し、残してきた土地の、いちばん新しい形だ。\n\nだから次にこのキャンパスを歩くとき、\nあなたが見るのは、ただの建物ではない。\n\n昔から続いてきた流れの、その先にある今の九州大学だ。";
+const narrationPageMaxChars = 170;
+
+const splitNarrationIntoPages = (raw: string, maxChars = narrationPageMaxChars): string[] => {
+  const normalized = raw.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return [""];
+
+  const paragraphs = normalized
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0);
+  const pages: string[] = [];
+  let currentPage = "";
+
+  const pushPage = (value: string) => {
+    const trimmed = value.trim();
+    if (trimmed.length > 0) pages.push(trimmed);
+  };
+
+  const splitLongParagraph = (paragraph: string): string => {
+    let remaining = paragraph.trim();
+    while (remaining.length > maxChars) {
+      const windowText = remaining.slice(0, maxChars);
+      const breakAt = Math.max(windowText.lastIndexOf("。"), windowText.lastIndexOf("、"), windowText.lastIndexOf(" "));
+      const cutIndex = breakAt >= Math.floor(maxChars * 0.55) ? breakAt + 1 : maxChars;
+      pushPage(remaining.slice(0, cutIndex));
+      remaining = remaining.slice(cutIndex).trim();
+    }
+    return remaining;
+  };
+
+  for (const paragraph of paragraphs) {
+    let nextParagraph = paragraph;
+    if (nextParagraph.length > maxChars) {
+      if (currentPage) {
+        pushPage(currentPage);
+        currentPage = "";
+      }
+      nextParagraph = splitLongParagraph(nextParagraph);
+    }
+
+    if (!nextParagraph) continue;
+    const candidate = currentPage ? `${currentPage}\n\n${nextParagraph}` : nextParagraph;
+    if (candidate.length <= maxChars) {
+      currentPage = candidate;
+    } else {
+      pushPage(currentPage);
+      currentPage = nextParagraph;
+    }
+  }
+
+  if (currentPage) pushPage(currentPage);
+  return pages.length > 0 ? pages : [normalized];
+};
+
 const spotTypingIntervalMs = 52;
 const spotTypingStep = 1;
 
 export default function App() {
-  const useMockMapBackground = true;
+  const useMockMapBackground =
+    (process.env.EXPO_PUBLIC_USE_MOCK_MAP_BACKGROUND ?? "").trim().toLowerCase() === "true";
   const { width } = useWindowDimensions();
   const contentWidth = useMemo(() => Math.max(0, Math.min(width - 32, 520)), [width]);
   const heroHeight = contentWidth;
@@ -872,18 +1374,70 @@ export default function App() {
       : "場所を覚えたい",
   );
   const [adminWorldConfig, setAdminWorldConfig] = useState<AdminWorldConfigPayload | null>(null);
+  const [generatedQuest, setGeneratedQuest] = useState<GeneratedQuestPayload | null>(null);
+  const [generatedQuestSteps, setGeneratedQuestSteps] = useState<GeneratedQuestStep[]>([]);
+  const [isGeneratingQuest, setIsGeneratingQuest] = useState(false);
+  const [questGenerationError, setQuestGenerationError] = useState<string | null>(null);
+
+  const baseSpots = useMemo(
+    () => buildExperienceSpots(selectedFamiliarity, selectedDuration),
+    [selectedDuration, selectedFamiliarity],
+  );
+  const generatedRouteSpots = useMemo(() => {
+    const seen = new Set<string>();
+    const resolved: Spot[] = [];
+    for (const generatedSpot of generatedQuest?.spots ?? []) {
+      const id = normalizeText(generatedSpot?.id);
+      if (!id || seen.has(id)) continue;
+
+      const catalogSpot = spotCatalogMap[id];
+      const latitude = normalizeFiniteNumber(generatedSpot?.lat) ?? catalogSpot?.coordinate.latitude;
+      const longitude = normalizeFiniteNumber(generatedSpot?.lng) ?? catalogSpot?.coordinate.longitude;
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
+
+      const generatedScenarioTexts = (generatedSpot?.scenarioTexts ?? [])
+        .map((text) => text.trim())
+        .filter((text) => text.length > 0)
+        .slice(0, 3);
+      const fallbackScenarioTexts =
+        catalogSpot?.scenarioTexts ??
+        [`${normalizeText(generatedSpot?.name) ?? id}に到着しました。周囲の導線と見どころを観測しましょう。`];
+
+      resolved.push({
+        id,
+        name: normalizeText(generatedSpot?.name) ?? catalogSpot?.name ?? id,
+        coordinate: {
+          latitude,
+          longitude,
+        },
+        scenarioTexts: generatedScenarioTexts.length > 0 ? generatedScenarioTexts : fallbackScenarioTexts,
+      });
+      seen.add(id);
+    }
+    return resolved;
+  }, [generatedQuest?.spots]);
+  const generatedSpotOverviewMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const spot of generatedQuest?.spots ?? []) {
+      if (!spot?.id) continue;
+      const overview = normalizeText(spot.overview);
+      if (!overview) continue;
+      map[spot.id] = overview;
+    }
+    return map;
+  }, [generatedQuest?.spots]);
+
   const spots = useMemo(() => {
-    const baseSpots = buildExperienceSpots(selectedFamiliarity, selectedDuration);
+    const routeSpots = generatedRouteSpots.length > 0 ? generatedRouteSpots : baseSpots;
     const adminSpotNarratives = adminWorldConfig?.spotNarratives ?? [];
-    return baseSpots.map((spot, index) => {
-      const overrideNarrative = adminSpotNarratives[index];
-      if (!overrideNarrative) return spot;
+    return routeSpots.map((spot, index) => {
+      const overrideNarrative = adminSpotNarratives[index]?.trim();
       return {
         ...spot,
-        scenarioTexts: [overrideNarrative],
+        scenarioTexts: overrideNarrative ? [overrideNarrative] : spot.scenarioTexts,
       };
     });
-  }, [adminWorldConfig, selectedDuration, selectedFamiliarity]);
+  }, [adminWorldConfig?.spotNarratives, baseSpots, generatedRouteSpots]);
   const [landingBottomBarHeight, setLandingBottomBarHeight] = useState(0);
   const [readyBottomBarHeight, setReadyBottomBarHeight] = useState(0);
   const [setupBottomBarHeight, setSetupBottomBarHeight] = useState(0);
@@ -925,6 +1479,8 @@ export default function App() {
   const [flowTransitionBody, setFlowTransitionBody] = useState("画面を切り替えています");
   const [isPrologueTypingDone, setIsPrologueTypingDone] = useState(false);
   const [isEpilogueTypingDone, setIsEpilogueTypingDone] = useState(false);
+  const [prologuePageIndex, setProloguePageIndex] = useState(0);
+  const [epiloguePageIndex, setEpiloguePageIndex] = useState(0);
   const [spotScenarioSegmentIndex, setSpotScenarioSegmentIndex] = useState(0);
   const [spotTypedCharCount, setSpotTypedCharCount] = useState(0);
   const [isSpotTypingDone, setIsSpotTypingDone] = useState(true);
@@ -943,6 +1499,8 @@ export default function App() {
   const prologueTypingAnim = useRef(new Animated.Value(0)).current;
   const epilogueEntryAnim = useRef(new Animated.Value(screen === "epilogue" ? 1 : 0)).current;
   const epilogueTypingAnim = useRef(new Animated.Value(0)).current;
+  const prologueSkipEnabledAtRef = useRef(0);
+  const epilogueSkipEnabledAtRef = useRef(0);
   const preparingPulseAnim = useRef(new Animated.Value(0)).current;
   const preparingRotateAnim = useRef(new Animated.Value(0)).current;
   const preparingBarAnimA = useRef(new Animated.Value(0)).current;
@@ -953,6 +1511,7 @@ export default function App() {
 
   const safeCurrentSpotIndex = clampSpotIndex(currentSpotIndex, spots.length);
   const currentSpot = spots[safeCurrentSpotIndex] ?? spots[0] ?? spotCatalog[0];
+  const currentStoryArcMeta = storyArcMetaMap[currentSpot.id] ?? fallbackStoryArcMeta;
   const spotScenarioTexts = currentSpot.scenarioTexts;
   const currentSpotScenarioText =
     spotScenarioTexts[Math.min(spotScenarioSegmentIndex, Math.max(spotScenarioTexts.length - 1, 0))] ?? "";
@@ -973,7 +1532,7 @@ export default function App() {
   const routeOrigin = liveCurrentLocation ?? fallbackOrigin;
   const activeCurrentLocation = routeOrigin;
   const activeTargetIndex = isExperienceCompleted ? -1 : safeCurrentSpotIndex;
-  const allSpotCoordinates = useMemo(() => spots.map((spot) => spot.coordinate), []);
+  const allSpotCoordinates = useMemo(() => spots.map((spot) => spot.coordinate), [spots]);
   const mapFitCoordinates = useMemo(() => [routeOrigin, ...allSpotCoordinates], [routeOrigin, allSpotCoordinates]);
   const mapInitialRegion = useMemo(() => createRegionFromCoordinates(mapFitCoordinates), [mapFitCoordinates]);
   const webFallbackGoogleEmbedUrl = useMemo(() => {
@@ -1060,7 +1619,7 @@ export default function App() {
       wholeRouteDots,
       activeRouteDots,
     };
-  }, [activeTargetIndex, routeOrigin]);
+  }, [activeTargetIndex, routeOrigin, spots]);
   const effectiveLandingTopTag = adminWorldConfig?.landingTopTag || "伊都キャンパス探索ナビ";
   const effectiveLandingHeroPanelTitle = adminWorldConfig?.landingHeroPanelTitle || "九大を、物語で知る。";
   const effectiveLandingHeroPanelBody = adminWorldConfig?.landingHeroPanelBody || "その場で体感する、伊都キャンパス紹介体験";
@@ -1091,32 +1650,66 @@ export default function App() {
   const effectiveSetupStartButton = adminWorldConfig?.setupStartButton || "体験をつくる";
 
   const effectivePreparingTitle = adminWorldConfig?.preparingTitle || "あなたにあった\n体験を整えています";
-  const effectivePreparingBody =
-    adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。";
-  const effectivePreparingStatusDone = adminWorldConfig?.preparingStatusDone || "条件を整理しています";
-  const effectivePreparingStatusProgress = adminWorldConfig?.preparingStatusProgress || "体験の流れを整えています";
-  const effectivePreparingStatusPending = adminWorldConfig?.preparingStatusPending || "最初の場所を準備しています";
+  const latestGenerationStepLabel =
+    generatedQuestSteps.length > 0 ? generatedQuestSteps[generatedQuestSteps.length - 1]?.label : undefined;
+  const effectivePreparingBody = questGenerationError
+    ? `${adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。"}\n${questGenerationError}`
+    : isGeneratingQuest
+      ? `${adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。"}\n現在: ${latestGenerationStepLabel ?? "ステップ1〜8を実行中"}`
+      : adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。";
+  const effectivePreparingStatusDone = generatedQuest
+    ? "ステップ1〜8の生成を完了しました"
+    : adminWorldConfig?.preparingStatusDone || "条件を整理しています";
+  const effectivePreparingStatusProgress = questGenerationError
+    ? "生成に失敗しました。再試行するかデフォルト体験で続行できます。"
+    : isGeneratingQuest
+      ? latestGenerationStepLabel
+        ? `${latestGenerationStepLabel}を処理中です`
+        : "AI生成フローを実行しています"
+      : adminWorldConfig?.preparingStatusProgress || "体験の流れを整えています";
+  const effectivePreparingStatusPending =
+    adminWorldConfig?.preparingStatusPending || "最初の場所を準備しています";
   const effectivePreparingSkipButton = adminWorldConfig?.preparingSkipButton || "次へ";
   const effectivePreparingFooter = adminWorldConfig?.preparingFooter || "まもなく始まります";
 
-  const readyStoryLead = "伊都キャンパス探索ルート";
-  const readyStoryTone = readyStoryToneMap[selectedFamiliarity];
+  const readyStoryLead = "九大センターゾーン発 観測航路";
+  const generatedStoryName = normalizeText(generatedQuest?.generatedStoryName);
+  const readyStoryTone = normalizeText(generatedQuest?.storyTone) || readyStoryToneMap[selectedFamiliarity];
   const effectiveReadyChapterLabel = adminWorldConfig?.readyChapterLabel || "CHAPTER 01";
-  const effectiveReadyStoryLead = adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLead;
-  const effectiveReadySummaryTitle = adminWorldConfig?.readySummaryTitle || "体験の準備が整いました";
+  const effectiveReadyStoryLead =
+    normalizeText(generatedQuest?.readyHeroLead) || adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLead;
+  const effectiveReadySummaryTitle =
+    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "体験の準備が整いました";
   const effectiveReadyGeneratedStoryLabel = adminWorldConfig?.readyGeneratedStoryLabel || "生成された物語名";
   const effectiveReadyStartButton = adminWorldConfig?.readyStartButton || "物語を始める";
   const effectiveReadyTransitionTitle = adminWorldConfig?.readyTransitionTitle || "プロローグへ移動中";
   const effectiveReadyTransitionBody = adminWorldConfig?.readyTransitionBody || "物語の扉をひらいています";
 
-  const effectivePrologueNarrationText =
-    adminWorldConfig?.prologueBody || adminWorldConfig?.description || defaultPrologueNarrationText;
+  const effectivePrologueNarrationText = defaultPrologueNarrationText;
   const effectivePrologueCtaText = adminWorldConfig?.prologueCta || "最初の場所へ向かう";
-  const effectiveEpilogueNarrationText = adminWorldConfig?.epilogueBody || defaultEpilogueNarrationText;
+  const effectiveEpilogueNarrationText = defaultEpilogueNarrationText;
   const effectiveEpilogueCtaText = adminWorldConfig?.epilogueCta || "体験を振り返る";
+  const prologueNarrationPages = useMemo(
+    () => splitNarrationIntoPages(effectivePrologueNarrationText),
+    [effectivePrologueNarrationText],
+  );
+  const epilogueNarrationPages = useMemo(
+    () => splitNarrationIntoPages(effectiveEpilogueNarrationText),
+    [effectiveEpilogueNarrationText],
+  );
+  const prologueLastPageIndex = Math.max(prologueNarrationPages.length - 1, 0);
+  const epilogueLastPageIndex = Math.max(epilogueNarrationPages.length - 1, 0);
+  const safeProloguePageIndex = Math.min(prologuePageIndex, prologueLastPageIndex);
+  const safeEpiloguePageIndex = Math.min(epiloguePageIndex, epilogueLastPageIndex);
+  const currentPrologueNarrationText = prologueNarrationPages[safeProloguePageIndex] ?? "";
+  const currentEpilogueNarrationText = epilogueNarrationPages[safeEpiloguePageIndex] ?? "";
+  const hasNextProloguePage = safeProloguePageIndex < prologueLastPageIndex;
+  const hasNextEpiloguePage = safeEpiloguePageIndex < epilogueLastPageIndex;
+  const prologueCtaLabel = hasNextProloguePage ? "次のページへ" : effectivePrologueCtaText;
+  const epilogueCtaLabel = hasNextEpiloguePage ? "次のページへ" : effectiveEpilogueCtaText;
 
-  const effectiveSpotMapInfoLine1 = adminWorldConfig?.spotMapInfoLine1 || "次の目的地に向かいましょう。";
-  const effectiveSpotMapInfoLine2 = adminWorldConfig?.spotMapInfoLine2 || "到着したら物語が始まります。";
+  const effectiveSpotMapInfoLine1 = adminWorldConfig?.spotMapInfoLine1 || currentStoryArcMeta.mapLead;
+  const effectiveSpotMapInfoLine2 = adminWorldConfig?.spotMapInfoLine2 || currentStoryArcMeta.trivia;
   const effectiveSpotMapArrivedLabel = adminWorldConfig?.spotMapArrivedLabel || "このスポットに到着した";
   const effectiveSpotMapRestartLabel = adminWorldConfig?.spotMapRestartLabel || "最初のスポットから始める";
   const effectiveSpotSpeakerBadge = adminWorldConfig?.spotSpeakerBadge || "案内役";
@@ -1144,14 +1737,8 @@ export default function App() {
   const effectiveFeedbackSubmitButton = adminWorldConfig?.feedbackSubmitButton || "送信して終了する";
   const effectiveFeedbackThanks = adminWorldConfig?.feedbackThanks || "Thank you for your voice";
 
-  const prologueNarrationChars = useMemo(
-    () => Array.from(effectivePrologueNarrationText),
-    [effectivePrologueNarrationText],
-  );
-  const epilogueNarrationChars = useMemo(
-    () => Array.from(effectiveEpilogueNarrationText),
-    [effectiveEpilogueNarrationText],
-  );
+  const prologueNarrationChars = useMemo(() => Array.from(currentPrologueNarrationText), [currentPrologueNarrationText]);
+  const epilogueNarrationChars = useMemo(() => Array.from(currentEpilogueNarrationText), [currentEpilogueNarrationText]);
   const readySectionWidth = useMemo(() => Math.max(0, Math.min(width - 32, 896)), [width]);
   const readyHeroTitleFontSize = useMemo(() => (readySectionWidth >= 768 ? 56 : 36), [readySectionWidth]);
   const readyHeroTitleLineHeight = useMemo(() => (readySectionWidth >= 768 ? 64 : 44), [readySectionWidth]);
@@ -1166,17 +1753,19 @@ export default function App() {
     [selectedDuration, spots],
   );
   const readyStorySynopsis = useMemo(() => {
+    const generatedSummaryText = normalizeText(generatedQuest?.readySummaryText);
+    if (generatedSummaryText) return generatedSummaryText;
     if (adminWorldConfig?.readySummaryText) return adminWorldConfig.readySummaryText;
     if (adminWorldConfig?.description) return adminWorldConfig.description;
 
     const familiarityView: Record<Familiarity, string> = {
-      はじめて来た: "初めて訪れる視点でも迷わないように",
-      まだあまり慣れていない: "まだ掴みきれていない導線を補いながら",
-      何度か来たことがある: "知っている景色に新しい意味を重ねながら",
-      よく来ている: "慣れた導線を深く読み解きながら",
+      はじめて来た: "初来訪でも迷わないように",
+      まだあまり慣れていない: "日常導線をつかみ直せるように",
+      何度か来たことがある: "既知の景色を再解釈できるように",
+      よく来ている: "慣れた導線を知識として言語化できるように",
     };
-    return `${familiarityView[selectedFamiliarity]}伊都キャンパスを巡る物語です。各スポットで短いシナリオを受け取りながら、場所の背景と日常の使い方を自然に理解できる構成になっています。`;
-  }, [adminWorldConfig?.description, adminWorldConfig?.readySummaryText, selectedFamiliarity]);
+    return `${familiarityView[selectedFamiliarity]}、Center Zone起点の6地点を起承転結で巡る構成です。各スポットで豆知識を物語へ変換し、最後にWest Gateで全体を接続します。`;
+  }, [adminWorldConfig?.description, adminWorldConfig?.readySummaryText, generatedQuest?.readySummaryText, selectedFamiliarity]);
   const readyFamiliarityChipLabel = useMemo(() => {
     const familiarityLabelMap: Record<Familiarity, string> = {
       はじめて来た: "はじめて",
@@ -1187,6 +1776,33 @@ export default function App() {
     return familiarityLabelMap[selectedFamiliarity];
   }, [selectedFamiliarity]);
   const readyDurationChipLabel = selectedDuration.replace("〜", "-");
+  useEffect(() => {
+    if (screen !== "ready") return;
+    console.groupCollapsed("[kyudai-mvp] ready.render.binding");
+    console.info("generatedQuest.raw", generatedQuest);
+    console.info("effective.ready", {
+      generatedStoryName,
+      effectiveReadyStoryLead,
+      effectiveReadySummaryTitle,
+      readyStorySynopsis,
+      readyStoryTone,
+      selectedUserType,
+      selectedFamiliarity,
+      selectedDuration,
+    });
+    console.groupEnd();
+  }, [
+    screen,
+    generatedQuest,
+    generatedStoryName,
+    effectiveReadyStoryLead,
+    effectiveReadySummaryTitle,
+    readyStorySynopsis,
+    readyStoryTone,
+    selectedUserType,
+    selectedFamiliarity,
+    selectedDuration,
+  ]);
   const readyInputItems = useMemo<ReadyInputItem[]>(
     () => [
       {
@@ -1215,20 +1831,20 @@ export default function App() {
       {
         id: "ready-tip-a",
         icon: "map-outline",
-        title: "地図で確認",
-        body: "アプリのナビゲーション機能を使って、迷わずにスポットへ辿り着けます。",
+        title: "導線を観測",
+        body: "現在地から次スポットまでの導線を先に把握すると、起承転結の流れが読みやすくなります。",
       },
       {
         id: "ready-tip-b",
         icon: "book-outline",
-        title: "現地で読む",
-        body: "スポットに到着すると、その場所にまつわる隠された物語が解放されます。",
+        title: "豆知識を回収",
+        body: "到着後の本文は、各スポットの機能や使われ方を物語に変換した内容で構成されています。",
       },
       {
         id: "ready-tip-c",
         icon: "create-outline",
-        title: "記録する",
-        body: "感じたこと、見つけた景色をあなたの手帳にメモして残しましょう。",
+        title: "出口で接続",
+        body: "最後にWest Gateで全体を振り返ると、次に取る行動が具体化しやすくなります。",
       },
     ],
     [],
@@ -1730,18 +2346,145 @@ export default function App() {
     return sessionId;
   };
 
-  const handleSetupCreateExperiencePress = () => {
+  const runQuestGeneration = async ({ moveToReady = true }: { moveToReady?: boolean } = {}) => {
+    if (isGeneratingQuest) return false;
+
+    const sessionId = ensureExperienceSession();
+    console.info("[kyudai-mvp] runQuestGeneration.start", {
+      moveToReady,
+      sessionId,
+      simulationInputs: {
+        userType: selectedUserType,
+        familiarity: selectedFamiliarity,
+        duration: selectedDuration,
+        explorationStyle: selectedExplorationStyle,
+        experienceExpectation: selectedExperienceExpectation,
+      },
+      hasWorldConfig: Boolean(adminWorldConfig),
+      worldConfigKeys: adminWorldConfig ? Object.keys(adminWorldConfig) : [],
+    });
+    emitPreviewDebugLog("runQuestGeneration.start", {
+      moveToReady,
+      sessionId,
+      simulationInputs: {
+        userType: selectedUserType,
+        familiarity: selectedFamiliarity,
+        duration: selectedDuration,
+        explorationStyle: selectedExplorationStyle,
+        experienceExpectation: selectedExperienceExpectation,
+      },
+      hasWorldConfig: Boolean(adminWorldConfig),
+      worldConfigKeys: adminWorldConfig ? Object.keys(adminWorldConfig) : [],
+    });
+    setIsGeneratingQuest(true);
+    setQuestGenerationError(null);
+    setGeneratedQuest(null);
+    setGeneratedQuestSteps([]);
+
+    try {
+      const result = await requestGeneratedQuest({
+        simulationInputs: {
+          userType: selectedUserType,
+          familiarity: selectedFamiliarity,
+          duration: selectedDuration,
+          explorationStyle: selectedExplorationStyle,
+          experienceExpectation: selectedExperienceExpectation,
+        },
+        worldConfig: adminWorldConfig,
+      });
+
+      setGeneratedQuest(result.quest ?? null);
+      setGeneratedQuestSteps(Array.isArray(result.steps) ? result.steps : []);
+      setCurrentSpotIndex(0);
+      setIsExperienceCompleted(false);
+      setSpotScenarioSegmentIndex(0);
+      setSpotTypedCharCount(0);
+      setIsSpotTypingDone(true);
+
+      console.info("[kyudai-mvp] runQuestGeneration.success.apply", {
+        generatedStoryName: result.quest?.generatedStoryName,
+        readyHeroLead: result.quest?.readyHeroLead,
+        readySummaryTitle: result.quest?.readySummaryTitle,
+        readySummaryText: result.quest?.readySummaryText,
+        steps: Array.isArray(result.steps)
+          ? result.steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail }))
+          : [],
+      });
+      emitPreviewDebugLog("runQuestGeneration.success.apply", {
+        generatedStoryName: result.quest?.generatedStoryName,
+        readyHeroLead: result.quest?.readyHeroLead,
+        readySummaryTitle: result.quest?.readySummaryTitle,
+        readySummaryText: result.quest?.readySummaryText,
+        steps: Array.isArray(result.steps)
+          ? result.steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail }))
+          : [],
+      });
+
+      await persistSessionDocument(
+        sessionId,
+        {
+          status: "generated",
+          generatedAt: new Date().toISOString(),
+          setup: {
+            userType: selectedUserType,
+            familiarity: selectedFamiliarity,
+            duration: selectedDuration,
+            explorationStyle: selectedExplorationStyle,
+            experienceExpectation: selectedExperienceExpectation,
+          },
+          generation: {
+            steps: Array.isArray(result.steps) ? result.steps : [],
+            quest: result.quest ?? null,
+          },
+        },
+        "generation",
+      );
+
+      if (moveToReady) {
+        setScreen("ready");
+      }
+      return true;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "クエスト生成に失敗しました。";
+      console.error("[kyudai-mvp] Quest generation failed", {
+        errorMessage,
+        error,
+      });
+      emitPreviewDebugLog("runQuestGeneration.error", {
+        errorMessage,
+      });
+      setQuestGenerationError(errorMessage);
+      return false;
+    } finally {
+      setIsGeneratingQuest(false);
+    }
+  };
+
+  const handleSetupCreateExperiencePress = async () => {
+    if (isGeneratingQuest) return;
     ensureExperienceSession();
     setFeedbackOverallRating(null);
     setFeedbackGuidanceScore(null);
     setFeedbackCampusScore(null);
+    setFeedbackVisitIntentScore(null);
+    setFeedbackExpectationScore(null);
     setFeedbackReuseIntent(null);
     setFeedbackComment("");
     setScreen("preparing");
+    await runQuestGeneration({ moveToReady: true });
   };
 
-  const handleReadyStartPress = () => {
+  const handleReadyStartPress = async () => {
     if (isReadyTransitioning) return;
+    if (isGeneratingQuest) return;
+    if (!generatedQuest) {
+      setScreen("preparing");
+      const generated = await runQuestGeneration({ moveToReady: true });
+      if (!generated) return;
+    }
     if (!experienceSessionId) {
       ensureExperienceSession();
     }
@@ -1812,12 +2555,27 @@ export default function App() {
         readyTransitionPulseAnim.setValue(0);
         readyTransitionProgressAnim.setValue(0);
       });
-    });
+      });
   };
+
+  useEffect(() => {
+    if (screen !== "ready") return;
+    if (generatedQuest) return;
+    if (isGeneratingQuest) return;
+    if (questGenerationError) return;
+
+    void runQuestGeneration({ moveToReady: false });
+  }, [generatedQuest, isGeneratingQuest, questGenerationError, runQuestGeneration, screen]);
 
   const handlePrologueNarrationPress = () => {
     if (screen !== "prologue") return;
-    if (isPrologueTypingDone) return;
+    if (isPrologueTypingDone) {
+      if (hasNextProloguePage) {
+        setProloguePageIndex((prev) => Math.min(prev + 1, prologueLastPageIndex));
+      }
+      return;
+    }
+    if (Date.now() < prologueSkipEnabledAtRef.current) return;
     prologueEntryAnim.stopAnimation();
     prologueTypingAnim.stopAnimation();
     prologueEntryAnim.setValue(1);
@@ -1827,7 +2585,13 @@ export default function App() {
 
   const handleEpilogueNarrationPress = () => {
     if (screen !== "epilogue") return;
-    if (isEpilogueTypingDone) return;
+    if (isEpilogueTypingDone) {
+      if (hasNextEpiloguePage) {
+        setEpiloguePageIndex((prev) => Math.min(prev + 1, epilogueLastPageIndex));
+      }
+      return;
+    }
+    if (Date.now() < epilogueSkipEnabledAtRef.current) return;
     epilogueEntryAnim.stopAnimation();
     epilogueTypingAnim.stopAnimation();
     epilogueEntryAnim.setValue(1);
@@ -1987,7 +2751,7 @@ export default function App() {
   };
 
   const renderFlowTransitionOverlay = () => (
-    <Animated.View pointerEvents="auto" style={[styles.mapScenarioTransitionOverlay, mapScenarioTransitionOverlayAnimatedStyle]}>
+    <Animated.View style={[styles.mapScenarioTransitionOverlay, { pointerEvents: "auto" }, mapScenarioTransitionOverlayAnimatedStyle]}>
       <Animated.View style={[styles.mapScenarioTransitionGlow, mapScenarioTransitionGlowAnimatedStyle]} />
       <Animated.View style={[styles.mapScenarioTransitionPanel, mapScenarioTransitionPanelAnimatedStyle]}>
         <View style={styles.mapScenarioTransitionIconWrap}>
@@ -2046,6 +2810,10 @@ export default function App() {
       setFeedbackExpectationScore(null);
       setFeedbackReuseIntent(null);
       setFeedbackComment("");
+      setGeneratedQuest(null);
+      setGeneratedQuestSteps([]);
+      setQuestGenerationError(null);
+      setIsGeneratingQuest(false);
       setIsSubmittingFeedback(false);
       setScreen("landing");
     }
@@ -2411,6 +3179,18 @@ export default function App() {
 
   useEffect(() => {
     if (screen !== "prologue") return;
+    setProloguePageIndex(0);
+  }, [screen, prologueNarrationPages.length]);
+
+  useEffect(() => {
+    if (screen !== "epilogue") return;
+    setEpiloguePageIndex(0);
+  }, [screen, epilogueNarrationPages.length]);
+
+  useEffect(() => {
+    if (screen !== "prologue") return;
+    // Ignore touch carry-over from the transition CTA so narration doesn't auto-skip.
+    prologueSkipEnabledAtRef.current = Date.now() + (safeProloguePageIndex === 0 ? 700 : 220);
     setIsPrologueTypingDone(false);
     prologueEntryAnim.stopAnimation();
     prologueTypingAnim.stopAnimation();
@@ -2436,10 +3216,18 @@ export default function App() {
       prologueEntryTiming.stop();
       prologueTypingTiming.stop();
     };
-  }, [screen, prologueEntryAnim, prologueTypingAnim, prologueTypingDuration]);
+  }, [
+    screen,
+    safeProloguePageIndex,
+    prologueEntryAnim,
+    prologueTypingAnim,
+    prologueTypingDuration,
+  ]);
 
   useEffect(() => {
     if (screen !== "epilogue") return;
+    // Ignore touch carry-over from the transition CTA so narration doesn't auto-skip.
+    epilogueSkipEnabledAtRef.current = Date.now() + (safeEpiloguePageIndex === 0 ? 700 : 220);
     setIsEpilogueTypingDone(false);
     epilogueEntryAnim.stopAnimation();
     epilogueTypingAnim.stopAnimation();
@@ -2465,7 +3253,13 @@ export default function App() {
       epilogueEntryTiming.stop();
       epilogueTypingTiming.stop();
     };
-  }, [screen, epilogueEntryAnim, epilogueTypingAnim, epilogueTypingDuration]);
+  }, [
+    screen,
+    safeEpiloguePageIndex,
+    epilogueEntryAnim,
+    epilogueTypingAnim,
+    epilogueTypingDuration,
+  ]);
 
   useEffect(() => {
     if (screen === "ready" || screen === "prologue") return;
@@ -2932,7 +3726,11 @@ export default function App() {
 
           <View style={[styles.preparingStatusWrap, { width: Math.min(contentWidth, 300) }]}>
             <View style={styles.statusRow}>
-              <Ionicons name="checkmark-circle" size={21} color={palette.tertiaryContainer} />
+              <Ionicons
+                name={generatedQuest ? "checkmark-circle" : questGenerationError ? "alert-circle" : "checkmark-circle"}
+                size={21}
+                color={generatedQuest ? palette.tertiaryContainer : questGenerationError ? palette.error : palette.tertiaryContainer}
+              />
               <Text style={styles.statusDoneText}>{effectivePreparingStatusDone}</Text>
             </View>
 
@@ -2951,14 +3749,49 @@ export default function App() {
             <View style={styles.progressTrack}>
               <Animated.View style={[styles.progressFill, preparingProgressAnimatedStyle]} />
             </View>
+
+            {generatedQuestSteps.length > 0 ? (
+              <Text style={styles.preparingStepSummary}>
+                最終更新: {generatedQuestSteps[generatedQuestSteps.length - 1]?.label}
+              </Text>
+            ) : null}
           </View>
         </View>
 
         <View style={styles.preparingFooter}>
-          <Pressable style={({ pressed }) => [styles.preparingSkipButton, pressed && styles.pressed]} onPress={() => setScreen("ready")}>
-            <Text style={styles.preparingSkipButtonText}>{effectivePreparingSkipButton}</Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.preparingSkipButton,
+              isGeneratingQuest ? styles.preparingSkipButtonDisabled : null,
+              pressed && styles.pressed,
+            ]}
+            onPress={() => {
+              if (isGeneratingQuest) return;
+              if (questGenerationError) {
+                setQuestGenerationError(null);
+                void runQuestGeneration({ moveToReady: true });
+                return;
+              }
+              if (generatedQuest) {
+                setScreen("ready");
+                return;
+              }
+              void runQuestGeneration({ moveToReady: true });
+            }}
+            disabled={isGeneratingQuest}
+          >
+            <Text style={styles.preparingSkipButtonText}>
+              {isGeneratingQuest ? "生成中..." : questGenerationError ? "再試行する" : generatedQuest ? effectivePreparingSkipButton : "生成を開始"}
+            </Text>
           </Pressable>
-          <Text style={styles.preparingFooterText}>{effectivePreparingFooter}</Text>
+          {questGenerationError && !isGeneratingQuest ? (
+            <Pressable style={({ pressed }) => [styles.preparingFallbackLink, pressed && styles.pressed]} onPress={() => setScreen("ready")}>
+              <Text style={styles.preparingFallbackLinkText}>デフォルト体験で続行</Text>
+            </Pressable>
+          ) : null}
+          <Text style={styles.preparingFooterText}>
+            {questGenerationError ? "生成に失敗しました。再試行またはデフォルト体験で進めます。" : effectivePreparingFooter}
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -3012,9 +3845,7 @@ export default function App() {
             <View style={styles.readyGeneratedStoryCard}>
               <Text style={styles.readyGeneratedStoryLabel}>{effectiveReadyGeneratedStoryLabel}</Text>
               <Text style={styles.readyGeneratedStoryText}>
-                {effectiveReadyStoryLead}
-                {" "}
-                {readyStoryTone}
+                {generatedStoryName || `${effectiveReadyStoryLead} ${readyStoryTone}`}
               </Text>
               <Text style={styles.readyGeneratedStorySubtext}>{readyStoryTagline}</Text>
             </View>
@@ -3044,9 +3875,19 @@ export default function App() {
                 >
                   <View style={[styles.readyTimelineDot, index === 0 ? styles.readyTimelineDotActive : null]} />
                   <View style={styles.readyTimelineCard}>
-                    <Text style={styles.readyTimelineIndex}>{String(index + 1).padStart(2, "0")}</Text>
+                    <View style={styles.readyTimelineMetaRow}>
+                      <Text style={styles.readyTimelineIndex}>{String(index + 1).padStart(2, "0")}</Text>
+                      <View style={styles.readyTimelineBeatTag}>
+                        <Text style={styles.readyTimelineBeatTagText}>
+                          {(storyArcMetaMap[spot.id] ?? fallbackStoryArcMeta).phase}
+                        </Text>
+                      </View>
+                    </View>
                     <Text style={styles.readyTimelineName}>{spot.name}</Text>
-                    <Text style={styles.readyTimelineDesc}>{readySpotOverviewMap[spot.id]}</Text>
+                    <Text style={styles.readyTimelineBeat}>
+                      {(storyArcMetaMap[spot.id] ?? fallbackStoryArcMeta).beat}
+                    </Text>
+                    <Text style={styles.readyTimelineDesc}>{generatedSpotOverviewMap[spot.id] || readySpotOverviewMap[spot.id]}</Text>
                   </View>
                 </View>
               ))}
@@ -3095,7 +3936,7 @@ export default function App() {
         </View>
 
         {isReadyTransitioning ? (
-          <Animated.View pointerEvents="auto" style={[styles.readyTransitionOverlay, readyTransitionOverlayAnimatedStyle]}>
+          <Animated.View style={[styles.readyTransitionOverlay, { pointerEvents: "auto" }, readyTransitionOverlayAnimatedStyle]}>
             <Animated.View style={[styles.readyTransitionPanel, readyTransitionPanelAnimatedStyle]}>
               <Animated.View style={[styles.readyTransitionGlow, readyTransitionGlowAnimatedStyle]} />
               <View style={styles.readyTransitionIconWrap}>
@@ -3137,6 +3978,11 @@ export default function App() {
           <Animated.View style={[styles.prologueCenterStack, prologueContentAnimatedStyle]}>
             <Pressable style={styles.prologueNarrationPressArea} onPress={handlePrologueNarrationPress}>
               <View style={styles.prologueTextWrap}>
+                {prologueNarrationPages.length > 1 ? (
+                  <Text style={styles.storyNarrationPageIndicator}>
+                    {safeProloguePageIndex + 1} / {prologueNarrationPages.length}
+                  </Text>
+                ) : null}
                 <Text style={styles.prologueTypewriterText}>
                   {prologueNarrationChars.map((char, index) => {
                     if (char === "\n") {
@@ -3174,26 +4020,33 @@ export default function App() {
             <Pressable
               style={({ pressed }) => [
                 styles.prologueCtaButton,
-                !isPrologueTypingDone || isMapScenarioTransitioning ? styles.storyNarrationCtaDisabled : null,
+                !isPrologueTypingDone || (!hasNextProloguePage && isMapScenarioTransitioning)
+                  ? styles.storyNarrationCtaDisabled
+                  : null,
                 pressed && styles.pressed,
               ]}
-              onPress={() =>
+              onPress={() => {
+                if (!isPrologueTypingDone) return;
+                if (hasNextProloguePage) {
+                  setProloguePageIndex((prev) => Math.min(prev + 1, prologueLastPageIndex));
+                  return;
+                }
                 runFlowTransition({
                   title: "ルートを表示しています",
                   body: "最初のスポットへ向かいましょう",
                   toScreen: "map",
-                })
-              }
-              disabled={!isPrologueTypingDone || isMapScenarioTransitioning}
+                });
+              }}
+              disabled={!isPrologueTypingDone || (!hasNextProloguePage && isMapScenarioTransitioning)}
             >
-              <Text style={styles.prologueCtaText}>{effectivePrologueCtaText}</Text>
+              <Text style={styles.prologueCtaText}>{prologueCtaLabel}</Text>
               <Ionicons name="arrow-forward" size={30} color="#2d3432" />
             </Pressable>
           </Animated.View>
         </View>
 
         {isReadyTransitioning ? (
-          <Animated.View pointerEvents="none" style={[styles.readyTransitionOverlay, readyTransitionOverlayAnimatedStyle]}>
+          <Animated.View style={[styles.readyTransitionOverlay, { pointerEvents: "none" }, readyTransitionOverlayAnimatedStyle]}>
             <Animated.View style={[styles.readyTransitionPanel, readyTransitionPanelAnimatedStyle]}>
               <Animated.View style={[styles.readyTransitionGlow, readyTransitionGlowAnimatedStyle]} />
               <View style={styles.readyTransitionIconWrap}>
@@ -3437,6 +4290,13 @@ export default function App() {
               <View style={styles.mapCardMain}>
                 <View style={styles.mapCardHeaderRow}>
                   <Text style={styles.mapCardTitle}>{currentSpot.name}</Text>
+                  <View style={styles.mapCardMetaWrap}>
+                    <View style={styles.mapCardBeatChip}>
+                      <Text style={styles.mapCardBeatChipText}>
+                        {`${currentStoryArcMeta.phase}｜${currentStoryArcMeta.beat}`}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
 
                 <View style={styles.mapCardInfoRow}>
@@ -3506,9 +4366,17 @@ export default function App() {
             </View>
 
             <View style={styles.spotBottomSheet}>
-              <View style={styles.spotSpeakerBadge}>
-                <Text style={styles.spotSpeakerBadgeText}>{effectiveSpotSpeakerBadge}</Text>
+              <View style={styles.spotSpeakerRow}>
+                <View style={styles.spotSpeakerBadge}>
+                  <Text style={styles.spotSpeakerBadgeText}>{effectiveSpotSpeakerBadge}</Text>
+                </View>
+                <View style={styles.spotStoryBeatBadge}>
+                  <Text style={styles.spotStoryBeatBadgeText}>
+                    {`${currentStoryArcMeta.phase}｜${currentStoryArcMeta.beat}`}
+                  </Text>
+                </View>
               </View>
+              <Text style={styles.spotTriviaText}>{currentStoryArcMeta.trivia}</Text>
 
               <Pressable style={styles.spotScenarioPressArea} onPress={handleSpotScenarioTextPress}>
                 <Text style={styles.spotScenarioText}>
@@ -3566,6 +4434,11 @@ export default function App() {
           <Animated.View style={[styles.prologueCenterStack, epilogueContentAnimatedStyle]}>
             <Pressable style={styles.prologueNarrationPressArea} onPress={handleEpilogueNarrationPress}>
               <View style={styles.prologueTextWrap}>
+                {epilogueNarrationPages.length > 1 ? (
+                  <Text style={styles.storyNarrationPageIndicator}>
+                    {safeEpiloguePageIndex + 1} / {epilogueNarrationPages.length}
+                  </Text>
+                ) : null}
                 <Text style={styles.prologueTypewriterText}>
                   {epilogueNarrationChars.map((char, index) => {
                     if (char === "\n") {
@@ -3606,10 +4479,17 @@ export default function App() {
                 !isEpilogueTypingDone ? styles.storyNarrationCtaDisabled : null,
                 pressed && styles.pressed,
               ]}
-              onPress={() => setScreen("feedback")}
+              onPress={() => {
+                if (!isEpilogueTypingDone) return;
+                if (hasNextEpiloguePage) {
+                  setEpiloguePageIndex((prev) => Math.min(prev + 1, epilogueLastPageIndex));
+                  return;
+                }
+                setScreen("feedback");
+              }}
               disabled={!isEpilogueTypingDone}
             >
-              <Text style={styles.prologueCtaText}>{effectiveEpilogueCtaText}</Text>
+              <Text style={styles.prologueCtaText}>{epilogueCtaLabel}</Text>
               <Ionicons name="arrow-forward" size={30} color="#2d3432" />
             </Pressable>
           </Animated.View>
@@ -4205,7 +5085,7 @@ export default function App() {
       </Modal>
 
       <StatusBar style="dark" />
-      <View style={styles.landingAmbientLayer} pointerEvents="none">
+      <View style={styles.landingAmbientLayer}>
         <View style={styles.landingAmbientOrbPrimary} />
         <View style={styles.landingAmbientOrbSecondary} />
       </View>
@@ -5124,6 +6004,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     maxWidth: 92,
   },
+  preparingSkipButtonDisabled: {
+    opacity: 0.58,
+  },
   preparingSkipButtonText: {
     color: "#3e4846",
     fontSize: 11,
@@ -5305,6 +6188,12 @@ const styles = StyleSheet.create({
     color: palette.onSurfaceVariant,
     fontWeight: "500",
   },
+  preparingStepSummary: {
+    marginTop: 4,
+    color: palette.onSurfaceVariant,
+    fontSize: 10,
+    letterSpacing: 0.3,
+  },
   progressTrack: {
     marginTop: 12,
     height: 2,
@@ -5329,6 +6218,17 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     color: "rgba(90,96,94,0.65)",
     fontWeight: "500",
+  },
+  preparingFallbackLink: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  preparingFallbackLinkText: {
+    fontSize: 11,
+    color: palette.secondaryText,
+    textDecorationLine: "underline",
+    textDecorationColor: "rgba(83,96,112,0.6)",
+    fontWeight: "600",
   },
   readyTopBar: {
     position: "absolute",
@@ -5552,12 +6452,32 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 4,
   },
+  readyTimelineMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+    gap: 10,
+  },
   readyTimelineIndex: {
     color: palette.tertiary,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 1.9,
-    marginBottom: 6,
+  },
+  readyTimelineBeatTag: {
+    borderRadius: 999,
+    backgroundColor: "rgba(245,206,83,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(245,206,83,0.52)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  readyTimelineBeatTagText: {
+    color: "#745c00",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.6,
   },
   readyTimelineName: {
     color: palette.onBackground,
@@ -5566,6 +6486,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 8,
     letterSpacing: -0.3,
+  },
+  readyTimelineBeat: {
+    color: "#33414f",
+    fontSize: 13,
+    lineHeight: 20,
+    fontWeight: "700",
+    marginBottom: 8,
+    letterSpacing: 0.2,
   },
   readyTimelineDesc: {
     color: palette.onSurfaceVariant,
@@ -5999,6 +6927,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  storyNarrationPageIndicator: {
+    color: "rgba(255,255,255,0.82)",
+    fontSize: 12,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+    marginBottom: 14,
+  },
   prologueNarrationPressArea: {
     width: "100%",
     minHeight: 240,
@@ -6374,6 +7309,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
+  mapCardBeatChip: {
+    borderRadius: 999,
+    backgroundColor: "rgba(245,206,83,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(245,206,83,0.52)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  mapCardBeatChipText: {
+    color: "#5b4700",
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+  },
   mapCardInfoRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -6606,13 +7556,42 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 20,
     paddingVertical: 6,
-    marginBottom: 14,
+    marginBottom: 0,
+  },
+  spotSpeakerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 8,
   },
   spotSpeakerBadgeText: {
     color: "rgba(255,244,217,0.96)",
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.4,
+  },
+  spotStoryBeatBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(27,18,10,0.58)",
+    borderWidth: 1,
+    borderColor: "rgba(255,232,196,0.26)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  spotStoryBeatBadgeText: {
+    color: "rgba(255,238,205,0.95)",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+  },
+  spotTriviaText: {
+    color: "rgba(255,231,188,0.9)",
+    fontSize: 12,
+    lineHeight: 19,
+    fontWeight: "600",
+    marginBottom: 12,
   },
   spotScenarioText: {
     color: "rgba(255,255,255,0.96)",

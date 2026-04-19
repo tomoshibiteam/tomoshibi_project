@@ -12,7 +12,7 @@ type EditorTab =
   | "spot"
   | "epilogue"
   | "feedback";
-type WorkspaceMode = "cms" | "ai";
+type WorkspaceMode = "cms" | "ai" | "spotdb";
 type AIWorkspacePaneMode = "prompt" | "simulation";
 type DeviceMode = "mobile" | "tablet";
 type PreviewScreen =
@@ -26,6 +26,60 @@ type PreviewScreen =
   | "epilogue"
   | "feedback";
 type AIOutputTarget = "ready" | "prologue" | "spot" | "epilogue";
+
+type SpotDbRecord = {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  source: string;
+  address: string;
+  kinds: string;
+};
+
+type SpotDbApiResponse = {
+  generatedAt: string | null;
+  totalSpots: number;
+  spots: SpotDbRecord[];
+};
+
+type GoogleMapInstance = {
+  setCenter(center: { lat: number; lng: number }): void;
+  setZoom(zoom: number): void;
+  fitBounds(bounds: GoogleLatLngBounds, padding?: number): void;
+};
+
+type GoogleMarkerInstance = {
+  setMap(map: GoogleMapInstance | null): void;
+};
+
+type GoogleLatLngBounds = {
+  extend(position: { lat: number; lng: number }): void;
+};
+
+type GoogleMapsWindow = Window & {
+  google?: {
+    maps?: {
+      Map?: new (
+        mapElement: HTMLElement,
+        options: {
+          center: { lat: number; lng: number };
+          zoom: number;
+          disableDefaultUI?: boolean;
+          clickableIcons?: boolean;
+          gestureHandling?: "cooperative" | "greedy" | "none" | "auto";
+          keyboardShortcuts?: boolean;
+        },
+      ) => GoogleMapInstance;
+      Marker?: new (options: {
+        position: { lat: number; lng: number };
+        map: GoogleMapInstance;
+        title?: string;
+      }) => GoogleMarkerInstance;
+      LatLngBounds?: new () => GoogleLatLngBounds;
+    };
+  };
+};
 
 type TextDraft = {
   landing: {
@@ -122,8 +176,8 @@ type AIPromptDraft = {
   additionalContext: string;
   outputLanguage: string;
   outputStyle: string;
-  step4OutlinePrompt: string;
-  step5NarrativePrompt: string;
+  step4RoutePrompt: string;
+  step6InsertionPrompt: string;
   step7RepairPrompt: string;
   outputTargets: AIOutputTarget[];
 };
@@ -134,6 +188,8 @@ type PreviewSimulationInputs = {
   duration: string;
   explorationStyle: string;
   experienceExpectation: string;
+  currentLat: string;
+  currentLng: string;
 };
 
 type SimulatedStoryPayload = {
@@ -152,16 +208,31 @@ type ProgramFlowDraft = {
     normalizeDuration: string;
   };
   step2: {
-    spotCountLogic: string;
-    difficultyLogic: string;
+    spotCountRule: string;
+    mobilityConstraintRule: string;
   };
   step3: {
-    spotSelectionLogic: string;
-    routeOrderingLogic: string;
+    candidateSelectionRule: string;
+    routeOrderingRule: string;
+    spotDbLinkPolicy: string;
+    candidateSpotPoolIds: string;
+  };
+  step5: {
+    narrativeContainerSpec: string;
+    slotInjectionPolicy: string;
   };
   step6: {
-    jsonValidationLogic: string;
-    textValidationLogic: string;
+    worldSetting: string;
+    characterProfile: string;
+    characterRole: string;
+    storyArcFor4Spots: string;
+    storyArcFor5Spots: string;
+    storyArcFor6Spots: string;
+    conversationFlow: string;
+  };
+  step7: {
+    validationRuleSet: string;
+    fallbackPolicy: string;
   };
   step8: {
     finalizeFormat: string;
@@ -179,14 +250,59 @@ type QuestGenerationStepId =
   | "step7"
   | "step8";
 
-type GenerationFlowStepKey =
-  | "setup"
-  | "preparing"
-  | "ready"
-  | "prologue"
-  | "spot"
-  | "epilogue"
-  | "feedback";
+type QuestGenerationStepStatus = "completed" | "fallback" | "error";
+
+type QuestGenerationStepResponse = {
+  id: QuestGenerationStepId;
+  label: string;
+  status: "completed" | "fallback";
+  detail: string;
+};
+
+type QuestGenerationStepTrace = {
+  id: QuestGenerationStepId;
+  program?: string;
+  inputVars?: Record<string, unknown>;
+  outputVars?: Record<string, unknown>;
+  aiPrompt?: {
+    provider?: string;
+    model?: string;
+    temperature?: number;
+    systemPrompt?: string;
+    userPrompt?: string;
+  };
+};
+
+type QuestGenerationSimulationApiResponse = {
+  ok: boolean;
+  error?: string;
+  steps?: QuestGenerationStepResponse[];
+  stepTraces?: QuestGenerationStepTrace[];
+};
+
+type StepSimulationState = {
+  ranAtIso: string;
+  status: QuestGenerationStepStatus;
+  detail: string;
+  program: string;
+  inputVars: Record<string, unknown>;
+  outputVars: Record<string, unknown>;
+  aiPrompt?: {
+    provider: string;
+    model: string;
+    temperature: number;
+    systemPrompt: string;
+    userPrompt: string;
+  };
+};
+
+type StepAiPromptView = {
+  provider: string;
+  model: string;
+  temperature: number;
+  systemPrompt: string;
+  userPrompt: string;
+};
 
 const PREVIEW_SCREEN_ORDER: PreviewScreen[] = [
   "landing",
@@ -204,6 +320,11 @@ const PREVIEW_VIEWPORT_SIZE = {
   mobile: { width: 390, height: 844 },
   tablet: { width: 420, height: 760 },
 } as const;
+
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const SETTINGS_MAPS_SCRIPT_ID = "google-maps-settings-script";
+const DEFAULT_SPOT_DB_MAP_CENTER = { lat: 33.59588443, lng: 130.2178404 };
+const DEFAULT_SPOT_DB_MAP_ZOOM = 14;
 
 const ADMIN_SETTINGS_STORAGE_KEY = "tomoshibiAdminConsoleSettingsV2";
 
@@ -233,10 +354,62 @@ const WORKSPACE_MODE_ITEMS: Array<{
   {
     key: "ai",
     label: "AI生成ステップ",
-    description: "AI生成文を作るための入力とプロンプト作成",
+    description: "ルート最適化と差し込み生成のフロー設定",
     icon: "auto_awesome",
   },
+  {
+    key: "spotdb",
+    label: "スポットDB",
+    description: "現在のスポットDBを地図で確認",
+    icon: "place",
+  },
 ];
+
+let settingsMapsScriptPromise: Promise<void> | null = null;
+
+function loadSettingsGoogleMapsScript(apiKey: string): Promise<void> {
+  if (!apiKey) {
+    return Promise.reject(new Error("Google Maps API key is not configured."));
+  }
+
+  const mapsWindow = window as GoogleMapsWindow;
+  if (mapsWindow.google?.maps?.Map && mapsWindow.google?.maps?.Marker) {
+    return Promise.resolve();
+  }
+
+  if (settingsMapsScriptPromise) {
+    return settingsMapsScriptPromise;
+  }
+
+  settingsMapsScriptPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.getElementById(SETTINGS_MAPS_SCRIPT_ID) as HTMLScriptElement | null;
+
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(), { once: true });
+      existingScript.addEventListener(
+        "error",
+        () => reject(new Error("Failed to load Google Maps script.")),
+        { once: true },
+      );
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = SETTINGS_MAPS_SCRIPT_ID;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=ja&region=JP`;
+    script.async = true;
+    script.defer = true;
+    script.addEventListener("load", () => resolve(), { once: true });
+    script.addEventListener(
+      "error",
+      () => reject(new Error("Failed to load Google Maps script.")),
+      { once: true },
+    );
+    document.head.appendChild(script);
+  });
+
+  return settingsMapsScriptPromise;
+}
 
 const AI_OUTPUT_TARGET_ITEMS: Array<{
   key: AIOutputTarget;
@@ -253,17 +426,149 @@ const QUEST_GENERATION_STEPS: Array<{
   id: QuestGenerationStepId;
   label: string;
   description: string;
-  kind: "program" | "ai";
+  kind: "program" | "ai" | "hybrid";
 }> = [
   { id: "step1", label: "1. 入力正規化", description: "入力値を内部形式へ変換", kind: "program" },
-  { id: "step2", label: "2. 体験設計", description: "スポット数と難易度を決定", kind: "program" },
-  { id: "step3", label: "3. ルート確定", description: "候補選定と巡回順を決定", kind: "program" },
-  { id: "step4", label: "4. 骨子生成", description: "物語骨子をAIで生成", kind: "ai" },
-  { id: "step5", label: "5. 本文生成", description: "各セクション本文をAIで生成", kind: "ai" },
-  { id: "step6", label: "6. 検証", description: "スキーマ/文言ルールを検証", kind: "program" },
-  { id: "step7", label: "7. 部分再生成", description: "NG箇所のみAIでリペア", kind: "ai" },
+  { id: "step2", label: "2. 制約計算", description: "スポット数と移動制約を決定", kind: "program" },
+  { id: "step3", label: "3. 候補抽出", description: "候補スポットと順序候補を抽出", kind: "program" },
+  { id: "step4", label: "4. ルート最適化", description: "条件に合う巡回ルートをAIで決定", kind: "ai" },
+  { id: "step5", label: "5. テンプレ割当", description: "事前定義の器へ差し込み先を割当", kind: "program" },
+  { id: "step6", label: "6. 差し込み生成", description: "器に沿って最終文面をAIで調整生成", kind: "ai" },
+  { id: "step7", label: "7. 検証/最小再生成", description: "検証後に必要箇所のみ再生成", kind: "hybrid" },
   { id: "step8", label: "8. 最終確定", description: "最終JSONを確定し保存", kind: "program" },
 ];
+
+const STEP_SIMULATION_SPECS: Record<
+  QuestGenerationStepId,
+  {
+    inputVars: string[];
+    outputVars: string[];
+    programSummary: string;
+  }
+> = {
+  step1: {
+    inputVars: [
+      "simulationInputs.userType",
+      "simulationInputs.familiarity",
+      "simulationInputs.duration",
+      "simulationInputs.explorationStyle",
+      "simulationInputs.experienceExpectation",
+      "simulationInputs.currentLat",
+      "simulationInputs.currentLng",
+    ],
+    outputVars: [
+      "normalizedUserType",
+      "normalizedFamiliarity",
+      "normalizedDuration",
+      "explorationStyle",
+      "experienceExpectation",
+    ],
+    programSummary:
+      "入力文字列を内部カテゴリへ正規化します（ユーザータイプ/習熟度/体験時間）。未入力時は既定値を適用します。",
+  },
+  step2: {
+    inputVars: ["normalizedDuration", "normalizedFamiliarity", "DURATION_SPOT_COUNT"],
+    outputVars: [
+      "targetCount",
+      "mobilityConstraint",
+      "minSegmentDistanceMeters",
+      "maxSegmentDistanceMeters",
+      "preferredSpotRanks",
+      "backfillSpotRanks",
+    ],
+    programSummary:
+      "正規化済み時間からスポット数を決め、徒歩制約（連続スポット間5m以上1km以内）と習熟度別スポットrank対象（優先/補完）を計算します。",
+  },
+  step3: {
+    inputVars: [
+      "normalizedFamiliarity",
+      "normalizedDuration",
+      "preferredSpotRanks",
+      "backfillSpotRanks",
+      "currentOrigin(lat/lng)",
+      "walkingMetersPerMinute",
+      "radiusReachabilityFactor",
+      "extractionPolicy(all records from spot-db -> radius filter)",
+      "program.step3.candidateSpotPoolIds",
+      "program.step3.spotDbLinkPolicy",
+      "targetCount",
+    ],
+    outputVars: [
+      "extractedSpotDbStatus",
+      "extractedSpotDbSource",
+      "extractedSpotDbTotal",
+      "extractedSpotDbReducedTotal",
+      "extractedSpotDbFilteredOutCount",
+      "maxReachableRadiusMeters",
+      "extractedSpotDbRecords",
+      "prefilterPoolBaseIds",
+      "configuredPoolIds",
+      "configuredRankExcludedPoolIds",
+      "ignoredPoolIds",
+      "preferredPoolIdsByRank",
+      "backfillPoolIdsByRank",
+      "middleCandidatesWithinRadius",
+      "reducedMiddleCandidates",
+      "poolBaseIds",
+      "middleCandidates",
+      "fallbackRouteIds",
+    ],
+    programSummary:
+      "spot-db全件を取得し、現在地と体験時間に応じた半径で候補を削減します。削減後の候補からstep4用fallback routeを組み立てます。",
+  },
+  step4: {
+    inputVars: [
+      "normalizedUserType / normalizedFamiliarity / normalizedDuration (step1)",
+      "targetCount / mobilityConstraint / minSegmentDistanceMeters / maxSegmentDistanceMeters (step2)",
+      "compactInput.currentLocation + candidateSpots(id/lat/lng) + candidateDistanceMatrixMeters + baselineRoute (step3)",
+    ],
+    outputVars: [
+      "routeIds",
+      "routeReasonMap",
+      "routeStoryTheme",
+      "routeLegDistances",
+      "mobilityNotes",
+      "routeQuality",
+      "routeDistanceSummary",
+    ],
+    programSummary:
+      "step1〜3の制約とcompact候補（id/lat/lng + 距離行列）を Gemini に投入し、徒歩制約を満たすルート候補を生成。最終的にプログラム側で距離最短参照ルートと比較し、制約順守と歩行効率を保証します。",
+  },
+  step5: {
+    inputVars: ["routeIds", "program.step5.narrativeContainerSpec", "program.step5.slotInjectionPolicy"],
+    outputVars: ["routeSpots", "templateContainer", "narrativeContainerSpec", "slotInjectionPolicy"],
+    programSummary:
+      "確定ルートをテンプレート器（ready/prologue/spot/epilogue）の差し込みスロットへ割り当てます。",
+  },
+  step6: {
+    inputVars: [
+      "step6InsertionGeneration prompt template",
+      "program.step6 world/character/arc settings",
+      "routeSpots",
+      "worldConfig tone/style/keywords",
+    ],
+    outputVars: ["narrativeResult", "generatedStoryName", "generatedSpotsCount", "step6Status"],
+    programSummary:
+      "運営定義の世界観・役割設定をプロンプトへ埋め込み、ルート情報を差し込んだ本文をAI生成します。",
+  },
+  step7: {
+    inputVars: ["narrativeResult", "validationRuleSet", "fallbackPolicy", "step7MinimalRepair prompt"],
+    outputVars: ["validationErrors", "repairedNarrativeResult", "step7Status"],
+    programSummary:
+      "生成結果を検証し、失敗箇所のみ最小再生成します。通過済みなら再生成をスキップします。",
+  },
+  step8: {
+    inputVars: ["routeIds", "routeSpots", "sanitizedNarrative", "program.step8.*"],
+    outputVars: ["finalQuest", "steps[]", "quest payload for app"],
+    programSummary:
+      "最終JSONをサニタイズ・統合し、アプリ配信用のクエスト出力として確定します。",
+  },
+};
+
+const KYUDAI_ISHIGAHARA_PROLOGUE_BODY =
+  "九州大学伊都キャンパスが建っているこの場所には、\n大学ができるよりずっと前から、人が集まり、物が行き交い、何かが作られ、残されてきた時間がある。\n\nその流れを、ひとつのファイルにまとめようとした人がいた。\n昔この地域で起きていたことを、\n今のキャンパスの場所と一枚ずつ結びつけて読めるようにするためのファイルだ。\n\nけれど、そのファイルは完成しなかった。\n途中のページが抜けたまま、最後まで読めなくなっている。\n\nあなたはこれから、澪先輩と一緒に、その抜けたページを探しに行く。\n集めるのは、ただの紙ではない。\nそれぞれのページには、昔この地域で実際に起きていたことが書かれている。\n\n外から人や物が届いていたこと。\n人が集まり、やり取りが起きていたこと。\n何かを作る営みがあったこと。\nその跡が、今まで残っていること。\n\nページを集めて最後まで読めたとき、\nただキャンパスを歩くだけでは見えない、もうひとつの九州大学が見えてくる。\n\nなぜ今、ここに九州大学伊都キャンパスがあるのか。\nその答えを読むために、石ヶ原ファイルを完成させよう。";
+const KYUDAI_ISHIGAHARA_EPILOGUE_BODY =
+  "石ヶ原ファイルは、ここで閉じられる。\n\nあなたが集めたページに書かれていたのは、\n昔この地域で本当に起きていたことだった。\n\n外から人や物が届いたこと。\n人が集まり、やり取りが生まれたこと。\n何かを作る営みがあったこと。\nその跡が、今まで残っていたこと。\n\n最後まで読んでわかるのは、\nそれが昔の出来事で終わっていない、ということだ。\n\n今、あなたが歩いている九州大学伊都キャンパスもまた、\nその続きの上にある。\n\nここは、何もない場所に突然できた大学ではない。\nもっと前から、人が来て、集まり、何かを生み出し、残してきた土地の、いちばん新しい形だ。\n\nだから次にこのキャンパスを歩くとき、\nあなたが見るのは、ただの建物ではない。\n\n昔から続いてきた流れの、その先にある今の九州大学だ。";
 
 const INITIAL_TEXT_DRAFT: TextDraft = {
   landing: {
@@ -305,22 +610,22 @@ const INITIAL_TEXT_DRAFT: TextDraft = {
   },
   ready: {
     chapterLabel: "CHAPTER 01",
-    heroLead: "伊都キャンパス探索ルート",
+    heroLead: "九大センターゾーン発 観測航路",
     summaryTitle: "体験の準備が整いました",
     summaryText:
-      "まだ掴みきれていない導線を補いながら伊都キャンパスを巡る物語です。各スポットで短いシナリオを受け取りながら、場所の背景と日常の使い方を自然に理解できる構成になっています。",
+      "Center Zoneを起点に6地点を起承転結で巡る物語です。各スポットの豆知識を短いシナリオへ変換し、最後にWest Gateで全体を接続します。",
     generatedStoryLabel: "生成された物語名",
     startButton: "物語を始める",
     transitionTitle: "プロローグへ移動中",
     transitionBody: "物語の扉をひらいています",
   },
   prologue: {
-    body: "あなたが今日歩くこの場所には、\nまだ気づいていない物語が眠っています。\nいつもの景色を、少し違う目線で辿ってみましょう。",
+    body: KYUDAI_ISHIGAHARA_PROLOGUE_BODY,
     cta: "最初の場所へ向かう",
   },
   spot: {
-    mapInfoLine1: "次の目的地に向かいましょう。",
-    mapInfoLine2: "到着したら物語が始まります。",
+    mapInfoLine1: "次の視点へ進み、導線の意味を観測しましょう。",
+    mapInfoLine2: "到着後に、スポットの豆知識を物語として解放します。",
     mapArrivedLabel: "このスポットに到着した",
     mapRestartLabel: "最初のスポットから始める",
     speakerBadge: "案内役",
@@ -328,16 +633,16 @@ const INITIAL_TEXT_DRAFT: TextDraft = {
     backToMapButton: "マップに戻る",
     finishButton: "エピローグへ",
     narratives: [
-      "ここはBig Orange。今日の物語が開く最初の場所です。",
-      "ここでは、学びと日常がすれ違いながら重なっていきます。",
-      "知の入口に立ちました。ここには多くの選択肢が静かに並んでいます。",
-      "ここはInnovation Plaza。学びのアイデアが実験へ変わる結節点です。",
-      "Research Commonsでは、分野を越えた対話が静かに進んでいます。",
-      "ここが今日の終点です。歩いた景色が、ひとつの記憶として結ばれます。",
+      "センターゾーンは講義棟と生活導線が重なる基点です。ここから観測を始めます。",
+      "ビッグオレンジは案内・食事・待ち合わせが集まる生活拠点。再集合地点として機能します。",
+      "Innovation Plazaでは学びが試作へ変わります。展示の痕跡から挑戦の文脈を拾えます。",
+      "中央図書館は静かな集中と情報探索の中枢。紙と電子を横断して問いを磨きます。",
+      "Research Commonsは分野横断の対話拠点。ポスター1枚から新しい接続が生まれます。",
+      "West Gateで6地点を接続し、学内で得た視点を次の行動へ持ち帰ります。",
     ],
   },
   epilogue: {
-    body: "歩いた景色も、立ち止まった場所も、\n今日の伊都キャンパスの記憶として残っていきます。\n最後に、今回の体験について教えてください。",
+    body: KYUDAI_ISHIGAHARA_EPILOGUE_BODY,
     cta: "体験を振り返る",
   },
   feedback: {
@@ -359,22 +664,103 @@ const INITIAL_TEXT_DRAFT: TextDraft = {
 };
 
 const INITIAL_AI_PROMPT_DRAFT: AIPromptDraft = {
-  objective: "伊都キャンパス初訪問者が、スポットを物語として理解できる体験を作る。",
+  objective: "入力条件で無理なく回れるルートを生成し、物語テンプレに自然に接続する。",
   audience: "新入生。キャンパスはまだ不慣れ。",
   tone: "落ち着き・知的・親しみやすい。断定しすぎない。",
-  requiredElements: "各文に具体的な場所性を含める。行動イメージが湧く表現にする。",
+  requiredElements: "テンプレの意図を維持しつつ、スポット固有情報を自然に埋め込む。",
   forbiddenElements: "誇張表現、スラング、根拠のない事実、過度な煽り。",
-  fixedTextPolicy: "固定UI文言は変更しない。AI生成対象本文のみ出力する。",
-  routeDesign: "15-20分は4スポット、20-30分は5スポット、30-45分は6スポットを想定。",
+  fixedTextPolicy: "固定UI文言と運営定義の物語軸は変更しない。差し込み部分のみ調整する。",
+  routeDesign: "15-20分は5スポット、20-30分は6スポット、30-45分は6スポットを想定。",
   additionalContext: "九州大学 伊都キャンパス。研究目的のPoCとして利用。",
   outputLanguage: "日本語",
   outputStyle: "です・ます調、簡潔、1文を短めに保つ。",
-  step4OutlinePrompt:
-    "以下の条件で体験の骨子を作成してください。ユーザー={userType} / 習熟度={familiarity} / 時間={duration} / 期待={experienceExpectation}。出力は ready, prologue, spot構成のみ。",
-  step5NarrativePrompt:
-    "骨子に基づき ready, prologue, spot, epilogue の本文を作成してください。トーン={tone}。必須要素={requiredElements}。文体={outputStyle}。",
+  step4RoutePrompt:
+    "あなたは九州大学伊都キャンパスの徒歩ルート設計AIです。\n" +
+    "目的: {userType}（習熟度: {familiarity}）に対して、{duration}で完走できる巡回ルートを設計する。\n" +
+    "探索スタイル: {explorationStyle} / 体験期待: {experienceExpectation}\n" +
+    "設計ルール: {routeDesign}\n" +
+    "ハード制約:\n" +
+    "1) requiredStartSpotId で開始する（終点は可変）\n" +
+    "2) routeSpotIds は targetCount 件で重複なし\n" +
+    "3) routeSpotIds は candidateSpots.id のみ使用\n" +
+    "4) 全セグメントは minSegmentDistanceMeters 以上かつ maxSegmentDistanceMeters 以下\n" +
+    "最適化優先順位:\n" +
+    "1) 制約順守\n" +
+    "2) 総歩行距離最小化\n" +
+    "3) 最長セグメント短縮\n" +
+    "4) 物語進行とユーザー期待の整合\n" +
+    "出力要件:\n" +
+    "- routeSpotIds は候補IDのみ、重複なし\n" +
+    "- routeReasonMap は routeSpotIds の全IDをキーとして埋める\n" +
+    "- mobilityNotes には baselineRoute 比較結果も含める\n" +
+    "出力はJSONのみ。説明文の前置きは禁止。",
+  step6InsertionPrompt:
+    "# Role\n" +
+    "あなたは、大学回遊型クエストのシナリオライターです。運営側が決めたクエスト骨格とスポット情報をもとに、自然な短編クエストを生成してください。\n\n" +
+    "# Mission\n" +
+    "九州大学伊都キャンパスを舞台に、参加者が「今どこにいて、何がわかり、次にどこへ向かうか」を毎地点で理解できる体験を作ってください。\n\n" +
+    "# Important Rules\n" +
+    "- スポット数は入力に従う\n" +
+    "- スポット名・順番・役割は入力に従う\n" +
+    "- 入力されていないスポット情報を勝手に補わない\n" +
+    "- 案内役は作者目線で話さない\n" +
+    "- 「このクエストでは」「ここで学ぶのは」などのメタ表現は禁止\n" +
+    "- 抽象語だけで済ませず、具体的に言い換える\n" +
+    "- 高校生〜大学1年生でもすぐ理解できる日本語にする\n" +
+    "- 1文を長くしすぎない\n" +
+    "- 出力言語は {outputLanguage}\n" +
+    "- トーンは {tone}\n" +
+    "- 文体は {outputStyle}\n" +
+    "- 必須要素: {requiredElements}\n" +
+    "- 禁止要素: {forbiddenElements}\n\n" +
+    "# Quest Skeleton Input\n" +
+    "【クエスト名】\n{questName}\n\n" +
+    "【サブタイトル】\n{questSubtitle}\n\n" +
+    "【想定プレイヤー】\n{playerType}\n\n" +
+    "【前提状態】\n{playerState}\n\n" +
+    "【所要時間】\n{duration}\n\n" +
+    "【クエスト全体テーマ】\n{questTheme}\n\n" +
+    "【体験ゴール】\n{questGoal}\n\n" +
+    "【体験後に持ち帰ってほしいこと】\n{takeaway}\n\n" +
+    "【案内役】\n" +
+    "名前: {guideName}\n" +
+    "立場: {guideRole}\n" +
+    "距離感: {guideDistance}\n" +
+    "話し方: {guideTone}\n" +
+    "知っている範囲: {guideKnows}\n" +
+    "知らない範囲: {guideDoesNotKnow}\n" +
+    "禁止したい話し方: {guideForbiddenStyle}\n\n" +
+    "【クエスト構造】\n{questStructure}\n\n" +
+    "【スポット数】\n{spotCount}\n\n" +
+    "【スポット一覧】\n{spotsJson}\n\n" +
+    "# Output Contract\n" +
+    "出力はJSONのみ。コードブロック禁止。\n" +
+    "JSON schema:\n" +
+    "{\n" +
+    '  "generatedStoryName": "string",\n' +
+    '  "storyTone": "string",\n' +
+    '  "readyHeroLead": "string",\n' +
+    '  "readySummaryTitle": "string",\n' +
+    '  "readySummaryText": "string",\n' +
+    '  "prologueBody": "string",\n' +
+    '  "epilogueBody": "string",\n' +
+    '  "spots": [\n' +
+    "    {\n" +
+    '      "id": "string",\n' +
+    '      "name": "string",\n' +
+    '      "overview": "到着時の短い地の文",\n' +
+    '      "rationale": "この場面の役割",\n' +
+    '      "scenarioTexts": [\n' +
+    '        "到着前の一言",\n' +
+    '        "案内役の会話",\n' +
+    '        "この地点での気づきと次スポットへの接続文"\n' +
+    "      ]\n" +
+    "    }\n" +
+    "  ]\n" +
+    "}\n" +
+    "spots の順序と件数は、入力スポット一覧と完全一致させる。",
   step7RepairPrompt:
-    "検証で失敗した項目のみ修正してください。禁止要素={forbiddenElements}。固定文言ポリシー={fixedTextPolicy}。他セクションは変更しない。",
+    "検証で失敗した箇所のみ最小限で修正してください。禁止要素={forbiddenElements}。固定文言ポリシー={fixedTextPolicy}。問題のないセクションは変更しない。",
   outputTargets: ["ready", "prologue", "spot", "epilogue"],
 };
 
@@ -385,16 +771,38 @@ const INITIAL_PROGRAM_FLOW_DRAFT: ProgramFlowDraft = {
     normalizeDuration: "15-20 / 20-30 / 30-45 の3区分へ丸める。",
   },
   step2: {
-    spotCountLogic: "15-20分=4件, 20-30分=5件, 30-45分=6件。",
-    difficultyLogic: "不慣れなユーザーほど導線が明確なスポットを優先。",
+    spotCountRule: "15-20分=5件, 20-30分=6件, 30-45分=6件。",
+    mobilityConstraintRule: "徒歩限定。連続スポット間の移動距離は5m以上1km以内とする。",
   },
   step3: {
-    spotSelectionLogic: "必須スポットを先に確保し、残りをスコア順で採用。",
-    routeOrderingLogic: "移動負荷が低い順で並べ、最後に終点スポットを固定。",
+    candidateSelectionRule:
+      "spot-db の全レコードを取得し、現在地中心の時間制約半径（duration上限分×徒歩速度×係数）で候補件数を削減する。",
+    routeOrderingRule: "削減後の候補を使い、センターゾーン起点で終点可変の順序候補を組み立てる。",
+    spotDbLinkPolicy:
+      "spot-db は全件取得するが、Step3でプログラム制約（半径フィルタ）を適用して件数を減らす。",
+    candidateSpotPoolIds: "",
+  },
+  step5: {
+    narrativeContainerSpec: "ready/prologue/spot/epilogue のテンプレ器を固定し、差し込みスロットを明示する。",
+    slotInjectionPolicy: "スポット名・見どころ・移動導線をどのスロットへ入れるかを定義する。",
   },
   step6: {
-    jsonValidationLogic: "出力JSONの必須キーと配列件数（spot最大6）を検証。",
-    textValidationLogic: "禁止語・文字数・重複率を検証し、失敗時はstep7へ。",
+    worldSetting: "九州大学 伊都キャンパス。学びと生活が交差する世界観。",
+    characterProfile:
+      "案内役: 作者目線に立たず、施設の使われ方と学生目線の価値を実感ベースで伝える。落ち着いた語り口。",
+    characterRole: "来訪者の不安を下げ、今どこにいて何を見るべきかを具体的に示し、次地点へ接続する。",
+    storyArcFor4Spots:
+      "Spot1:起点をつかむ / Spot2:戻る場所を知る / Spot3:問いを深める場所を知る / Spot4:終着点で全体をつなぐ。",
+    storyArcFor5Spots:
+      "Spot1:起点をつかむ / Spot2:戻る場所を知る / Spot3:挑戦が始まる場所を知る / Spot4:問いを深める場所を知る / Spot5:終着点で全体をつなぐ。",
+    storyArcFor6Spots:
+      "Spot1:起点をつかむ / Spot2:戻る場所を知る / Spot3:人が集まる場所を知る / Spot4:挑戦が始まる場所を知る / Spot5:問いを深める場所を知る / Spot6:終着点で全体をつなぐ。",
+    conversationFlow:
+      "各スポットは 1)到着前の一言 2)案内役の会話 3)気づきと次地点接続 を必ず含める。メタ発言は禁止。",
+  },
+  step7: {
+    validationRuleSet: "出力JSON必須キー、スポット件数（最大6）、禁止語、文字数、重複率を検証する。",
+    fallbackPolicy: "検証失敗時は該当スロットのみ再生成し、全体再生成は行わない。",
   },
   step8: {
     finalizeFormat: "ready/prologue/spot/epilogue を1つのクエストJSONに統合。",
@@ -408,57 +816,38 @@ const DEFAULT_PREVIEW_SIMULATION_INPUTS: PreviewSimulationInputs = {
   duration: "20〜30分",
   explorationStyle: "地図で事前確認",
   experienceExpectation: "場所を覚えたい",
+  currentLat: "33.59780",
+  currentLng: "130.22040",
 };
 
-const GENERATION_FLOW_STEPS: Array<{
-  key: GenerationFlowStepKey;
-  label: string;
-  description: string;
-  screens: PreviewScreen[];
-}> = [
-  {
-    key: "setup",
-    label: "条件入力",
-    description: "アプリ内のセットアップで条件を選択",
-    screens: ["setup"],
-  },
-  {
-    key: "preparing",
-    label: "生成中",
-    description: "条件に基づいてクエストを構築",
-    screens: ["preparing"],
-  },
-  {
-    key: "ready",
-    label: "準備完了",
-    description: "生成結果の要約を提示",
-    screens: ["ready"],
-  },
-  {
-    key: "prologue",
-    label: "導入生成",
-    description: "導入文を表示して開始",
-    screens: ["prologue"],
-  },
-  {
-    key: "spot",
-    label: "スポット進行",
-    description: "各スポット文を順に表示",
-    screens: ["map", "spotArrival"],
-  },
-  {
-    key: "epilogue",
-    label: "締め生成",
-    description: "エピローグを表示",
-    screens: ["epilogue"],
-  },
-  {
-    key: "feedback",
-    label: "フィードバック",
-    description: "体験後アンケート",
-    screens: ["feedback"],
-  },
-];
+const STEP4_PREVIEW_REQUIRED_START_SPOT_ID = "center-zone";
+const STEP4_PREVIEW_MIN_SEGMENT_DISTANCE_METERS = 5;
+const STEP4_PREVIEW_MAX_SEGMENT_DISTANCE_METERS = 1000;
+const STEP4_PREVIEW_WALKING_METERS_PER_MINUTE = 67;
+const STEP4_PREVIEW_RADIUS_REACHABILITY_FACTOR = 0.6;
+const STEP4_PREVIEW_SPOT_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  "center-zone": { lat: 33.5978, lng: 130.2204 },
+  "big-orange": { lat: 33.59895, lng: 130.2169 },
+  "innovation-plaza": { lat: 33.59735, lng: 130.2192 },
+  "central-library": { lat: 33.5961, lng: 130.2184 },
+  "research-commons": { lat: 33.59645, lng: 130.2171 },
+  "west-gate": { lat: 33.5952, lng: 130.2159 },
+};
+
+function distanceMetersBetweenCoordinates(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): number {
+  const earthRadius = 6371000;
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const deltaLat = toRadians(b.lat - a.lat);
+  const deltaLng = toRadians(b.lng - a.lng);
+  const sinLat = Math.sin(deltaLat / 2);
+  const sinLng = Math.sin(deltaLng / 2);
+  const latProduct = Math.cos(toRadians(a.lat)) * Math.cos(toRadians(b.lat));
+  const haversine = sinLat * sinLat + latProduct * sinLng * sinLng;
+  return 2 * earthRadius * Math.asin(Math.sqrt(haversine));
+}
 
 function buildSimulatedStoryPayload(
   aiPromptDraft: AIPromptDraft,
@@ -489,24 +878,19 @@ function buildSimulatedStoryPayload(
       .split(/\n|。/)
       .map((line) => line.trim())
       .find((line) => line.length > 0) ?? "落ち着き・知的・親しみやすい";
-  const additionalContext =
-    aiPromptDraft.additionalContext
-      .split(/\n|。/)
-      .map((line) => line.trim())
-      .find((line) => line.length > 0) ?? "九州大学 伊都キャンパス";
-  const spotCount = duration.includes("15") ? 4 : duration.includes("45") ? 6 : 5;
+  const spotCount = duration.includes("15") ? 5 : 6;
 
-  const readyHeroLead = `${duration} / ${familiarity}向けクエスト`;
-  const readySummaryTitle = `${userType}向けシミュレーションを生成しました`;
-  const readySummaryText = `${familiarity}の来訪者向けに、${objective}を満たす導線を組み立てました。${requiredElements}を守りつつ、${tone}で案内します。設計ルール: ${programFlowDraft.step2.spotCountLogic}`;
-  const prologueBody = `${additionalContext}でのシミュレーションを開始します。\n探索スタイルは「${explorationStyle}」。\n期待「${experienceExpectation}」を満たすよう最初のスポットへ進みましょう。`;
-  const epilogueBody = `クエスト完了です。今回の目的は「${experienceExpectation}」でした。\n達成度を確認し、必要に応じてセットアップ条件を変更して再試行してください。`;
+  const readyHeroLead = "九大センターゾーン発 観測航路";
+  const readySummaryTitle = `${userType}向け${spotCount}スポット構成を生成しました`;
+  const readySummaryText = `${familiarity}の来訪者向けに、${objective}を満たす${spotCount}地点の導線を構成しました。${requiredElements}を守りつつ、${tone}で起承転結を案内します。設計ルール: ${programFlowDraft.step2.spotCountRule}`;
+  const prologueBody = KYUDAI_ISHIGAHARA_PROLOGUE_BODY;
+  const epilogueBody = KYUDAI_ISHIGAHARA_EPILOGUE_BODY;
 
-  const stageLabels = ["導入", "観察", "発見", "対話", "統合", "余白"];
+  const stageLabels = ["起", "承", "承", "転", "転", "結"];
   const spotNarratives = Array.from({ length: 6 }, (_, index) => {
     const fallback = fallbackSpotNarratives[index] || `スポット${index + 1}です。`;
     if (index < spotCount) {
-      return `${stageLabels[index] ?? `段階${index + 1}`}スポットです。${fallback} ${explorationStyle}を保ちながら、${experienceExpectation}につながる手がかりを拾ってください。`;
+      return `${stageLabels[index] ?? `段階${index + 1}`}の地点です。${fallback} ${explorationStyle}を保ちながら、${experienceExpectation}につながる手がかりを拾ってください。`;
     }
     return `${fallback} この地点は任意です。時間に余裕がある場合のみ立ち寄り、体験の理解を補強してください。`;
   });
@@ -533,36 +917,429 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function findFlowStepIndex(screen: PreviewScreen | null): number {
-  if (!screen) return -1;
-  return GENERATION_FLOW_STEPS.findIndex((step) => step.screens.includes(screen));
+function parseLineSeparatedIds(value: string): string[] {
+  return Array.from(
+    new Set(
+      value
+        .split(/[\n,]/)
+        .map((item) => item.trim())
+      .filter((item) => item.length > 0),
+    ),
+  );
 }
 
-function renderPromptTemplate(
-  template: string,
+function resolveDurationUpperMinutes(duration: string): number {
+  if (duration.includes("15")) return 20;
+  if (duration.includes("45")) return 45;
+  return 30;
+}
+
+function resolveStep4TargetCount(duration: string): number {
+  if (duration.includes("15")) return 5;
+  return 6;
+}
+
+function parsePreviewCoordinate(value: string, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function buildStep4PreviewCompactInput(
   previewInputs: PreviewSimulationInputs,
-  aiPromptDraft: AIPromptDraft,
-): string {
-  const replacements: Record<string, string> = {
+  programFlowDraft: ProgramFlowDraft,
+): Record<string, unknown> {
+  const currentLat = parsePreviewCoordinate(previewInputs.currentLat, DEFAULT_SPOT_DB_MAP_CENTER.lat);
+  const currentLng = parsePreviewCoordinate(previewInputs.currentLng, DEFAULT_SPOT_DB_MAP_CENTER.lng);
+  const durationUpperMinutes = resolveDurationUpperMinutes(previewInputs.duration);
+  const targetCount = resolveStep4TargetCount(previewInputs.duration);
+  const maxReachableRadiusMeters =
+    durationUpperMinutes *
+    STEP4_PREVIEW_WALKING_METERS_PER_MINUTE *
+    STEP4_PREVIEW_RADIUS_REACHABILITY_FACTOR;
+
+  const configuredCandidateSpotPoolIds = parseLineSeparatedIds(programFlowDraft.step3.candidateSpotPoolIds);
+  const previewFallbackPoolIds =
+    configuredCandidateSpotPoolIds.length > 0
+      ? configuredCandidateSpotPoolIds
+      : Object.keys(STEP4_PREVIEW_SPOT_COORDINATES);
+  const candidateSpotPoolIds = Array.from(
+    new Set([
+      STEP4_PREVIEW_REQUIRED_START_SPOT_ID,
+      ...previewFallbackPoolIds,
+    ]),
+  );
+
+  const candidateSpots = candidateSpotPoolIds.map((id) => {
+    const coordinate = STEP4_PREVIEW_SPOT_COORDINATES[id];
+    return {
+      id,
+      lat: coordinate?.lat ?? null,
+      lng: coordinate?.lng ?? null,
+    };
+  });
+  const coordinateReadyCandidateSpots = candidateSpots.filter(
+    (spot): spot is { id: string; lat: number; lng: number } =>
+      typeof spot.lat === "number" && typeof spot.lng === "number",
+  );
+  const candidateDistanceMatrixMeters = coordinateReadyCandidateSpots.flatMap((from) =>
+    coordinateReadyCandidateSpots
+      .filter((to) => to.id !== from.id)
+      .map((to) => ({
+        fromId: from.id,
+        toId: to.id,
+        distanceMeters: Math.round(
+          distanceMetersBetweenCoordinates(
+            { lat: from.lat, lng: from.lng },
+            { lat: to.lat, lng: to.lng },
+          ),
+        ),
+      })),
+  );
+  const baselineMiddleTarget = Math.max(0, targetCount - 1);
+  const baselineMiddleIds = candidateSpotPoolIds
+    .filter((id) => id !== STEP4_PREVIEW_REQUIRED_START_SPOT_ID)
+    .slice(0, baselineMiddleTarget);
+  const baselineRouteIds = [
+    STEP4_PREVIEW_REQUIRED_START_SPOT_ID,
+    ...baselineMiddleIds,
+  ];
+  const baselineLegDistances = baselineRouteIds.slice(0, -1).map((fromId, index) => {
+    const toId = baselineRouteIds[index + 1];
+    const from = STEP4_PREVIEW_SPOT_COORDINATES[fromId];
+    const to = STEP4_PREVIEW_SPOT_COORDINATES[toId];
+    if (!from || !to) {
+      return {
+        fromId,
+        toId,
+        distanceMeters: null,
+      };
+    }
+    return {
+      fromId,
+      toId,
+      distanceMeters: Math.round(
+        distanceMetersBetweenCoordinates(
+          { lat: from.lat, lng: from.lng },
+          { lat: to.lat, lng: to.lng },
+        ),
+      ),
+    };
+  });
+  const baselineTotalDistanceMeters = baselineLegDistances.reduce(
+    (sum, leg) => sum + (typeof leg.distanceMeters === "number" ? leg.distanceMeters : 0),
+    0,
+  );
+  const baselineUnknownSegments = baselineLegDistances.filter(
+    (leg) => typeof leg.distanceMeters !== "number",
+  ).length;
+
+  return {
+    currentLocation: {
+      lat: currentLat,
+      lng: currentLng,
+    },
+    travelMode: "walking",
     userType: previewInputs.userType,
     familiarity: previewInputs.familiarity,
     duration: previewInputs.duration,
     explorationStyle: previewInputs.explorationStyle,
     experienceExpectation: previewInputs.experienceExpectation,
-    objective: aiPromptDraft.objective,
-    audience: aiPromptDraft.audience,
-    tone: aiPromptDraft.tone,
-    requiredElements: aiPromptDraft.requiredElements,
-    forbiddenElements: aiPromptDraft.forbiddenElements,
-    fixedTextPolicy: aiPromptDraft.fixedTextPolicy,
-    outputStyle: aiPromptDraft.outputStyle,
+    targetCount,
+    maxReachableRadiusMeters: Math.round(maxReachableRadiusMeters),
+    minSegmentDistanceMeters: STEP4_PREVIEW_MIN_SEGMENT_DISTANCE_METERS,
+    maxSegmentDistanceMeters: STEP4_PREVIEW_MAX_SEGMENT_DISTANCE_METERS,
+    requiredStartSpotId: STEP4_PREVIEW_REQUIRED_START_SPOT_ID,
+    candidateSpots,
+    candidateDistanceMatrixMeters,
+    baselineRoute: {
+      routeIds: baselineRouteIds,
+      totalDistanceMeters: baselineTotalDistanceMeters,
+      legDistances: baselineLegDistances,
+      unknownSegmentCount: baselineUnknownSegments,
+    },
   };
+}
 
-  return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (match, key) => {
-    const value = replacements[key];
-    if (typeof value !== "string") return match;
-    return value;
-  });
+function sanitizeStepOutputPreview(
+  stepId: QuestGenerationStepId,
+  outputVars: Record<string, unknown>,
+): Record<string, unknown> {
+  if (stepId !== "step4") return outputVars;
+
+  const routeIds = Array.isArray(outputVars.routeIds)
+    ? outputVars.routeIds
+    : Array.isArray(outputVars.routeSpotIds)
+      ? outputVars.routeSpotIds
+      : [];
+  const routeLegDistances = Array.isArray(outputVars.routeLegDistances)
+    ? outputVars.routeLegDistances
+    : [];
+  const routeReasonMap = isRecord(outputVars.routeReasonMap)
+    ? outputVars.routeReasonMap
+    : isRecord(outputVars.reasonBySpotId)
+      ? outputVars.reasonBySpotId
+      : {};
+  const routeQuality = isRecord(outputVars.routeQuality)
+    ? outputVars.routeQuality
+    : {};
+  const routeDistanceSummary = isRecord(outputVars.routeDistanceSummary)
+    ? outputVars.routeDistanceSummary
+    : {};
+
+  return {
+    routeIds,
+    routeStoryTheme:
+      typeof outputVars.routeStoryTheme === "string" ? outputVars.routeStoryTheme : "",
+    routeReasonMap,
+    routeLegDistances,
+    mobilityNotes:
+      typeof outputVars.mobilityNotes === "string" ? outputVars.mobilityNotes : "",
+    routeQuality,
+    routeDistanceSummary,
+  };
+}
+
+function normalizeStep4RoutePrompt(value: unknown): string {
+  if (typeof value !== "string") return INITIAL_AI_PROMPT_DRAFT.step4RoutePrompt;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return INITIAL_AI_PROMPT_DRAFT.step4RoutePrompt;
+
+  const looksLegacyOutlinePrompt =
+    /(体験の骨子|骨子を作成|ready|prologue|epilogue|本文を作成)/i.test(trimmed) &&
+    !/(巡回ルート|ルート最適化|route)/i.test(trimmed);
+
+  return looksLegacyOutlinePrompt ? INITIAL_AI_PROMPT_DRAFT.step4RoutePrompt : trimmed;
+}
+
+function applyPromptTemplate(template: string, vars: Record<string, string>): string {
+  return template.replace(/\{(\w+)\}/g, (_match, key) => vars[key] ?? "");
+}
+
+function buildStepAiPromptPreview(params: {
+  stepId: QuestGenerationStepId;
+  previewInputs: PreviewSimulationInputs;
+  aiPromptDraft: AIPromptDraft;
+  programFlowDraft: ProgramFlowDraft;
+}): StepAiPromptView | null {
+  const { stepId, previewInputs, aiPromptDraft, programFlowDraft } = params;
+
+  if (stepId === "step4") {
+    const step4PromptTemplate = normalizeStep4RoutePrompt(aiPromptDraft.step4RoutePrompt);
+    const step4PromptResolved = applyPromptTemplate(step4PromptTemplate, {
+      userType: previewInputs.userType,
+      familiarity: previewInputs.familiarity,
+      duration: previewInputs.duration,
+      explorationStyle: previewInputs.explorationStyle,
+      experienceExpectation: previewInputs.experienceExpectation,
+      routeDesign: aiPromptDraft.routeDesign,
+    });
+    return {
+      provider: "gemini",
+      model: "server:GEMINI_ROUTE_MODEL",
+      temperature: 0.2,
+      systemPrompt:
+        "あなたは徒歩ルート最適化担当です。出力は必ずJSONのみ。入力JSON以外の情報は使用禁止。" +
+        "routeSpotIds は candidateSpots の id のみ使用可能。requiredStartSpotId から開始すること（終点は可変）。" +
+        "travelMode=walking のため、連続スポット間は minSegmentDistanceMeters 以上かつ maxSegmentDistanceMeters 以下を守ること。" +
+        "まずハード制約を満たし、次に total walking distance 最小化を行うこと。",
+      userPrompt:
+        `${step4PromptResolved}\n\n` +
+        "以下の compact input を使ってルートを設計してください。\n" +
+        "compact_input=<step3出力 compactInput を実行時に注入>\n" +
+        "制約メモ: targetCount=<step2出力>, mobilityConstraint=<step2出力>\n\n" +
+        "最適化手順:\n" +
+        "1) requiredStartSpotId から開始（終点は可変）\n" +
+        "2) routeSpotIds は targetCount 件、重複なし\n" +
+        "3) candidateDistanceMatrixMeters で全セグメントが minSegmentDistanceMeters 以上かつ maxSegmentDistanceMeters 以下の経路のみ残す\n" +
+        "4) 残った経路のうち総歩行距離(totalDistance)が最小の経路を選ぶ\n" +
+        "5) 同点なら最長セグメントが短い経路を優先\n" +
+        "6) baselineRoute.totalDistanceMeters より悪化する場合は mobilityNotes へ理由を記載\n" +
+        "7) routeSpotIds の全IDに routeReasonMap を付与\n\n" +
+        "JSON schema:\n" +
+        "{\n" +
+        '  "routeSpotIds": ["center-zone", "..."],\n' +
+        '  "routeStoryTheme": "文字列",\n' +
+        '  "routeReasonMap": {"spotId": "その地点を採用した理由"},\n' +
+        '  "mobilityNotes": "制約順守に関する短い注記"\n' +
+        "}\n" +
+        "注意: 必ずJSONのみを返すこと。コードブロック禁止。",
+    };
+  }
+
+  if (stepId === "step6") {
+    const step6SpotCount = previewInputs.duration.includes("15") ? "5" : "6";
+    const step6QuestName = `${previewInputs.userType}の伊都キャンパスクエスト`;
+    const step6QuestSubtitle = `${previewInputs.duration}で巡る伊都キャンパス回遊`;
+    const step6QuestTheme = aiPromptDraft.objective;
+    const step6QuestGoal = aiPromptDraft.routeDesign;
+    const step6Takeaway = aiPromptDraft.requiredElements;
+    const step6GuideName = "澪先輩";
+    const step6GuideRole = "伊都キャンパスを案内する先輩";
+    const step6GuideDistance = "近すぎず、必要なときに背中を押す距離";
+    const step6GuideTone = aiPromptDraft.tone;
+    const step6GuideKnows = "施設の使われ方、学生目線での価値、ルートの意図";
+    const step6GuideDoesNotKnow = "制作裏話、プレイヤーの内心、過剰な断定";
+    const step6GuideForbiddenStyle = "メタ発言、抽象論だけの説明、説明くさすぎる語り";
+    const step6QuestStructure = "序盤: 起点をつかむ / 中盤: 戻る場所・挑戦・深める場を回収 / 終盤: 終着点で全体をつなぐ";
+    const step6SpotsJson = "[step5出力: spot_id, spot_name, spot_order, spot_role, facility_summary, why_selected, what_player_should_notice, transition_to_next, optional_notes]";
+    const step6PromptResolved = applyPromptTemplate(aiPromptDraft.step6InsertionPrompt, {
+      objective: aiPromptDraft.objective,
+      audience: aiPromptDraft.audience,
+      additionalContext: aiPromptDraft.additionalContext,
+      requiredElements: aiPromptDraft.requiredElements,
+      tone: aiPromptDraft.tone,
+      outputStyle: aiPromptDraft.outputStyle,
+      outputLanguage: aiPromptDraft.outputLanguage,
+      fixedTextPolicy: aiPromptDraft.fixedTextPolicy,
+      forbiddenElements: aiPromptDraft.forbiddenElements,
+      worldSetting: programFlowDraft.step6.worldSetting,
+      characterProfile: programFlowDraft.step6.characterProfile,
+      characterRole: programFlowDraft.step6.characterRole,
+      storyArcFor4Spots: programFlowDraft.step6.storyArcFor4Spots,
+      storyArcFor5Spots: programFlowDraft.step6.storyArcFor5Spots,
+      storyArcFor6Spots: programFlowDraft.step6.storyArcFor6Spots,
+      conversationFlow: programFlowDraft.step6.conversationFlow,
+      questName: step6QuestName,
+      questSubtitle: step6QuestSubtitle,
+      playerType: previewInputs.userType,
+      playerState: previewInputs.familiarity,
+      duration: previewInputs.duration,
+      questTheme: step6QuestTheme,
+      questGoal: step6QuestGoal,
+      takeaway: step6Takeaway,
+      guideName: step6GuideName,
+      guideRole: step6GuideRole,
+      guideDistance: step6GuideDistance,
+      guideTone: step6GuideTone,
+      guideKnows: step6GuideKnows,
+      guideDoesNotKnow: step6GuideDoesNotKnow,
+      guideForbiddenStyle: step6GuideForbiddenStyle,
+      questStructure: step6QuestStructure,
+      spotCount: step6SpotCount,
+      spotsJson: step6SpotsJson,
+    });
+    return {
+      provider: "openai",
+      model: "server:OPENAI_MODEL",
+      temperature: 0.45,
+      systemPrompt:
+        "あなたは観光/キャンパス案内の日本語ライターです。出力はJSONのみ。spots は routeSpotIds と同じ順序・同じ件数で返し、scenarioTextsは3要素固定で返す。",
+      userPrompt:
+        `${step6PromptResolved}\n\n` +
+        `ユーザー条件: userType=${previewInputs.userType}, familiarity=${previewInputs.familiarity}, duration=${previewInputs.duration}, explorationStyle=${previewInputs.explorationStyle}, expectation=${previewInputs.experienceExpectation}\n` +
+        "ルートテーマ: <step4出力 routeStoryTheme>\n" +
+        "運営設定: objective/audience/additionalContext/fixedTextPolicy を実行時に注入\n" +
+        "ルートID順: <step4出力 routeIds>\n" +
+        "ルート詳細: <step5出力 routeSpotKnowledge + routeSpots>\n" +
+        'JSON schema: {"generatedStoryName":string,"storyTone":string,"readyHeroLead":string,"readySummaryTitle":string,"readySummaryText":string,"prologueBody":string,"epilogueBody":string,"spots":[{"id":string,"name":string,"overview":string,"rationale":string,"scenarioTexts":["到着前の一言","案内役の会話","気づきと次スポット接続"]}]}',
+    };
+  }
+
+  if (stepId === "step7") {
+    const step7PromptResolved = applyPromptTemplate(aiPromptDraft.step7RepairPrompt, {
+      forbiddenElements: aiPromptDraft.forbiddenElements,
+      fixedTextPolicy: aiPromptDraft.fixedTextPolicy,
+    });
+    return {
+      provider: "openai",
+      model: "server:OPENAI_MODEL",
+      temperature: 0.1,
+      systemPrompt: "あなたは検証修正担当です。必ずJSONのみを返し、指摘項目だけ最小修正してください。",
+      userPrompt:
+        `${step7PromptResolved}\n\n` +
+        "エラー: <step7実行時の validationErrors>\n" +
+        "routeIds: <step4出力 routeIds>\n" +
+        "currentPayload: <step6生成 payload>",
+    };
+  }
+
+  return null;
+}
+
+function buildStepInputPreview(
+  stepId: QuestGenerationStepId,
+  previewInputs: PreviewSimulationInputs,
+  aiPromptDraft: AIPromptDraft,
+  programFlowDraft: ProgramFlowDraft,
+): Record<string, unknown> {
+  if (stepId === "step1") {
+    return {
+      simulationInputs: previewInputs,
+    };
+  }
+  if (stepId === "step2") {
+    return {
+      normalizedSourceInputs: {
+        userType: previewInputs.userType,
+        familiarity: previewInputs.familiarity,
+        duration: previewInputs.duration,
+        currentLat: previewInputs.currentLat,
+        currentLng: previewInputs.currentLng,
+      },
+      rules: programFlowDraft.step2,
+    };
+  }
+  if (stepId === "step3") {
+    return {
+      familiarity: previewInputs.familiarity,
+      currentOrigin: {
+        lat: previewInputs.currentLat,
+        lng: previewInputs.currentLng,
+      },
+      rules: {
+        candidateSelectionRule: programFlowDraft.step3.candidateSelectionRule,
+        routeOrderingRule: programFlowDraft.step3.routeOrderingRule,
+        spotDbLinkPolicy: programFlowDraft.step3.spotDbLinkPolicy,
+        candidateSpotPoolIds: parseLineSeparatedIds(programFlowDraft.step3.candidateSpotPoolIds),
+      },
+    };
+  }
+  if (stepId === "step4") {
+    const step4CompactInputPreview = buildStep4PreviewCompactInput(previewInputs, programFlowDraft);
+    return {
+      normalizedInputsFromStep1: {
+        userType: previewInputs.userType,
+        familiarity: previewInputs.familiarity,
+        duration: previewInputs.duration,
+      },
+      constraintsFromStep2: {
+        targetCount: resolveStep4TargetCount(previewInputs.duration),
+        mobilityConstraintRule: programFlowDraft.step2.mobilityConstraintRule,
+        minSegmentDistanceMeters: STEP4_PREVIEW_MIN_SEGMENT_DISTANCE_METERS,
+        maxSegmentDistanceMeters: STEP4_PREVIEW_MAX_SEGMENT_DISTANCE_METERS,
+      },
+      compactInputFromStep3: step4CompactInputPreview,
+    };
+  }
+  if (stepId === "step5") {
+    return {
+      routeInputs: {
+        duration: previewInputs.duration,
+        familiarity: previewInputs.familiarity,
+      },
+      rules: programFlowDraft.step5,
+    };
+  }
+  if (stepId === "step6") {
+    return {
+      simulationInputs: previewInputs,
+      objective: aiPromptDraft.objective,
+      tone: aiPromptDraft.tone,
+      outputStyle: aiPromptDraft.outputStyle,
+      step6PromptTemplate: aiPromptDraft.step6InsertionPrompt,
+      worldConfig: programFlowDraft.step6,
+    };
+  }
+  if (stepId === "step7") {
+    return {
+      step7PromptTemplate: aiPromptDraft.step7RepairPrompt,
+      rules: programFlowDraft.step7,
+    };
+  }
+  return {
+    rules: programFlowDraft.step8,
+    outputTargets: aiPromptDraft.outputTargets,
+  };
 }
 
 function readPersistedSettings(): {
@@ -590,7 +1367,11 @@ function readPersistedSettings(): {
         ? (parsed.activeEditorTab as EditorTab)
         : "landing";
     const activeWorkspaceMode: WorkspaceMode =
-      parsed.activeWorkspaceMode === "ai" ? "ai" : "cms";
+      parsed.activeWorkspaceMode === "ai"
+        ? "ai"
+        : parsed.activeWorkspaceMode === "spotdb"
+          ? "spotdb"
+          : "cms";
     const aiWorkspacePaneMode: AIWorkspacePaneMode =
       parsed.aiWorkspacePaneMode === "simulation" ? "simulation" : "prompt";
     const activeQuestGenerationStep: QuestGenerationStepId =
@@ -639,11 +1420,29 @@ function readPersistedSettings(): {
 
     const aiPromptDraft: AIPromptDraft = isRecord(parsed.aiPromptDraft)
       ? (() => {
-          const persistedAiPrompt = parsed.aiPromptDraft as Partial<AIPromptDraft>;
-          const persistedTargets = persistedAiPrompt.outputTargets;
-          return {
+          const persistedAiPrompt = parsed.aiPromptDraft as Record<string, unknown>;
+          const migratedAiPrompt: Record<string, unknown> = { ...persistedAiPrompt };
+          if (
+            typeof migratedAiPrompt.step4RoutePrompt !== "string" &&
+            typeof persistedAiPrompt.step4OutlinePrompt === "string"
+          ) {
+            migratedAiPrompt.step4RoutePrompt = persistedAiPrompt.step4OutlinePrompt;
+          }
+          if (
+            typeof migratedAiPrompt.step6InsertionPrompt !== "string" &&
+            typeof persistedAiPrompt.step5NarrativePrompt === "string"
+          ) {
+            migratedAiPrompt.step6InsertionPrompt = persistedAiPrompt.step5NarrativePrompt;
+          }
+
+          const mergedPrompt = {
             ...INITIAL_AI_PROMPT_DRAFT,
-            ...persistedAiPrompt,
+            ...(migratedAiPrompt as Partial<AIPromptDraft>),
+          };
+          const persistedTargets = migratedAiPrompt.outputTargets;
+          return {
+            ...mergedPrompt,
+            step4RoutePrompt: normalizeStep4RoutePrompt(mergedPrompt.step4RoutePrompt),
             outputTargets: Array.isArray(persistedTargets)
               ? persistedTargets.filter((target): target is AIOutputTarget =>
                   AI_OUTPUT_TARGET_ITEMS.some((item) => item.key === target),
@@ -659,7 +1458,9 @@ function readPersistedSettings(): {
           const persistedStep1 = isRecord(persistedProgramFlow.step1) ? persistedProgramFlow.step1 : {};
           const persistedStep2 = isRecord(persistedProgramFlow.step2) ? persistedProgramFlow.step2 : {};
           const persistedStep3 = isRecord(persistedProgramFlow.step3) ? persistedProgramFlow.step3 : {};
+          const persistedStep5 = isRecord(persistedProgramFlow.step5) ? persistedProgramFlow.step5 : {};
           const persistedStep6 = isRecord(persistedProgramFlow.step6) ? persistedProgramFlow.step6 : {};
+          const persistedStep7 = isRecord(persistedProgramFlow.step7) ? persistedProgramFlow.step7 : {};
           const persistedStep8 = isRecord(persistedProgramFlow.step8) ? persistedProgramFlow.step8 : {};
           return {
             step1: {
@@ -677,34 +1478,96 @@ function readPersistedSettings(): {
                   : INITIAL_PROGRAM_FLOW_DRAFT.step1.normalizeDuration,
             },
             step2: {
-              spotCountLogic:
-                typeof persistedStep2.spotCountLogic === "string"
-                  ? persistedStep2.spotCountLogic
-                  : INITIAL_PROGRAM_FLOW_DRAFT.step2.spotCountLogic,
-              difficultyLogic:
-                typeof persistedStep2.difficultyLogic === "string"
-                  ? persistedStep2.difficultyLogic
-                  : INITIAL_PROGRAM_FLOW_DRAFT.step2.difficultyLogic,
+              spotCountRule:
+                typeof persistedStep2.spotCountRule === "string"
+                  ? persistedStep2.spotCountRule
+                  : typeof persistedStep2.spotCountLogic === "string"
+                    ? persistedStep2.spotCountLogic
+                    : INITIAL_PROGRAM_FLOW_DRAFT.step2.spotCountRule,
+              mobilityConstraintRule:
+                typeof persistedStep2.mobilityConstraintRule === "string"
+                  ? persistedStep2.mobilityConstraintRule
+                  : typeof persistedStep2.difficultyLogic === "string"
+                    ? persistedStep2.difficultyLogic
+                    : INITIAL_PROGRAM_FLOW_DRAFT.step2.mobilityConstraintRule,
             },
             step3: {
-              spotSelectionLogic:
-                typeof persistedStep3.spotSelectionLogic === "string"
-                  ? persistedStep3.spotSelectionLogic
-                  : INITIAL_PROGRAM_FLOW_DRAFT.step3.spotSelectionLogic,
-              routeOrderingLogic:
-                typeof persistedStep3.routeOrderingLogic === "string"
-                  ? persistedStep3.routeOrderingLogic
-                  : INITIAL_PROGRAM_FLOW_DRAFT.step3.routeOrderingLogic,
+              candidateSelectionRule:
+                typeof persistedStep3.candidateSelectionRule === "string"
+                  ? persistedStep3.candidateSelectionRule
+                  : typeof persistedStep3.spotSelectionLogic === "string"
+                    ? persistedStep3.spotSelectionLogic
+                    : INITIAL_PROGRAM_FLOW_DRAFT.step3.candidateSelectionRule,
+              routeOrderingRule:
+                typeof persistedStep3.routeOrderingRule === "string"
+                  ? persistedStep3.routeOrderingRule
+                  : typeof persistedStep3.routeOrderingLogic === "string"
+                    ? persistedStep3.routeOrderingLogic
+                    : INITIAL_PROGRAM_FLOW_DRAFT.step3.routeOrderingRule,
+              spotDbLinkPolicy:
+                typeof persistedStep3.spotDbLinkPolicy === "string"
+                  ? persistedStep3.spotDbLinkPolicy
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step3.spotDbLinkPolicy,
+              candidateSpotPoolIds:
+                typeof persistedStep3.candidateSpotPoolIds === "string"
+                  ? persistedStep3.candidateSpotPoolIds
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step3.candidateSpotPoolIds,
+            },
+            step5: {
+              narrativeContainerSpec:
+                typeof persistedStep5.narrativeContainerSpec === "string"
+                  ? persistedStep5.narrativeContainerSpec
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step5.narrativeContainerSpec,
+              slotInjectionPolicy:
+                typeof persistedStep5.slotInjectionPolicy === "string"
+                  ? persistedStep5.slotInjectionPolicy
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step5.slotInjectionPolicy,
             },
             step6: {
-              jsonValidationLogic:
-                typeof persistedStep6.jsonValidationLogic === "string"
-                  ? persistedStep6.jsonValidationLogic
-                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.jsonValidationLogic,
-              textValidationLogic:
-                typeof persistedStep6.textValidationLogic === "string"
-                  ? persistedStep6.textValidationLogic
-                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.textValidationLogic,
+              worldSetting:
+                typeof persistedStep6.worldSetting === "string"
+                  ? persistedStep6.worldSetting
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.worldSetting,
+              characterProfile:
+                typeof persistedStep6.characterProfile === "string"
+                  ? persistedStep6.characterProfile
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.characterProfile,
+              characterRole:
+                typeof persistedStep6.characterRole === "string"
+                  ? persistedStep6.characterRole
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.characterRole,
+              storyArcFor4Spots:
+                typeof persistedStep6.storyArcFor4Spots === "string"
+                  ? persistedStep6.storyArcFor4Spots
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.storyArcFor4Spots,
+              storyArcFor5Spots:
+                typeof persistedStep6.storyArcFor5Spots === "string"
+                  ? persistedStep6.storyArcFor5Spots
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.storyArcFor5Spots,
+              storyArcFor6Spots:
+                typeof persistedStep6.storyArcFor6Spots === "string"
+                  ? persistedStep6.storyArcFor6Spots
+                  : INITIAL_PROGRAM_FLOW_DRAFT.step6.storyArcFor6Spots,
+              conversationFlow:
+                typeof persistedStep6.conversationFlow === "string"
+                  ? persistedStep6.conversationFlow
+                  : typeof persistedStep6.textValidationLogic === "string"
+                    ? persistedStep6.textValidationLogic
+                    : INITIAL_PROGRAM_FLOW_DRAFT.step6.conversationFlow,
+            },
+            step7: {
+              validationRuleSet:
+                typeof persistedStep7.validationRuleSet === "string"
+                  ? persistedStep7.validationRuleSet
+                  : typeof persistedStep6.jsonValidationLogic === "string"
+                    ? persistedStep6.jsonValidationLogic
+                    : INITIAL_PROGRAM_FLOW_DRAFT.step7.validationRuleSet,
+              fallbackPolicy:
+                typeof persistedStep7.fallbackPolicy === "string"
+                  ? persistedStep7.fallbackPolicy
+                  : typeof persistedStep6.textValidationLogic === "string"
+                    ? persistedStep6.textValidationLogic
+                    : INITIAL_PROGRAM_FLOW_DRAFT.step7.fallbackPolicy,
             },
             step8: {
               finalizeFormat:
@@ -766,21 +1629,29 @@ function TextAreaField({
   onChange,
   rows = 4,
   helper,
+  readOnly = false,
 }: {
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   rows?: number;
   helper?: string;
+  readOnly?: boolean;
 }) {
   return (
     <div>
       <label className="mb-2 block text-sm font-semibold tracking-wider text-[#2d3432]">{label}</label>
       <textarea
-        className="w-full resize-none rounded-xl border border-[#dee4e0] bg-white p-4 text-[14px] leading-[1.6] text-[#2d3432] shadow-sm transition-colors focus:border-[#f5ce53] focus:ring-1 focus:ring-[#f5ce53] focus:outline-none"
+        className={[
+          "w-full resize-none rounded-xl border p-4 text-[14px] leading-[1.6] text-[#2d3432] shadow-sm transition-colors focus:outline-none",
+          readOnly
+            ? "border-[#d5ddd9] bg-[#f4f7f5] text-[#3e4a46]"
+            : "border-[#dee4e0] bg-white focus:border-[#f5ce53] focus:ring-1 focus:ring-[#f5ce53]",
+        ].join(" ")}
         rows={rows}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        readOnly={readOnly}
+        onChange={(event) => onChange?.(event.target.value)}
       />
       {helper ? <p className="mt-2 text-[12px] text-[#5a605e]">{helper}</p> : null}
     </div>
@@ -792,30 +1663,39 @@ export default function SettingsPage() {
   const [activeWorkspaceMode, setActiveWorkspaceMode] = useState<WorkspaceMode>(
     persistedSettings?.activeWorkspaceMode ?? "cms",
   );
-  const [aiWorkspacePaneMode, setAiWorkspacePaneMode] = useState<AIWorkspacePaneMode>(
-    persistedSettings?.aiWorkspacePaneMode ?? "prompt",
-  );
+  const [aiWorkspacePaneMode] = useState<AIWorkspacePaneMode>(persistedSettings?.aiWorkspacePaneMode ?? "prompt");
   const [activeQuestGenerationStep, setActiveQuestGenerationStep] = useState<QuestGenerationStepId>(
     persistedSettings?.activeQuestGenerationStep ?? "step1",
   );
   const [activeEditorTab, setActiveEditorTab] = useState<EditorTab>(persistedSettings?.activeEditorTab ?? "landing");
   const [deviceMode, setDeviceMode] = useState<DeviceMode>(persistedSettings?.deviceMode ?? "mobile");
   const [textDraft, setTextDraft] = useState<TextDraft>(persistedSettings?.textDraft ?? INITIAL_TEXT_DRAFT);
-  const [aiPromptDraft, setAiPromptDraft] = useState<AIPromptDraft>(
-    persistedSettings?.aiPromptDraft ?? INITIAL_AI_PROMPT_DRAFT,
-  );
-  const [programFlowDraft, setProgramFlowDraft] = useState<ProgramFlowDraft>(
+  const [aiPromptDraft] = useState<AIPromptDraft>(persistedSettings?.aiPromptDraft ?? INITIAL_AI_PROMPT_DRAFT);
+  const [programFlowDraft] = useState<ProgramFlowDraft>(
     persistedSettings?.programFlowDraft ?? INITIAL_PROGRAM_FLOW_DRAFT,
   );
-  const [committedPromptSnapshot, setCommittedPromptSnapshot] = useState<string>("");
   const [previewSimulationInputs, setPreviewSimulationInputs] = useState<PreviewSimulationInputs>(
     DEFAULT_PREVIEW_SIMULATION_INPUTS,
   );
+  const [stepSimulationStates, setStepSimulationStates] = useState<
+    Partial<Record<QuestGenerationStepId, StepSimulationState>>
+  >({});
+  const [simulatingStepId, setSimulatingStepId] = useState<QuestGenerationStepId | null>(null);
+  const [simulationModalStepId, setSimulationModalStepId] = useState<QuestGenerationStepId | null>(null);
+  const [simulationVisibleStepCount, setSimulationVisibleStepCount] = useState(1);
+  const [simulationCompletedStepCount, setSimulationCompletedStepCount] = useState(0);
 
   const [previewScreen, setPreviewScreen] = useState<PreviewScreen | null>(null);
   const [previewScale, setPreviewScale] = useState(1);
+  const [spotDbData, setSpotDbData] = useState<SpotDbApiResponse | null>(null);
+  const [spotDbLoading, setSpotDbLoading] = useState(false);
+  const [spotDbError, setSpotDbError] = useState<string | null>(null);
+  const [spotDbMapReady, setSpotDbMapReady] = useState(false);
   const previewFrameRef = useRef<HTMLIFrameElement | null>(null);
   const previewViewportRef = useRef<HTMLDivElement | null>(null);
+  const spotDbMapContainerRef = useRef<HTMLDivElement | null>(null);
+  const spotDbMapRef = useRef<GoogleMapInstance | null>(null);
+  const spotDbMarkersRef = useRef<GoogleMarkerInstance[]>([]);
   const previewAppUrl = process.env.NEXT_PUBLIC_KYUDAI_PREVIEW_URL ?? "http://localhost:8082/";
 
   const previewOrigin = useMemo(() => {
@@ -825,6 +1705,154 @@ export default function SettingsPage() {
       return "*";
     }
   }, [previewAppUrl]);
+
+  const clearSpotDbMarkers = useCallback(() => {
+    spotDbMarkersRef.current.forEach((marker) => marker.setMap(null));
+    spotDbMarkersRef.current = [];
+  }, []);
+
+  const fetchSpotDbData = useCallback(async () => {
+    setSpotDbLoading(true);
+    setSpotDbError(null);
+    try {
+      const response = await fetch("/api/spot-db", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("スポットDBの取得に失敗しました。");
+      }
+      const payload = (await response.json()) as Partial<SpotDbApiResponse>;
+      const normalizedSpots = Array.isArray(payload.spots)
+        ? payload.spots.filter(
+            (spot): spot is SpotDbRecord =>
+              Boolean(
+                spot &&
+                  typeof spot.id === "string" &&
+                  typeof spot.name === "string" &&
+                  typeof spot.lat === "number" &&
+                  Number.isFinite(spot.lat) &&
+                  typeof spot.lng === "number" &&
+                  Number.isFinite(spot.lng),
+              ),
+          )
+        : [];
+
+      setSpotDbData({
+        generatedAt: typeof payload.generatedAt === "string" ? payload.generatedAt : null,
+        totalSpots:
+          typeof payload.totalSpots === "number" && Number.isFinite(payload.totalSpots)
+            ? payload.totalSpots
+            : normalizedSpots.length,
+        spots: normalizedSpots,
+      });
+    } catch {
+      setSpotDbError("スポットDBを読み込めませんでした。しばらくして再試行してください。");
+    } finally {
+      setSpotDbLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeWorkspaceMode !== "spotdb") return;
+    if (spotDbData || spotDbLoading || spotDbError) return;
+    void fetchSpotDbData();
+  }, [activeWorkspaceMode, fetchSpotDbData, spotDbData, spotDbLoading, spotDbError]);
+
+  useEffect(() => {
+    if (activeWorkspaceMode !== "spotdb") return;
+    if (!spotDbData?.spots.length) {
+      setSpotDbMapReady(false);
+      clearSpotDbMarkers();
+      return;
+    }
+    if (!GOOGLE_MAPS_API_KEY || !spotDbMapContainerRef.current) {
+      setSpotDbMapReady(false);
+      return;
+    }
+
+    let isDisposed = false;
+    setSpotDbMapReady(false);
+    void loadSettingsGoogleMapsScript(GOOGLE_MAPS_API_KEY)
+      .then(() => {
+        if (isDisposed || !spotDbMapContainerRef.current) return;
+        const mapsWindow = window as GoogleMapsWindow;
+        const MapCtor = mapsWindow.google?.maps?.Map;
+        const MarkerCtor = mapsWindow.google?.maps?.Marker;
+        const LatLngBoundsCtor = mapsWindow.google?.maps?.LatLngBounds;
+        if (!MapCtor || !MarkerCtor || !LatLngBoundsCtor) {
+          throw new Error("Google Maps script loaded without required APIs.");
+        }
+
+        if (!spotDbMapRef.current) {
+          spotDbMapRef.current = new MapCtor(spotDbMapContainerRef.current, {
+            center: DEFAULT_SPOT_DB_MAP_CENTER,
+            zoom: DEFAULT_SPOT_DB_MAP_ZOOM,
+            disableDefaultUI: true,
+            clickableIcons: false,
+            gestureHandling: "cooperative",
+            keyboardShortcuts: false,
+          });
+        }
+
+        const map = spotDbMapRef.current;
+        clearSpotDbMarkers();
+        const bounds = new LatLngBoundsCtor();
+        const duplicatePositionCount = new Map<string, number>();
+        const jitterBase = 0.00008;
+        const jitterMaxPerRing = 6;
+
+        spotDbData.spots.forEach((spot) => {
+          const key = `${spot.lat.toFixed(6)},${spot.lng.toFixed(6)}`;
+          const currentIndex = duplicatePositionCount.get(key) ?? 0;
+          duplicatePositionCount.set(key, currentIndex + 1);
+
+          let markerPosition = { lat: spot.lat, lng: spot.lng };
+          if (currentIndex > 0) {
+            const ring = Math.floor((currentIndex - 1) / jitterMaxPerRing) + 1;
+            const angle =
+              ((currentIndex - 1) % jitterMaxPerRing) * ((Math.PI * 2) / jitterMaxPerRing);
+            const distance = jitterBase * ring;
+            markerPosition = {
+              lat: spot.lat + Math.sin(angle) * distance,
+              lng: spot.lng + Math.cos(angle) * distance,
+            };
+          }
+
+          const marker = new MarkerCtor({
+            position: markerPosition,
+            map,
+            title: spot.name,
+          });
+          spotDbMarkersRef.current.push(marker);
+          bounds.extend(markerPosition);
+        });
+
+        if (spotDbData.spots.length === 1) {
+          const onlySpot = spotDbData.spots[0];
+          map.setCenter({ lat: onlySpot.lat, lng: onlySpot.lng });
+          map.setZoom(16);
+        } else {
+          map.fitBounds(bounds, 40);
+        }
+
+        if (!isDisposed) {
+          setSpotDbMapReady(true);
+        }
+      })
+      .catch(() => {
+        if (!isDisposed) {
+          setSpotDbError("地図の読み込みに失敗しました。APIキー設定を確認してください。");
+        }
+      });
+
+    return () => {
+      isDisposed = true;
+    };
+  }, [activeWorkspaceMode, clearSpotDbMarkers, spotDbData]);
+
+  useEffect(() => {
+    return () => {
+      clearSpotDbMarkers();
+    };
+  }, [clearSpotDbMarkers]);
 
   const worldConfigPayload = useMemo(
     () => ({
@@ -887,8 +1915,26 @@ export default function SettingsPage() {
       feedbackCommentNote: textDraft.feedback.commentNote.trim(),
       feedbackSubmitButton: textDraft.feedback.submitButton.trim(),
       feedbackThanks: textDraft.feedback.thanks.trim(),
+      title: aiPromptDraft.objective.trim(),
+      description: aiPromptDraft.additionalContext.trim(),
+      audience: aiPromptDraft.audience.trim(),
+      tone: aiPromptDraft.tone.trim(),
+      styleRules: aiPromptDraft.outputStyle.trim(),
+      outputLanguage: aiPromptDraft.outputLanguage.trim(),
+      routeDesign: aiPromptDraft.routeDesign.trim(),
+      fixedTextPolicy: aiPromptDraft.fixedTextPolicy.trim(),
+      requiredKeywords: parseLineSeparatedIds(aiPromptDraft.requiredElements),
+      blockedKeywords: parseLineSeparatedIds(aiPromptDraft.forbiddenElements),
+      questGenerationConfig: {
+        program: programFlowDraft,
+        aiPrompts: {
+          step4RouteOptimization: aiPromptDraft.step4RoutePrompt,
+          step6InsertionGeneration: aiPromptDraft.step6InsertionPrompt,
+          step7MinimalRepair: aiPromptDraft.step7RepairPrompt,
+        },
+      },
     }),
-    [textDraft],
+    [textDraft, programFlowDraft, aiPromptDraft],
   );
 
   const simulatedStoryPayload = useMemo(
@@ -905,14 +1951,6 @@ export default function SettingsPage() {
   const aiSimulationWorldConfigPayload = useMemo(() => {
     return {
       ...worldConfigPayload,
-      questGenerationConfig: {
-        program: programFlowDraft,
-        aiPrompts: {
-          step4: aiPromptDraft.step4OutlinePrompt,
-          step5: aiPromptDraft.step5NarrativePrompt,
-          step7: aiPromptDraft.step7RepairPrompt,
-        },
-      },
       ...(simulatedStoryPayload.readyHeroLead
         ? { readyHeroLead: simulatedStoryPayload.readyHeroLead }
         : {}),
@@ -932,7 +1970,7 @@ export default function SettingsPage() {
         ? { epilogueBody: simulatedStoryPayload.epilogueBody }
         : {}),
     };
-  }, [worldConfigPayload, programFlowDraft, aiPromptDraft, simulatedStoryPayload]);
+  }, [worldConfigPayload, simulatedStoryPayload]);
 
   const effectivePreviewPayload =
     activeWorkspaceMode === "ai" && aiWorkspacePaneMode === "simulation"
@@ -942,15 +1980,21 @@ export default function SettingsPage() {
   const postWorldConfigToPreview = useCallback(() => {
     const frameWindow = previewFrameRef.current?.contentWindow;
     if (!frameWindow) return;
-
-    frameWindow.postMessage(
-      {
-        source: "tomoshibi-admin-console",
-        type: "tomoshibi-world-config:update",
-        payload: effectivePreviewPayload,
-      },
-      previewOrigin,
-    );
+    try {
+      frameWindow.postMessage(
+        {
+          source: "tomoshibi-admin-console",
+          type: "tomoshibi-world-config:update",
+          payload: effectivePreviewPayload,
+        },
+        "*",
+      );
+    } catch (error) {
+      console.warn("[settings-preview] world-config postMessage skipped", {
+        previewOrigin,
+        error: error instanceof Error ? error.message : "unknown",
+      });
+    }
   }, [previewOrigin, effectivePreviewPayload]);
 
   useEffect(() => {
@@ -998,6 +2042,17 @@ export default function SettingsPage() {
       };
 
       if (message.source !== "kyudai-dictionary-mvp-mobile") return;
+      if (message.type === "tomoshibi-mobile:debug-log") {
+        const payload = isRecord(message.payload) ? message.payload : null;
+        const event = payload && typeof payload.event === "string" ? payload.event : "unknown";
+        const emittedAt = payload && typeof payload.emittedAt === "string" ? payload.emittedAt : null;
+        const debugData = payload && isRecord(payload.data) ? payload.data : payload;
+        console.info(`[kyudai-preview-debug] ${event}`, {
+          emittedAt,
+          payload: debugData,
+        });
+        return;
+      }
       if (message.type !== "tomoshibi-mobile:state") return;
       if (!message.payload || typeof message.payload !== "object") return;
 
@@ -1033,6 +2088,18 @@ export default function SettingsPage() {
             typeof simulationInputs.experienceExpectation === "string"
               ? simulationInputs.experienceExpectation
               : prev.experienceExpectation,
+          currentLat:
+            typeof simulationInputs.currentLat === "string"
+              ? simulationInputs.currentLat
+              : typeof simulationInputs.currentLat === "number"
+                ? String(simulationInputs.currentLat)
+              : prev.currentLat,
+          currentLng:
+            typeof simulationInputs.currentLng === "string"
+              ? simulationInputs.currentLng
+              : typeof simulationInputs.currentLng === "number"
+                ? String(simulationInputs.currentLng)
+              : prev.currentLng,
         };
 
         if (
@@ -1040,7 +2107,9 @@ export default function SettingsPage() {
           next.familiarity === prev.familiarity &&
           next.duration === prev.duration &&
           next.explorationStyle === prev.explorationStyle &&
-          next.experienceExpectation === prev.experienceExpectation
+          next.experienceExpectation === prev.experienceExpectation &&
+          next.currentLat === prev.currentLat &&
+          next.currentLng === prev.currentLng
         ) {
           return prev;
         }
@@ -1056,15 +2125,22 @@ export default function SettingsPage() {
     (direction: "back" | "forward") => {
       const frameWindow = previewFrameRef.current?.contentWindow;
       if (!frameWindow) return;
-
-      frameWindow.postMessage(
-        {
-          source: "tomoshibi-admin-console",
-          type: "tomoshibi-navigation:step",
-          payload: { direction },
-        },
-        previewOrigin,
-      );
+      try {
+        frameWindow.postMessage(
+          {
+            source: "tomoshibi-admin-console",
+            type: "tomoshibi-navigation:step",
+            payload: { direction },
+          },
+          "*",
+        );
+      } catch (error) {
+        console.warn("[settings-preview] navigation postMessage skipped", {
+          direction,
+          previewOrigin,
+          error: error instanceof Error ? error.message : "unknown",
+        });
+      }
     },
     [previewOrigin],
   );
@@ -1076,14 +2152,22 @@ export default function SettingsPage() {
       if (!target) return;
       const frameWindow = previewFrameRef.current?.contentWindow;
       if (!frameWindow) return;
-      frameWindow.postMessage(
-        {
-          source: "tomoshibi-admin-console",
-          type: "tomoshibi-navigation:set-screen",
-          payload: { screen: target.screen },
-        },
-        previewOrigin,
-      );
+      try {
+        frameWindow.postMessage(
+          {
+            source: "tomoshibi-admin-console",
+            type: "tomoshibi-navigation:set-screen",
+            payload: { screen: target.screen },
+          },
+          "*",
+        );
+      } catch (error) {
+        console.warn("[settings-preview] set-screen postMessage skipped", {
+          screen: target.screen,
+          previewOrigin,
+          error: error instanceof Error ? error.message : "unknown",
+        });
+      }
     },
     [previewOrigin],
   );
@@ -1162,138 +2246,440 @@ export default function SettingsPage() {
     setTextDraft((prev) => ({ ...prev, feedback: { ...prev.feedback, [key]: value } }));
   };
 
-  const updateAIPromptField = (key: keyof Omit<AIPromptDraft, "outputTargets">, value: string) => {
-    setAiPromptDraft((prev) => ({ ...prev, [key]: value }));
+  const updateSimulationInput = (key: keyof PreviewSimulationInputs, value: string) => {
+    setPreviewSimulationInputs((prev) => ({ ...prev, [key]: value }));
   };
 
-  const updateProgramStep1Field = (
-    key: keyof ProgramFlowDraft["step1"],
-    value: string,
-  ) => {
-    setProgramFlowDraft((prev) => ({
-      ...prev,
-      step1: { ...prev.step1, [key]: value },
-    }));
-  };
+  const fetchSimulationStates = useCallback(
+    async (runUntilStep: QuestGenerationStepId): Promise<Partial<Record<QuestGenerationStepId, StepSimulationState>>> => {
+      const runUntilStepIndex = QUEST_GENERATION_STEPS.findIndex((step) => step.id === runUntilStep);
+      const response = await fetch("/api/kyudai-mvp/quest/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          simulationInputs: {
+            userType: previewSimulationInputs.userType,
+            familiarity: previewSimulationInputs.familiarity,
+            duration: previewSimulationInputs.duration,
+            explorationStyle: previewSimulationInputs.explorationStyle,
+            experienceExpectation: previewSimulationInputs.experienceExpectation,
+            currentLat: previewSimulationInputs.currentLat,
+            currentLng: previewSimulationInputs.currentLng,
+          },
+          simulationControl: {
+            runUntilStep,
+          },
+          worldConfig: worldConfigPayload,
+        }),
+      });
 
-  const updateProgramStep2Field = (
-    key: keyof ProgramFlowDraft["step2"],
-    value: string,
-  ) => {
-    setProgramFlowDraft((prev) => ({
-      ...prev,
-      step2: { ...prev.step2, [key]: value },
-    }));
-  };
-
-  const updateProgramStep3Field = (
-    key: keyof ProgramFlowDraft["step3"],
-    value: string,
-  ) => {
-    setProgramFlowDraft((prev) => ({
-      ...prev,
-      step3: { ...prev.step3, [key]: value },
-    }));
-  };
-
-  const updateProgramStep6Field = (
-    key: keyof ProgramFlowDraft["step6"],
-    value: string,
-  ) => {
-    setProgramFlowDraft((prev) => ({
-      ...prev,
-      step6: { ...prev.step6, [key]: value },
-    }));
-  };
-
-  const updateProgramStep8Field = (
-    key: keyof ProgramFlowDraft["step8"],
-    value: string,
-  ) => {
-    setProgramFlowDraft((prev) => ({
-      ...prev,
-      step8: { ...prev.step8, [key]: value },
-    }));
-  };
-
-  const toggleAIPromptTarget = (target: AIOutputTarget) => {
-    setAiPromptDraft((prev) => {
-      const hasTarget = prev.outputTargets.includes(target);
-      if (hasTarget) {
-        const nextTargets = prev.outputTargets.filter((item) => item !== target);
-        return {
-          ...prev,
-          outputTargets: nextTargets.length > 0 ? nextTargets : [target],
-        };
+      const payload = (await response.json()) as QuestGenerationSimulationApiResponse;
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || "ステップシミュレーションに失敗しました。");
       }
-      return {
-        ...prev,
-        outputTargets: [...prev.outputTargets, target],
-      };
-    });
-  };
 
-  const step4PromptPreview = useMemo(
-    () => renderPromptTemplate(aiPromptDraft.step4OutlinePrompt, previewSimulationInputs, aiPromptDraft),
-    [aiPromptDraft, previewSimulationInputs],
+      const ranAtIso = new Date().toISOString();
+      const stepMap = new Map<QuestGenerationStepId, QuestGenerationStepResponse>();
+      const traceMap = new Map<QuestGenerationStepId, QuestGenerationStepTrace>();
+      if (Array.isArray(payload.steps)) {
+        payload.steps.forEach((step) => {
+          stepMap.set(step.id, step);
+        });
+      }
+      if (Array.isArray(payload.stepTraces)) {
+        payload.stepTraces.forEach((trace) => {
+          traceMap.set(trace.id, trace);
+        });
+      }
+
+      const nextStates: Partial<Record<QuestGenerationStepId, StepSimulationState>> = {};
+      QUEST_GENERATION_STEPS.forEach((step, index) => {
+        if (index > runUntilStepIndex) return;
+        const matchedStep = stepMap.get(step.id);
+        const matchedTrace = traceMap.get(step.id);
+        if (!matchedStep && !matchedTrace) return;
+        const spec = STEP_SIMULATION_SPECS[step.id];
+        const traceAiPrompt = matchedTrace?.aiPrompt;
+        const normalizedAiPrompt =
+          traceAiPrompt &&
+          typeof traceAiPrompt.provider === "string" &&
+          typeof traceAiPrompt.model === "string" &&
+          typeof traceAiPrompt.temperature === "number" &&
+          typeof traceAiPrompt.systemPrompt === "string" &&
+          typeof traceAiPrompt.userPrompt === "string"
+            ? {
+                provider: traceAiPrompt.provider,
+                model: traceAiPrompt.model,
+                temperature: traceAiPrompt.temperature,
+                systemPrompt: traceAiPrompt.systemPrompt,
+                userPrompt: traceAiPrompt.userPrompt,
+              }
+            : undefined;
+        nextStates[step.id] = {
+          ranAtIso,
+          status: matchedStep?.status ?? "completed",
+          detail:
+            matchedStep?.detail ??
+            (matchedTrace ? "シミュレーション完了" : "このステップの実行結果を取得できませんでした。"),
+          program:
+            typeof matchedTrace?.program === "string" && matchedTrace.program.trim().length > 0
+              ? matchedTrace.program
+              : spec.programSummary,
+          inputVars:
+            matchedTrace?.inputVars && isRecord(matchedTrace.inputVars) ? matchedTrace.inputVars : {},
+          outputVars:
+            matchedTrace?.outputVars && isRecord(matchedTrace.outputVars) ? matchedTrace.outputVars : {},
+          aiPrompt: normalizedAiPrompt,
+        };
+      });
+
+      return nextStates;
+    },
+    [previewSimulationInputs, worldConfigPayload],
   );
-  const step5PromptPreview = useMemo(
-    () => renderPromptTemplate(aiPromptDraft.step5NarrativePrompt, previewSimulationInputs, aiPromptDraft),
-    [aiPromptDraft, previewSimulationInputs],
-  );
-  const step7PromptPreview = useMemo(
-    () => renderPromptTemplate(aiPromptDraft.step7RepairPrompt, previewSimulationInputs, aiPromptDraft),
-    [aiPromptDraft, previewSimulationInputs],
-  );
 
-  const generatedAIPrompt = useMemo(() => {
-    const targetLabels = AI_OUTPUT_TARGET_ITEMS
-      .filter((item) => aiPromptDraft.outputTargets.includes(item.key))
-      .map((item) => item.label)
-      .join(" / ");
-    return [
-      `対象: ${targetLabels || "未選択"}`,
-      "",
-      "[STEP4 骨子生成]",
-      step4PromptPreview,
-      "",
-      "[STEP5 本文生成]",
-      step5PromptPreview,
-      "",
-      "[STEP7 部分再生成]",
-      step7PromptPreview,
-    ].join("\n");
-  }, [aiPromptDraft.outputTargets, step4PromptPreview, step5PromptPreview, step7PromptPreview]);
-
-  const runSimulation = useCallback(() => {
-    setCommittedPromptSnapshot(generatedAIPrompt);
-    setAiWorkspacePaneMode("simulation");
-
-    const frameWindow = previewFrameRef.current?.contentWindow;
-    if (!frameWindow) return;
-    frameWindow.postMessage(
-      {
-        source: "tomoshibi-admin-console",
-        type: "tomoshibi-navigation:set-screen",
-        payload: { screen: "setup" },
-      },
-      previewOrigin,
-    );
-  }, [generatedAIPrompt, previewOrigin]);
-
-  const returnToPromptBuilder = useCallback(() => {
-    setAiWorkspacePaneMode("prompt");
+  const openSequentialSimulationModal = useCallback(() => {
+    setSimulationModalStepId("step1");
+    setStepSimulationStates({});
+    setSimulationVisibleStepCount(1);
+    setSimulationCompletedStepCount(0);
+    setSimulatingStepId(null);
   }, []);
 
-  const simulationPromptSource = committedPromptSnapshot || generatedAIPrompt;
-  const currentFlowStepIndex = findFlowStepIndex(previewScreen);
+  const runStepSimulation = useCallback(
+    async (stepId: QuestGenerationStepId) => {
+      if (simulatingStepId) return;
 
-  const isAISimulationActive =
-    activeWorkspaceMode === "ai" && aiWorkspacePaneMode === "simulation";
-  const rightPaneTitle = isAISimulationActive ? "Simulation Preview" : "Live Preview";
-  const rightPaneSubtitle = isAISimulationActive
-    ? `現在: ${previewScreen ?? "未接続"} / 合成結果をアプリUIで確認`
-    : `現在: ${previewScreen ?? "未接続"}`;
+      const currentStepIndex = QUEST_GENERATION_STEPS.findIndex((step) => step.id === stepId);
+      if (currentStepIndex < 0 || currentStepIndex !== simulationCompletedStepCount) {
+        return;
+      }
+
+      setSimulatingStepId(stepId);
+      try {
+        const nextStates = await fetchSimulationStates(stepId);
+        setStepSimulationStates((prev) => ({ ...prev, ...nextStates }));
+
+        const totalSteps = QUEST_GENERATION_STEPS.length;
+        const nextCompleted = Math.min(totalSteps, simulationCompletedStepCount + 1);
+        const nextVisible = Math.min(totalSteps, nextCompleted + 1);
+        const nextFocusIndex = Math.min(nextCompleted, totalSteps - 1);
+
+        setSimulationCompletedStepCount(nextCompleted);
+        setSimulationVisibleStepCount(nextVisible);
+        setSimulationModalStepId(QUEST_GENERATION_STEPS[nextFocusIndex]?.id ?? stepId);
+      } catch (error) {
+        const message =
+          error instanceof Error && error.message.trim().length > 0
+            ? error.message
+            : "ステップシミュレーション中にエラーが発生しました。";
+        const spec = STEP_SIMULATION_SPECS[stepId];
+        setStepSimulationStates((prev) => ({
+          ...prev,
+          [stepId]: {
+            ranAtIso: new Date().toISOString(),
+            status: "error",
+            detail: message,
+            program: spec.programSummary,
+            inputVars: {},
+            outputVars: {},
+          },
+        }));
+      } finally {
+        setSimulatingStepId(null);
+      }
+    },
+    [fetchSimulationStates, simulatingStepId, simulationCompletedStepCount],
+  );
+
+  const renderStepSimulationButton = () => {
+    const isDisabled = simulatingStepId !== null;
+    return (
+      <button
+        type="button"
+        onClick={() => openSequentialSimulationModal()}
+        disabled={isDisabled}
+        className="rounded-lg border border-[#dee4e0] bg-white px-4 py-2 text-sm font-semibold text-[#2d3432] hover:border-[#f5ce53] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        一連シミュレーション開始
+      </button>
+    );
+  };
+
+  const renderStepSimulationPanel = (stepId: QuestGenerationStepId) => {
+    const spec = STEP_SIMULATION_SPECS[stepId];
+    const inputPreview = buildStepInputPreview(stepId, previewSimulationInputs, aiPromptDraft, programFlowDraft);
+
+    return (
+      <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4">
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-[#2d3432]">処理ロジック（プログラム）</p>
+          <p className="text-sm leading-relaxed text-[#3e4a46]">{spec.programSummary}</p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold tracking-wide text-[#5a605e] uppercase">受け入れ入力変数</p>
+            <div className="flex flex-wrap gap-2">
+              {spec.inputVars.map((item) => (
+                <span key={item} className="rounded-md border border-[#dee4e0] bg-white px-2 py-1 text-xs text-[#3e4a46]">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold tracking-wide text-[#5a605e] uppercase">出力変数</p>
+            <div className="flex flex-wrap gap-2">
+              {spec.outputVars.map((item) => (
+                <span key={item} className="rounded-md border border-[#dee4e0] bg-white px-2 py-1 text-xs text-[#3e4a46]">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2 rounded-lg border border-[#dee4e0] bg-white p-3">
+          <p className="text-xs font-semibold tracking-wide text-[#5a605e] uppercase">実行前の入力値プレビュー</p>
+          <pre className="max-h-[260px] overflow-auto rounded-lg border border-[#dee4e0] bg-[#f9f9f7] p-3 text-xs leading-relaxed text-[#3e4a46]">
+            {JSON.stringify(inputPreview, null, 2)}
+          </pre>
+          <p className="text-xs text-[#5a605e]">
+            実行結果は Step1→Step8 の連鎖（前段出力が次段入力に入る形）でモーダル表示します。
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  const renderSimulationResultModal = () => {
+    if (!simulationModalStepId) return null;
+
+    const totalSteps = QUEST_GENERATION_STEPS.length;
+    const resultEntries = QUEST_GENERATION_STEPS.map((step, index) => ({
+      step,
+      index,
+      result: stepSimulationStates[step.id],
+    }));
+    const visibleEntries = resultEntries.slice(0, simulationVisibleStepCount);
+    const isRunning = simulatingStepId !== null;
+    const isFinished = simulationCompletedStepCount >= totalSteps;
+    const latestRanAtIso = resultEntries.find((entry) => entry.result)?.result?.ranAtIso;
+    const activeStepLabel =
+      QUEST_GENERATION_STEPS.find((step) => step.id === simulationModalStepId)?.label ?? simulationModalStepId;
+    const statusBadgeClass = (status: QuestGenerationStepStatus | "not-run") => {
+      if (status === "completed") return "border-[#c9d8cd] bg-[#eef6f0] text-[#335a3c]";
+      if (status === "fallback") return "border-[#f0d2a3] bg-[#fff3df] text-[#8a5a15]";
+      if (status === "error") return "border-[#f1c7c5] bg-[#fce9e8] text-[#8c3430]";
+      return "border-[#dee4e0] bg-[#f2f4f2] text-[#5a605e]";
+    };
+    const statusLabel = (status: QuestGenerationStepStatus | "not-run") => status;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4 py-6">
+        <div className="flex max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl border border-[#dee4e0] bg-white shadow-2xl">
+          <div className="flex items-center justify-between border-b border-[#dee4e0] px-5 py-3">
+            <div>
+              <p className="text-sm text-[#5a605e]">シミュレーション結果</p>
+              <h5 className="text-lg font-bold text-[#2d3432]">{activeStepLabel}</h5>
+              <p className="text-xs text-[#5a605e]">
+                進行: {Math.min(simulationCompletedStepCount, totalSteps)} / {totalSteps}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSimulationModalStepId(null)}
+              className="rounded-lg border border-[#dee4e0] bg-white px-3 py-1.5 text-sm font-semibold text-[#2d3432] hover:border-[#f5ce53]"
+            >
+              閉じる
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs text-[#5a605e]">
+                表示モード: Step1から順番に実行し、前段の出力を次段の入力へ引き継ぎます。
+              </p>
+              {latestRanAtIso ? (
+                <p className="text-xs text-[#5a605e]">実行時刻: {new Date(latestRanAtIso).toLocaleString("ja-JP")}</p>
+              ) : null}
+            </div>
+            {isRunning ? (
+              <div className="rounded-lg border border-[#dee4e0] bg-[#f9f9f7] px-4 py-8 text-center text-sm text-[#5a605e]">
+                一連シミュレーションを実行中です...
+              </div>
+            ) : null}
+            {visibleEntries.map((entry, index) => {
+              const isExecuted = entry.index < simulationCompletedStepCount;
+              const isCurrent = entry.index === simulationCompletedStepCount && !isFinished;
+              const isCurrentRunning = simulatingStepId === entry.step.id;
+              const inputPreview =
+                entry.result && Object.keys(entry.result.inputVars).length > 0
+                  ? entry.result.inputVars
+                  : buildStepInputPreview(entry.step.id, previewSimulationInputs, aiPromptDraft, programFlowDraft);
+              const outputPreview = sanitizeStepOutputPreview(entry.step.id, entry.result?.outputVars ?? {});
+              const aiPromptPreview =
+                entry.result?.aiPrompt ??
+                buildStepAiPromptPreview({
+                  stepId: entry.step.id,
+                  previewInputs: previewSimulationInputs,
+                  aiPromptDraft,
+                  programFlowDraft,
+                });
+              const currentStatus: QuestGenerationStepStatus | "not-run" = isExecuted
+                ? entry.result?.status ?? "completed"
+                : entry.result?.status === "error"
+                  ? "error"
+                  : "not-run";
+
+              const previous = index > 0 ? visibleEntries[index - 1] : null;
+              const previousOutputVars = previous?.result?.outputVars ?? {};
+              const previousOutputKeys = Object.keys(previousOutputVars);
+              const currentInputKeys = Object.keys(inputPreview);
+              const carriedKeys = previousOutputKeys.filter((key) => currentInputKeys.includes(key));
+              const additionalInputKeys = currentInputKeys.filter((key) => !carriedKeys.includes(key));
+
+              return (
+                <div
+                  key={entry.step.id}
+                  className={[
+                    "space-y-3 rounded-xl border p-4",
+                    entry.step.id === simulationModalStepId
+                      ? "border-[#f5ce53] bg-[#fffdf6]"
+                      : "border-[#dee4e0] bg-[#f9f9f7]",
+                  ].join(" ")}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h6 className="text-base font-bold text-[#2d3432]">{entry.step.label}</h6>
+                    {isCurrent ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void runStepSimulation(entry.step.id);
+                        }}
+                        disabled={Boolean(simulatingStepId)}
+                        className="rounded-lg border border-[#dee4e0] bg-white px-3 py-1.5 text-xs font-semibold text-[#2d3432] hover:border-[#f5ce53] disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isCurrentRunning ? "実行中..." : "実行する"}
+                      </button>
+                    ) : (
+                      <span className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${statusBadgeClass(currentStatus)}`}>
+                        {statusLabel(currentStatus)}
+                      </span>
+                    )}
+                  </div>
+                  <TextAreaField
+                    label="処理ロジック（実行時）"
+                    value={entry.result?.program ?? STEP_SIMULATION_SPECS[entry.step.id].programSummary}
+                    readOnly
+                    rows={2}
+                  />
+                  <p className="text-sm text-[#3e4a46]">
+                    {isExecuted
+                      ? entry.result?.detail ?? "実行完了"
+                      : entry.result?.status === "error"
+                        ? entry.result.detail
+                        : "このステップは未実行です。右上の「実行する」で進めてください。"}
+                  </p>
+                  {index > 0 ? (
+                    <div className="space-y-2 rounded-lg border border-[#dee4e0] bg-white p-3">
+                      <p className="text-xs font-semibold tracking-wide text-[#5a605e] uppercase">
+                        前段連鎖: {previous?.step.label} の出力 → {entry.step.label} の入力
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {carriedKeys.length > 0 ? (
+                          carriedKeys.map((key) => (
+                            <span
+                              key={`carry-${entry.step.id}-${key}`}
+                              className="rounded-md border border-[#d8e6dc] bg-[#eef6f0] px-2 py-1 text-[11px] text-[#335a3c]"
+                            >
+                              連鎖入力: {key}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="rounded-md border border-[#dee4e0] bg-[#f2f4f2] px-2 py-1 text-[11px] text-[#5a605e]">
+                            自動連鎖キーなし（構造変換あり）
+                          </span>
+                        )}
+                        {additionalInputKeys.map((key) => (
+                          <span
+                            key={`additional-${entry.step.id}-${key}`}
+                            className="rounded-md border border-[#f0d2a3] bg-[#fff3df] px-2 py-1 text-[11px] text-[#8a5a15]"
+                          >
+                            追加入力: {key}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold tracking-wide text-[#5a605e] uppercase">
+                        {isExecuted ? "入力値（実行時）" : "入力値（未実行プレビュー）"}
+                      </p>
+                      <pre className="max-h-[220px] overflow-auto rounded-lg border border-[#dee4e0] bg-white p-3 text-xs leading-relaxed text-[#3e4a46]">
+                        {JSON.stringify(inputPreview, null, 2)}
+                      </pre>
+                      {aiPromptPreview ? (
+                        <div className="space-y-2 rounded-lg border border-[#dee4e0] bg-white p-3">
+                          <p className="text-xs font-semibold tracking-wide text-[#5a605e] uppercase">
+                            {entry.result?.aiPrompt ? "AIプロンプト（実行時・原文）" : "AIプロンプト（実行前プレビュー）"}
+                          </p>
+                          <p className="text-[11px] text-[#5a605e]">
+                            provider={aiPromptPreview.provider} / model={aiPromptPreview.model} /
+                            temperature={aiPromptPreview.temperature}
+                          </p>
+                          <div className="space-y-1">
+                            <p className="text-[11px] font-semibold text-[#3e4a46]">system prompt</p>
+                            <pre className="max-h-[180px] overflow-auto rounded-lg border border-[#dee4e0] bg-[#f9f9f7] p-2 text-[11px] leading-relaxed text-[#3e4a46]">
+                              {aiPromptPreview.systemPrompt}
+                            </pre>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[11px] font-semibold text-[#3e4a46]">user prompt</p>
+                            <pre className="max-h-[260px] overflow-auto rounded-lg border border-[#dee4e0] bg-[#f9f9f7] p-2 text-[11px] leading-relaxed text-[#3e4a46]">
+                              {aiPromptPreview.userPrompt}
+                            </pre>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold tracking-wide text-[#5a605e] uppercase">出力結果</p>
+                      {isExecuted ? (
+                        <pre className="max-h-[220px] overflow-auto rounded-lg border border-[#dee4e0] bg-white p-3 text-xs leading-relaxed text-[#3e4a46]">
+                          {JSON.stringify(outputPreview, null, 2)}
+                        </pre>
+                      ) : (
+                        <div className="rounded-lg border border-[#dee4e0] bg-white px-3 py-4 text-xs text-[#5a605e]">
+                          未実行のため、出力結果はまだありません。
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const activeQuestStep = useMemo(
+    () => QUEST_GENERATION_STEPS.find((step) => step.id === activeQuestGenerationStep) ?? QUEST_GENERATION_STEPS[0],
+    [activeQuestGenerationStep],
+  );
+
+  const showLivePreviewPane = activeWorkspaceMode === "cms";
+  const spotDbUpdatedAtLabel = useMemo(() => {
+    if (!spotDbData?.generatedAt) return "不明";
+    const parsed = new Date(spotDbData.generatedAt);
+    if (Number.isNaN(parsed.getTime())) return spotDbData.generatedAt;
+    return parsed.toLocaleString("ja-JP");
+  }, [spotDbData?.generatedAt]);
 
   return (
     <main className="h-screen overflow-hidden bg-[#f9f9f7] text-[#2d3432]" style={{ backgroundImage: "none" }}>
@@ -1534,17 +2920,24 @@ export default function SettingsPage() {
             </div>
           ) : null}
                 </>
-              ) : aiWorkspacePaneMode === "prompt" ? (
-                <div className="max-w-none space-y-6 xl:max-w-5xl">
-                  <div>
-                    <h3 className="mb-2 text-2xl font-bold text-[#2d3432]">クエスト生成フロー管理</h3>
-                    <p className="text-[15px] leading-relaxed text-[#5a605e]">
-                      1〜8の各ステップを編集します。4/5/7はAIプロンプト、1/2/3/6/8はプログラム設定です。
-                    </p>
+              ) : activeWorkspaceMode === "ai" ? (
+                <div className="max-w-none space-y-6">
+                  <div className="rounded-xl border border-[#dee4e0] bg-white px-5 py-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="mb-1 text-2xl font-bold text-[#2d3432]">AI生成フロー管理</h3>
+                        <p className="text-[14px] leading-relaxed text-[#5a605e]">
+                          ステップごとの設定を編集し、`questGenerationConfig`として生成APIに反映します。
+                        </p>
+                      </div>
+                      <div className="rounded-lg border border-[#f5ce53]/50 bg-[#fff7e2] px-3 py-2 text-xs font-semibold text-[#5a605e]">
+                        現在: {activeQuestStep.label}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
-                    <aside className="space-y-2 rounded-xl border border-[#dee4e0] bg-white p-3">
+                  <div className="overflow-x-auto rounded-xl border border-[#dee4e0] bg-white p-2">
+                    <div className="flex min-w-max gap-2">
                       {QUEST_GENERATION_STEPS.map((step) => {
                         const isActive = activeQuestGenerationStep === step.id;
                         return (
@@ -1553,389 +2946,211 @@ export default function SettingsPage() {
                             type="button"
                             onClick={() => setActiveQuestGenerationStep(step.id)}
                             className={[
-                              "w-full rounded-lg border px-3 py-2 text-left transition-colors",
+                              "min-w-[180px] rounded-lg border px-3 py-3 text-left transition-colors",
                               isActive
                                 ? "border-[#f5ce53] bg-[#fff7e2]"
                                 : "border-[#dee4e0] bg-[#f9f9f7] hover:border-[#f5ce53]/70",
                             ].join(" ")}
                           >
-                            <p className="text-sm font-semibold text-[#2d3432]">{step.label}</p>
-                            <p className="text-[11px] text-[#5a605e]">{step.description}</p>
-                            <p className="mt-1 text-[10px] font-semibold text-[#5a605e] uppercase">
-                              {step.kind === "ai" ? "AI" : "Program"}
-                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-semibold text-[#2d3432]">{step.label}</p>
+                              <span
+                                className={[
+                                  "rounded-md px-2 py-0.5 text-[10px] font-semibold",
+                                  step.kind === "program"
+                                    ? "bg-[#e6eef8] text-[#455363]"
+                                    : step.kind === "ai"
+                                      ? "bg-[#fef0d1] text-[#745c00]"
+                                      : "bg-[#ece8f9] text-[#55408a]",
+                                ].join(" ")}
+                              >
+                                {step.kind === "program" ? "Program" : step.kind === "ai" ? "AI" : "Hybrid"}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-[11px] leading-relaxed text-[#5a605e]">{step.description}</p>
                           </button>
                         );
                       })}
-                    </aside>
-
-                    <div className="space-y-6">
-                      {activeQuestGenerationStep === "step1" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 1: 入力正規化</h4>
-                          <TextAreaField
-                            label="ユーザータイプ正規化ルール"
-                            rows={4}
-                            value={programFlowDraft.step1.normalizeUserType}
-                            onChange={(value) => updateProgramStep1Field("normalizeUserType", value)}
-                          />
-                          <TextAreaField
-                            label="習熟度正規化ルール"
-                            rows={4}
-                            value={programFlowDraft.step1.normalizeFamiliarity}
-                            onChange={(value) => updateProgramStep1Field("normalizeFamiliarity", value)}
-                          />
-                          <TextAreaField
-                            label="時間正規化ルール"
-                            rows={3}
-                            value={programFlowDraft.step1.normalizeDuration}
-                            onChange={(value) => updateProgramStep1Field("normalizeDuration", value)}
-                          />
-                        </div>
-                      ) : null}
-
-                      {activeQuestGenerationStep === "step2" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 2: 体験設計</h4>
-                          <TextAreaField
-                            label="スポット数ロジック"
-                            rows={4}
-                            value={programFlowDraft.step2.spotCountLogic}
-                            onChange={(value) => updateProgramStep2Field("spotCountLogic", value)}
-                          />
-                          <TextAreaField
-                            label="難易度ロジック"
-                            rows={4}
-                            value={programFlowDraft.step2.difficultyLogic}
-                            onChange={(value) => updateProgramStep2Field("difficultyLogic", value)}
-                          />
-                        </div>
-                      ) : null}
-
-                      {activeQuestGenerationStep === "step3" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 3: ルート確定</h4>
-                          <TextAreaField
-                            label="スポット選定ロジック"
-                            rows={4}
-                            value={programFlowDraft.step3.spotSelectionLogic}
-                            onChange={(value) => updateProgramStep3Field("spotSelectionLogic", value)}
-                          />
-                          <TextAreaField
-                            label="巡回順ロジック"
-                            rows={4}
-                            value={programFlowDraft.step3.routeOrderingLogic}
-                            onChange={(value) => updateProgramStep3Field("routeOrderingLogic", value)}
-                          />
-                        </div>
-                      ) : null}
-
-                      {activeQuestGenerationStep === "step4" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 4: 骨子生成（AI）</h4>
-                          <TextAreaField
-                            label="目的"
-                            rows={3}
-                            value={aiPromptDraft.objective}
-                            onChange={(value) => updateAIPromptField("objective", value)}
-                          />
-                          <TextAreaField
-                            label="対象ユーザー"
-                            rows={3}
-                            value={aiPromptDraft.audience}
-                            onChange={(value) => updateAIPromptField("audience", value)}
-                          />
-                          <TextAreaField
-                            label="骨子生成プロンプトテンプレート"
-                            rows={5}
-                            helper="利用可能な変数: {userType}, {familiarity}, {duration}, {explorationStyle}, {experienceExpectation}"
-                            value={aiPromptDraft.step4OutlinePrompt}
-                            onChange={(value) => updateAIPromptField("step4OutlinePrompt", value)}
-                          />
-                          <div>
-                            <p className="mb-2 block text-sm font-semibold tracking-wider text-[#2d3432]">
-                              プロンプトプレビュー
-                            </p>
-                            <textarea
-                              readOnly
-                              rows={7}
-                              value={step4PromptPreview}
-                              className="w-full resize-none rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4 text-[13px] leading-[1.6] text-[#2d3432] focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {activeQuestGenerationStep === "step5" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 5: 本文生成（AI）</h4>
-                          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                            <TextAreaField
-                              label="トーン"
-                              rows={3}
-                              value={aiPromptDraft.tone}
-                              onChange={(value) => updateAIPromptField("tone", value)}
-                            />
-                            <TextAreaField
-                              label="必須要素"
-                              rows={3}
-                              value={aiPromptDraft.requiredElements}
-                              onChange={(value) => updateAIPromptField("requiredElements", value)}
-                            />
-                            <InputField
-                              label="出力文体"
-                              value={aiPromptDraft.outputStyle}
-                              onChange={(value) => updateAIPromptField("outputStyle", value)}
-                            />
-                            <InputField
-                              label="出力言語"
-                              value={aiPromptDraft.outputLanguage}
-                              onChange={(value) => updateAIPromptField("outputLanguage", value)}
-                            />
-                          </div>
-                          <div className="rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-3">
-                            <p className="mb-2 text-xs font-bold tracking-wider text-[#5a605e] uppercase">生成対象</p>
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                              {AI_OUTPUT_TARGET_ITEMS.map((item) => {
-                                const selected = aiPromptDraft.outputTargets.includes(item.key);
-                                return (
-                                  <button
-                                    key={item.key}
-                                    type="button"
-                                    onClick={() => toggleAIPromptTarget(item.key)}
-                                    className={[
-                                      "rounded-lg border px-3 py-2 text-left transition-colors",
-                                      selected
-                                        ? "border-[#f5ce53] bg-[#fff7e2]"
-                                        : "border-[#dee4e0] bg-white hover:border-[#f5ce53]/70",
-                                    ].join(" ")}
-                                  >
-                                    <p className="text-sm font-semibold text-[#2d3432]">{item.label}</p>
-                                    <p className="text-[11px] text-[#5a605e]">{item.description}</p>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <TextAreaField
-                            label="本文生成プロンプトテンプレート"
-                            rows={5}
-                            helper="利用可能な変数: {tone}, {requiredElements}, {outputStyle}, {forbiddenElements}"
-                            value={aiPromptDraft.step5NarrativePrompt}
-                            onChange={(value) => updateAIPromptField("step5NarrativePrompt", value)}
-                          />
-                          <div>
-                            <p className="mb-2 block text-sm font-semibold tracking-wider text-[#2d3432]">
-                              プロンプトプレビュー
-                            </p>
-                            <textarea
-                              readOnly
-                              rows={7}
-                              value={step5PromptPreview}
-                              className="w-full resize-none rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4 text-[13px] leading-[1.6] text-[#2d3432] focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {activeQuestGenerationStep === "step6" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 6: 検証</h4>
-                          <TextAreaField
-                            label="JSON検証ロジック"
-                            rows={4}
-                            value={programFlowDraft.step6.jsonValidationLogic}
-                            onChange={(value) => updateProgramStep6Field("jsonValidationLogic", value)}
-                          />
-                          <TextAreaField
-                            label="テキスト検証ロジック"
-                            rows={4}
-                            value={programFlowDraft.step6.textValidationLogic}
-                            onChange={(value) => updateProgramStep6Field("textValidationLogic", value)}
-                          />
-                        </div>
-                      ) : null}
-
-                      {activeQuestGenerationStep === "step7" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 7: 部分再生成（AI）</h4>
-                          <TextAreaField
-                            label="禁止要素"
-                            rows={3}
-                            value={aiPromptDraft.forbiddenElements}
-                            onChange={(value) => updateAIPromptField("forbiddenElements", value)}
-                          />
-                          <TextAreaField
-                            label="固定文言ポリシー"
-                            rows={3}
-                            value={aiPromptDraft.fixedTextPolicy}
-                            onChange={(value) => updateAIPromptField("fixedTextPolicy", value)}
-                          />
-                          <TextAreaField
-                            label="部分再生成プロンプトテンプレート"
-                            rows={5}
-                            helper="利用可能な変数: {forbiddenElements}, {fixedTextPolicy}, {tone}"
-                            value={aiPromptDraft.step7RepairPrompt}
-                            onChange={(value) => updateAIPromptField("step7RepairPrompt", value)}
-                          />
-                          <div>
-                            <p className="mb-2 block text-sm font-semibold tracking-wider text-[#2d3432]">
-                              プロンプトプレビュー
-                            </p>
-                            <textarea
-                              readOnly
-                              rows={7}
-                              value={step7PromptPreview}
-                              className="w-full resize-none rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4 text-[13px] leading-[1.6] text-[#2d3432] focus:outline-none"
-                            />
-                          </div>
-                        </div>
-                      ) : null}
-
-                      {activeQuestGenerationStep === "step8" ? (
-                        <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-white p-4">
-                          <h4 className="text-lg font-semibold text-[#2d3432]">Step 8: 最終確定</h4>
-                          <TextAreaField
-                            label="最終フォーマット"
-                            rows={4}
-                            value={programFlowDraft.step8.finalizeFormat}
-                            onChange={(value) => updateProgramStep8Field("finalizeFormat", value)}
-                          />
-                          <TextAreaField
-                            label="保存・配信処理"
-                            rows={4}
-                            value={programFlowDraft.step8.persistAndDispatch}
-                            onChange={(value) => updateProgramStep8Field("persistAndDispatch", value)}
-                          />
-                        </div>
-                      ) : null}
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-[#dee4e0] bg-white px-4 py-3 text-sm text-[#5a605e]">
-                    シミュレーション開始後は、右側プレビュー操作に応じて左側の生成フロー進行がハイライトされます。
+                  <div className="space-y-5 rounded-xl border border-[#dee4e0] bg-white p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-lg font-bold text-[#2d3432]">{activeQuestStep.label} シミュレーション</h4>
+                        <p className="mt-1 text-sm text-[#5a605e]">
+                          実行時は Step1→Step8 を連鎖実行し、前段出力が次段入力へ渡る流れを含めて確認できます。
+                        </p>
+                      </div>
+                      {renderStepSimulationButton()}
+                    </div>
+                    <div className="space-y-4 rounded-xl border border-[#dee4e0] bg-[#f9f9f7] p-4">
+                      <p className="text-sm font-semibold text-[#2d3432]">シミュレーション入力値（実際に投入する値）</p>
+                      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                        <InputField
+                          label="userType"
+                          value={previewSimulationInputs.userType}
+                          onChange={(value) => updateSimulationInput("userType", value)}
+                        />
+                        <InputField
+                          label="familiarity"
+                          value={previewSimulationInputs.familiarity}
+                          onChange={(value) => updateSimulationInput("familiarity", value)}
+                        />
+                        <InputField
+                          label="duration"
+                          value={previewSimulationInputs.duration}
+                          onChange={(value) => updateSimulationInput("duration", value)}
+                        />
+                        <InputField
+                          label="explorationStyle"
+                          value={previewSimulationInputs.explorationStyle}
+                          onChange={(value) => updateSimulationInput("explorationStyle", value)}
+                        />
+                        <InputField
+                          label="experienceExpectation"
+                          value={previewSimulationInputs.experienceExpectation}
+                          onChange={(value) => updateSimulationInput("experienceExpectation", value)}
+                        />
+                        <InputField
+                          label="currentLat"
+                          value={previewSimulationInputs.currentLat}
+                          onChange={(value) => updateSimulationInput("currentLat", value)}
+                        />
+                        <InputField
+                          label="currentLng"
+                          value={previewSimulationInputs.currentLng}
+                          onChange={(value) => updateSimulationInput("currentLng", value)}
+                        />
+                      </div>
+                      <p className="text-xs text-[#5a605e]">
+                        緯度経度を空欄にすると、既定の開始地点（Big Orange）を現在地として扱います。
+                      </p>
+                    </div>
+                    {renderStepSimulationPanel(activeQuestGenerationStep)}
                   </div>
-
-                  <div className="flex justify-end">
+                </div>
+              ) : activeWorkspaceMode === "spotdb" ? (
+                <div className="max-w-none space-y-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="mb-2 text-2xl font-bold text-[#2d3432]">スポットDB</h3>
+                      <p className="text-[15px] leading-relaxed text-[#5a605e]">
+                        現在のスポットDBを地図上に全件ピン表示します。
+                      </p>
+                    </div>
                     <button
                       type="button"
-                      onClick={runSimulation}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#1a1c20] px-4 py-2 text-sm font-semibold text-[#f7f7fd] hover:bg-[#2d3432]"
+                      onClick={() => {
+                        void fetchSpotDbData();
+                      }}
+                      disabled={spotDbLoading}
+                      className="rounded-lg border border-[#dee4e0] bg-white px-4 py-2 text-sm font-semibold text-[#2d3432] hover:border-[#f5ce53] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      <MaterialIcon name="science" className="text-base" />
-                      シミュレーションモードへ
+                      {spotDbLoading ? "読み込み中..." : "再読み込み"}
                     </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-[#dee4e0] bg-white px-4 py-3">
+                      <p className="text-[11px] font-semibold tracking-wide text-[#5a605e] uppercase">総スポット数</p>
+                      <p className="mt-1 text-2xl font-bold text-[#2d3432]">{spotDbData?.totalSpots ?? 0}</p>
+                    </div>
+                    <div className="rounded-xl border border-[#dee4e0] bg-white px-4 py-3">
+                      <p className="text-[11px] font-semibold tracking-wide text-[#5a605e] uppercase">最終更新</p>
+                      <p className="mt-1 text-sm font-semibold text-[#2d3432]">{spotDbUpdatedAtLabel}</p>
+                    </div>
+                    <div className="rounded-xl border border-[#dee4e0] bg-white px-4 py-3">
+                      <p className="text-[11px] font-semibold tracking-wide text-[#5a605e] uppercase">地図API</p>
+                      <p className="mt-1 text-sm font-semibold text-[#2d3432]">
+                        {GOOGLE_MAPS_API_KEY ? "利用可能" : "未設定"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {spotDbError ? (
+                    <div className="rounded-xl border border-[#f5ce53]/40 bg-[#fff7e2] px-4 py-3 text-sm text-[#5a605e]">
+                      {spotDbError}
+                    </div>
+                  ) : null}
+
+                  <div className="overflow-hidden rounded-xl border border-[#dee4e0] bg-white">
+                    <div className="flex items-center justify-between border-b border-[#dee4e0] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#2d3432]">スポット分布マップ</p>
+                      <p className="text-xs text-[#5a605e]">全件ピン表示</p>
+                    </div>
+                    <div className="relative h-[420px] bg-[#f4f7f5]">
+                      {!GOOGLE_MAPS_API_KEY ? (
+                        <div className="flex h-full items-center justify-center px-6 text-center text-sm leading-relaxed text-[#5a605e]">
+                          `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` が未設定のため、ピン付きマップを表示できません。
+                        </div>
+                      ) : spotDbLoading && !spotDbData ? (
+                        <div className="flex h-full items-center justify-center text-sm text-[#5a605e]">
+                          スポットDBを読み込み中...
+                        </div>
+                      ) : spotDbData?.spots.length ? (
+                        <>
+                          <div className="h-full w-full" ref={spotDbMapContainerRef} />
+                          {!spotDbMapReady ? (
+                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#f4f7f5]/70 text-sm text-[#5a605e]">
+                              地図を読み込み中...
+                            </div>
+                          ) : null}
+                        </>
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-sm text-[#5a605e]">
+                          表示できるスポットがありません。
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-xl border border-[#dee4e0] bg-white">
+                    <div className="border-b border-[#dee4e0] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#2d3432]">スポット一覧</p>
+                    </div>
+                    <div className="max-h-[320px] overflow-auto">
+                      <table className="min-w-full text-left text-sm">
+                        <thead className="sticky top-0 bg-[#f9f9f7] text-xs font-semibold tracking-wide text-[#5a605e] uppercase">
+                          <tr>
+                            <th className="px-3 py-2">#</th>
+                            <th className="px-3 py-2">名称</th>
+                            <th className="px-3 py-2">緯度</th>
+                            <th className="px-3 py-2">経度</th>
+                            <th className="px-3 py-2">source</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(spotDbData?.spots ?? []).map((spot, index) => (
+                            <tr className="border-t border-[#eef2ef]" key={spot.id}>
+                              <td className="px-3 py-2 text-xs text-[#5a605e]">{index + 1}</td>
+                              <td className="px-3 py-2 font-medium text-[#2d3432]">{spot.name}</td>
+                              <td className="px-3 py-2 text-[#3e4a46]">{spot.lat.toFixed(6)}</td>
+                              <td className="px-3 py-2 text-[#3e4a46]">{spot.lng.toFixed(6)}</td>
+                              <td className="px-3 py-2 text-xs text-[#5a605e]">{spot.source}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="max-w-none space-y-8 xl:max-w-4xl">
-                  <div>
-                    <h3 className="mb-2 text-2xl font-bold text-[#2d3432]">AIシミュレーション</h3>
-                    <p className="text-[15px] leading-relaxed text-[#5a605e]">
-                      右側プレビューの操作を条件として扱います。左側では確定プロンプトと生成フロー進行を確認します。
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-[#dee4e0] bg-white p-4">
-                    <p className="mb-3 text-sm font-semibold text-[#2d3432]">現在のプレビュー条件（読み取り専用）</p>
-                    <div className="grid grid-cols-1 gap-3 text-sm text-[#2d3432] sm:grid-cols-2">
-                      <div className="rounded-lg bg-[#f9f9f7] px-3 py-2">ユーザー: {previewSimulationInputs.userType}</div>
-                      <div className="rounded-lg bg-[#f9f9f7] px-3 py-2">習熟度: {previewSimulationInputs.familiarity}</div>
-                      <div className="rounded-lg bg-[#f9f9f7] px-3 py-2">時間: {previewSimulationInputs.duration}</div>
-                      <div className="rounded-lg bg-[#f9f9f7] px-3 py-2">探索: {previewSimulationInputs.explorationStyle}</div>
-                      <div className="rounded-lg bg-[#f9f9f7] px-3 py-2 sm:col-span-2">期待: {previewSimulationInputs.experienceExpectation}</div>
-                    </div>
-                    <p className="mt-3 text-[12px] text-[#5a605e]">
-                      条件変更は右側プレビューのセットアップ画面で行ってください。
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 rounded-xl border border-[#dee4e0] bg-white p-4">
-                    <p className="text-sm font-semibold text-[#2d3432]">確定プロンプト</p>
-                    <textarea
-                      readOnly
-                      value={simulationPromptSource}
-                      rows={12}
-                      className="w-full resize-none rounded-lg border border-[#dee4e0] bg-[#f9f9f7] p-3 text-[12px] leading-[1.65] text-[#2d3432] focus:outline-none"
-                    />
-                    <p className="text-[11px] text-[#5a605e]">シミュレーション開始時点で確定したプロンプトです。</p>
-                  </div>
-
-                  <div className="rounded-xl border border-[#dee4e0] bg-white p-4">
-                    <p className="mb-3 text-sm font-semibold text-[#2d3432]">生成フロー</p>
-                    <div className="space-y-2">
-                      {GENERATION_FLOW_STEPS.map((step, index) => {
-                        const isActive = currentFlowStepIndex === index;
-                        const isDone = currentFlowStepIndex > index;
-                        return (
-                          <div
-                            key={step.key}
-                            className={[
-                              "rounded-lg border px-3 py-2 transition-colors",
-                              isActive
-                                ? "border-[#f5ce53] bg-[#fff7e2]"
-                                : isDone
-                                  ? "border-[#cfd7d3] bg-[#f4f7f5]"
-                                  : "border-[#dee4e0] bg-[#f9f9f7]",
-                            ].join(" ")}
-                          >
-                            <p className="text-sm font-semibold text-[#2d3432]">{step.label}</p>
-                            <p className="text-[11px] text-[#5a605e]">{step.description}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={runSimulation}
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#1a1c20] px-4 py-2 text-sm font-semibold text-[#f7f7fd] hover:bg-[#2d3432]"
-                    >
-                      <MaterialIcon name="play_arrow" className="text-base" />
-                      再シミュレーション
-                    </button>
-                    <button
-                      type="button"
-                      onClick={returnToPromptBuilder}
-                      className="inline-flex items-center gap-2 rounded-xl border border-[#dee4e0] bg-white px-4 py-2 text-sm font-semibold text-[#2d3432] hover:border-[#f5ce53]"
-                    >
-                      <MaterialIcon name="edit_note" className="text-base" />
-                      プロンプト編集に戻る
-                    </button>
-                  </div>
-                </div>
+                <div className="h-full" />
               )}
             </main>
           </div>
         </div>
 
-        <aside
-          className={[
-            "relative z-10 flex h-full min-h-0 flex-shrink-0 flex-col border-l border-[#dee4e0] bg-[#f2f4f2] shadow-[-10px_0_30px_rgba(0,0,0,0.02)]",
-            isAISimulationActive
-              ? "w-[clamp(460px,50vw,760px)] min-w-[460px] max-w-[760px]"
-              : "w-[clamp(360px,38vw,520px)] min-w-[360px] max-w-[520px]",
-          ].join(" ")}
-        >
-          <>
+        {showLivePreviewPane ? (
+          <aside className="relative z-10 flex h-full min-h-0 w-[clamp(360px,38vw,520px)] min-w-[360px] max-w-[520px] flex-shrink-0 flex-col border-l border-[#dee4e0] bg-[#f2f4f2] shadow-[-10px_0_30px_rgba(0,0,0,0.02)]">
             <div className="sticky top-0 z-20 h-14 border-b border-[#dee4e0] bg-[#f9f9f7]/70 px-3 backdrop-blur-sm sm:px-4">
               <div className="flex h-full items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-semibold text-[#2d3432]">{rightPaneTitle}</h4>
-                  <p className="text-[11px] text-[#5a605e]">{rightPaneSubtitle}</p>
+                  <h4 className="text-sm font-semibold text-[#2d3432]">Live Preview</h4>
+                  <p className="text-[11px] text-[#5a605e]">現在: {previewScreen ?? "未接続"}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {isAISimulationActive ? (
-                    <button
-                      type="button"
-                      onClick={returnToPromptBuilder}
-                      className="rounded-lg border border-[#dee4e0] bg-white px-2.5 py-1 text-xs font-semibold text-[#2d3432] hover:border-[#f5ce53]"
-                    >
-                      プロンプト編集へ
-                    </button>
-                  ) : null}
                   <div className="rounded-full bg-[#dee4e0] p-0.5">
                     <button
                       type="button"
@@ -2021,9 +3236,10 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
-          </>
-        </aside>
+          </aside>
+        ) : null}
       </div>
+      {renderSimulationResultModal()}
     </main>
   );
 }
