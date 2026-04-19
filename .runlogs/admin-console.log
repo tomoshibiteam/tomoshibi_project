@@ -10,5 +10,4 @@
 - Local:         http://localhost:3001
 - Network:       http://192.168.1.3:3001
 - Environments: .env.local
-✓ Ready in 397ms
-
+✓ Ready in 467ms
