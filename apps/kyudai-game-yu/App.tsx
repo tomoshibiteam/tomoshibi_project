@@ -64,14 +64,14 @@ const epilogueBgImage =
 
 const mapCenterRegion = {
   latitude: 33.5968,
-  longitude: 130.2188,
-  latitudeDelta: 0.0102,
-  longitudeDelta: 0.0102,
+  longitude: 130.2238,
+  latitudeDelta: 0.0072,
+  longitudeDelta: 0.0072,
 };
 
 const currentLocation = {
-  latitude: 33.59495,
-  longitude: 130.2218,
+  latitude: 33.5968,
+  longitude: 130.2238,
 };
 
 type Coordinate = { latitude: number; longitude: number };
@@ -88,13 +88,13 @@ type Spot = {
 
 // スポット座標マップ（v5 シナリオIDに対応する実座標）
 const spotCoordinateMap: Record<string, Coordinate> = {
-  "yamakawa":    { latitude: 33.5970,  longitude: 130.2195 },
-  "oumei":       { latitude: 33.5975,  longitude: 130.2200 },
-  "koukousha":   { latitude: 33.5968,  longitude: 130.2175 },
-  "teiteisha":   { latitude: 33.5967,  longitude: 130.2173 },
-  "chikashoku":  { latitude: 33.5963,  longitude: 130.2180 },
-  "bigsky":      { latitude: 33.5961,  longitude: 130.2184 },
-  "foucault":    { latitude: 33.5955,  longitude: 130.2145 },
+  "yamakawa":    { latitude: 33.597637, longitude: 130.224077 },
+  "oumei":       { latitude: 33.596980, longitude: 130.223490 },
+  "koukousha":   { latitude: 33.596218, longitude: 130.222679 },
+  "teiteisha":   { latitude: 33.595916, longitude: 130.222815 },
+  "chikashoku":  { latitude: 33.596661, longitude: 130.222576 },
+  "bigsky":      { latitude: 33.598089, longitude: 130.227848 },
+  "foucault":    { latitude: 33.596040, longitude: 130.218541 },
 };
 
 // scenario.ts のスポット定義から spotCatalog を生成する
@@ -512,9 +512,9 @@ const experienceExpectationOptions: ExperienceExpectation[] = [
 ];
 
 const durationSpotCountMap: Record<Duration, number> = {
-  "15〜20分": 5,
-  "20〜30分": 6,
-  "30〜45分": 6,
+  "15〜20分": 7,
+  "20〜30分": 7,
+  "30〜45分": 7,
 };
 // scenario.spots の中間スポット（最初と最後を除く）を familiarity に関係なく全使用
 const _scenarioMiddleIds = scenario.spots.slice(1, -1).map((s) => s.id);
@@ -1142,13 +1142,13 @@ const readyDurationLabelMap: Record<Duration, string> = {
 
 // 各スポットの説明文（Ready画面EXPLORATION PATH用）
 const readySpotOverviewMap: Record<string, string> = {
-  "central-library":    "古い本に挟まれた虫食いの手紙を発見する。差出人は旧制高校時代の学生「青柳」。「學び舎とは何か」── 7つの場所を巡る旅が始まる。",
-  "yamakawa-statue":    "手紙の「初代の目が見つめる先」を追い、誰も立ち止まらない胸像の前へ。会津藩士の少年が大学人になった軌跡に、百年の問いの起源を見る。",
-  "uzuranaki-plaza":    "「鳥が鳴き交う空の下」── だが鳥はいない。プレートに刻まれた「嚶鳴」の二文字に、三千年前の詩経の言葉が隠されていた。",
-  "kokotei":            "「月の光が包む學び舎を探せ」── 名前に詩が隠される法則に気づいたあなたは、公募で選ばれた名前の由来を解き明かす。",
-  "teiteitei":          "皎皎舎の隣に佇むもう一棟。51畳の畳空間に、旧制福岡高校から百年かけて引き継がれた「学生が集う場」の伝統が宿る。青柳の正体が浮かぶ。",
-  "mogumogo-cafeteria": "「腹が減っては學問はできぬ」── 半地下に隠された食堂で、とり天親子丼を食べながら、青柳もまた飯を食う普通の学生だったと気づく。",
-  "foucault-pendulum":  "手紙の全文が解読される。振り子のように場所も人も変わり続ける。だが名前は残る。── 「學び舎とは、想いを込めた場所のことだ」",
+  "yamakawa":   "毎日何百人も素通りしているのに、誰も立ち止まらない胸像。この人物の正体を知ったとき、旅が始まる。",
+  "oumei":      "コンセントのある開放的な広場。「嚶鳴（おうめい）」── 読めないその名前に、3000年前の詩が隠されていた。",
+  "koukousha":  "書籍2万点とカフェを持つ書店。「月の光が包む場所」という名前は、公募で選ばれた。",
+  "teiteisha":  "51畳の畳空間。「学生が集まって語り合う場」が100年かけて引き継がれた歴史がある。",
+  "chikashoku": "外からは気づかない半地下の食堂。鶏天親子丼と鶏天定食が青柳のおすすめ。",
+  "bigsky":     "「空が大きく見える場所になるから」── この名前は、ある学生が完成前の食堂を想像して贈った言葉だ。",
+  "foucault":   "地球の自転を目で確かめられる振り子の前で、ノートの最後のページを開く。すべてがつながる。",
 };
 
 const defaultPrologueNarrationText = scenario.prologue;
@@ -1645,18 +1645,18 @@ export default function App() {
   const effectivePreparingSkipButton = adminWorldConfig?.preparingSkipButton || "次へ";
   const effectivePreparingFooter = adminWorldConfig?.preparingFooter || "まもなく始まります";
 
-  const readyStoryBrand = "TOMOSHIBI × 九州大学伊都キャンパス";
+  const readyStoryBrand = "TOMOSHIBI · 伊都キャンパス · CHAPTER 01";
   const readyStoryLeadDefault = "名前を解く旅";
   const generatedStoryName = normalizeText(generatedQuest?.generatedStoryName);
   // ヒーロー3行目は常に固定サブタイトル
-  const readyStoryTone = "── 百年の手紙 ──";
+  const readyStoryTone = "── 青柳ノート";
   // 1行目: ブランドラベル（小さいテキスト）
   const effectiveReadyChapterLabel = adminWorldConfig?.readyChapterLabel || readyStoryBrand;
   // 2行目: メインタイトル
   const effectiveReadyStoryLead =
     normalizeText(generatedQuest?.readyHeroLead) || adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLeadDefault;
   const effectiveReadySummaryTitle =
-    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "── 百年の手紙 ──";
+    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "青柳ノート · はじめに";
   const effectiveReadyGeneratedStoryLabel = adminWorldConfig?.readyGeneratedStoryLabel || "STORY PREMISE";
   const effectiveReadyStartButton = adminWorldConfig?.readyStartButton || "物語を始める";
   const effectiveReadyTransitionTitle = adminWorldConfig?.readyTransitionTitle || "プロローグへ移動中";
@@ -1735,7 +1735,7 @@ export default function App() {
     if (adminWorldConfig?.readySummaryText) return adminWorldConfig.readySummaryText;
     if (adminWorldConfig?.description) return adminWorldConfig.description;
 
-    return `中央図書館で見つけた百年前の手紙。旧制高校の学生「青柳」が未来の学生に残した問い「學び舎とは何か」7つの場所を巡り、答えを見つけ出せ。`;
+    return `このキャンパスの施設には、やたらと読めない名前がついている。気になって調べたら、全部に理由があった。7つの場所を順番に巡ってみてください。── 青柳`;
   }, [adminWorldConfig?.description, adminWorldConfig?.readySummaryText, generatedQuest?.readySummaryText]);
   const readyFamiliarityChipLabel = useMemo(() => {
     const familiarityLabelMap: Record<Familiarity, string> = {
@@ -1780,19 +1780,19 @@ export default function App() {
         id: "ready-user",
         icon: "school-outline",
         label: "対象",
-        value: "新入生・キャンパス未体験者",
+        value: "新入生",
       },
       {
         id: "ready-familiarity",
         icon: "time-outline",
-        label: "所要",
+        label: "所要時間",
         value: "15〜20分",
       },
       {
         id: "ready-duration",
-        icon: "git-branch-outline",
-        label: "構成",
-        value: "起承転結 × 7地点",
+        icon: "location-outline",
+        label: "スポット",
+        value: "7地点",
       },
     ],
     [],
@@ -1801,21 +1801,21 @@ export default function App() {
     () => [
       {
         id: "ready-tip-a",
-        icon: "mail-outline",
-        title: "手紙を読み解く",
-        body: "各スポットに到着してクイズに正解すると、虫食いの手紙の断片が一つ現れます。全7片を集めると手紙の全文が解読されます。",
+        icon: "book-outline",
+        title: "青柳ノートを読む",
+        body: "各スポットに青柳の書き込みがある。読むと次の場所への手がかりがわかる。",
       },
       {
         id: "ready-tip-b",
         icon: "ear-outline",
         title: "名前に耳を澄ます",
-        body: "このキャンパスの施設名には、三千年前の詩や百年前の伝統が隠されています。プレートや看板の文字に注意してみてください。",
+        body: "プレートの文字に注目。読めない名前には、必ず理由がある。",
       },
       {
         id: "ready-tip-c",
-        icon: "infinite-outline",
-        title: "振り子で接続する",
-        body: "最後のスポットで物語が完成します。7つの場所で得た視点が、明日からのキャンパスの景色を変えるでしょう。",
+        icon: "lock-closed-outline",
+        title: "最後のページは7箇所目で",
+        body: "青柳ノートの最後は封がされている。フーコーの振り子の前でだけ開ける約束。",
       },
     ],
     [],
@@ -4512,7 +4512,7 @@ export default function App() {
               TOMOSHIBI — 見過ごしていた景色に、あなただけの物語が宿る。
             </Text>
             <Text style={[styles.footerCopy, { textAlign: "center", textTransform: "none", letterSpacing: 0.2, fontSize: 10, color: palette.outlineVariant }]}>
-              ※ 登場人物「青柳」および「手紙」はフィクションです
+              ※ 登場人物「青柳」はフィクションです
             </Text>
           </Animated.View>
         </ScrollView>
