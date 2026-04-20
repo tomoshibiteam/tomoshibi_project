@@ -21,7 +21,7 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
-import { signInAnonymously } from "firebase/auth";
+import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getFirebaseClientAuth, getFirebaseClientDb, getFirebaseMissingEnvKeys } from "./src/lib/firebase";
 
@@ -59,8 +59,6 @@ const readyImage =
 const spotArrivalBgImage =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuB9njCw7nXk5DUmoznlabXuCOMK4uNHGAQ5-tOAyEMczuwsyiiHLkLOjsZzbtPAen9op_YKDuAEJnZrara6rOpVmCh1ABrbfJJZhaqxQVxFuIBGWfW_FyakA4MpB8LEI1LVPD2eEZIu9-qogDJnl939KUOoiscx-vRWfPDYYtGbkAMfM0LhOxG3rdNk-6-cr8_tlmnNKQK_HRisYgPLnUkImELEYbsfpzALMmWHI8jo_Yul0oRwgfhPH7k2CXWDSYwZ7Td8bOjVAmw";
 
-const spotArrivalCharacterImage = require("./assets/characters/ar-character.png");
-
 const epilogueBgImage =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCdDV4U9QpH_B0Ri9yn4ltTPOKZm0h2xFfMUpXnR7k7CZn7akV58MDWdkhhH5m0fwgJ1dxpMZmkw1vlXJ2GiUs2kxB2_16VpwatTfiIa4TdNmmGB-HbkwC-6DcvCE25-m9PURAIsId0jq7sbHmCkgf3dCtAQ84CAGLXR2DuN-ey8-FWwtxhT1OkAGpwPuGHsIlaJJjoD85ghgeJYa-WNG8HczVxugyGwtawbrsb5rv1HLBYvq5cofr1X8VSuQHijSEh6u2M0RjUT8c";
 
@@ -84,6 +82,7 @@ type Spot = {
   scenarioTexts: string[];
   aoyagiNote: string;
   aoyagiNoteAfter?: string;
+  nextHint?: string;
   quiz: ScenarioQuiz;
 };
 
@@ -109,6 +108,7 @@ const spotCatalog: Spot[] = scenario.spots.map((scenarioSpot) => ({
     .filter((p) => p.length > 0),
   aoyagiNote: scenarioSpot.aoyagiNote,
   aoyagiNoteAfter: scenarioSpot.aoyagiNoteAfter,
+  nextHint: scenarioSpot.nextHint,
   quiz: scenarioSpot.quiz,
 }));
 
@@ -272,6 +272,10 @@ const fetchWalkingDirectionsCoordinates = async (
 ): Promise<Coordinate[] | null> => {
   if (!GOOGLE_MAPS_WEB_API_KEY) return null;
 
+  if (Platform.OS === "web") {
+    return [origin, ...waypoints, destination];
+  }
+
   const params = new URLSearchParams({
     origin: `${origin.latitude},${origin.longitude}`,
     destination: `${destination.latitude},${destination.longitude}`,
@@ -301,46 +305,153 @@ const fetchWalkingDirectionsCoordinates = async (
   return decoded.length > 1 ? decoded : null;
 };
 
-let googleMapsJsLoader: Promise<void> | null = null;
+const fetchRouteDirectionsForSpots = async (spots: Spot[]): Promise<Coordinate[] | null> => {
+  if (spots.length < 2) return null;
+  const origin = spots[0]?.coordinate;
+  const destination = spots[spots.length - 1]?.coordinate;
+  if (!origin || !destination) return null;
+  const waypoints = spots.slice(1, -1).map((spot) => spot.coordinate);
+  return fetchWalkingDirectionsCoordinates(origin, destination, waypoints);
+};
 
-const loadGoogleMapsJs = async () => {
+let googleMapsJsLoader: Promise<void> | null = null;
+const googleMapsScriptId = "kyudai-google-maps-js";
+const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+const hasGoogleMapsCoreConstructors = (maps: any) =>
+  Boolean(
+    maps &&
+      typeof maps.Map === "function" &&
+      typeof maps.Polyline === "function" &&
+      typeof maps.LatLngBounds === "function" &&
+      maps.event &&
+      typeof maps.event.addListenerOnce === "function",
+  );
+
+const removeGoogleMapsScript = () => {
+  if (typeof document === "undefined") return;
+  const existingScript = document.getElementById(googleMapsScriptId);
+  if (existingScript?.parentNode) {
+    existingScript.parentNode.removeChild(existingScript);
+  }
+};
+
+const loadGoogleMapsJs = async ({ forceReload = false }: { forceReload?: boolean } = {}) => {
   if (Platform.OS !== "web") return;
   if (!GOOGLE_MAPS_WEB_API_KEY) {
     throw new Error("GOOGLE_MAPS_WEB_API_KEY is missing");
   }
 
-  if ((globalThis as any)?.google?.maps) {
-    return;
+  if (forceReload) {
+    removeGoogleMapsScript();
+    googleMapsJsLoader = null;
   }
 
   if (!googleMapsJsLoader) {
     googleMapsJsLoader = new Promise<void>((resolve, reject) => {
-      const scriptId = "kyudai-google-maps-js";
-      const existingScript = document.getElementById(scriptId) as HTMLScriptElement | null;
-      if (existingScript) {
-        if ((globalThis as any)?.google?.maps) {
+      const fail = (reason: string) => reject(new Error(reason));
+      const resolveWhenGoogleMapsAvailable = () => {
+        let settled = false;
+        const done = () => {
+          if (settled) return;
+          settled = true;
+          clearInterval(pollTimer);
+          clearTimeout(timeoutTimer);
           resolve();
-          return;
-        }
-        existingScript.addEventListener("load", () => resolve(), { once: true });
-        existingScript.addEventListener("error", () => reject(new Error("Google Maps script load failed")), {
+        };
+        const pollTimer = setInterval(() => {
+          const maps = (globalThis as any)?.google?.maps;
+          if (maps) done();
+        }, 80);
+        const timeoutTimer = setTimeout(() => {
+          if (settled) return;
+          settled = true;
+          clearInterval(pollTimer);
+          fail("Google Maps script load timeout");
+        }, 12000);
+      };
+
+      const existingScript = document.getElementById(googleMapsScriptId) as HTMLScriptElement | null;
+      if (existingScript) {
+        existingScript.addEventListener("error", () => fail("Google Maps script load failed"), {
           once: true,
         });
+        resolveWhenGoogleMapsAvailable();
         return;
       }
 
       const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_WEB_API_KEY}&language=ja&region=JP`;
+      script.id = googleMapsScriptId;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_WEB_API_KEY}&language=ja&region=JP&v=weekly`;
       script.async = true;
       script.defer = true;
-      script.addEventListener("load", () => resolve(), { once: true });
-      script.addEventListener("error", () => reject(new Error("Google Maps script load failed")), { once: true });
+      script.addEventListener("error", () => fail("Google Maps script load failed"), { once: true });
       document.head.appendChild(script);
+      resolveWhenGoogleMapsAvailable();
     });
   }
 
   await googleMapsJsLoader;
+};
+
+const resolveGoogleMapsConstructors = async (): Promise<any | null> => {
+  const maps = (globalThis as any)?.google?.maps;
+  if (!maps) return null;
+  if (hasGoogleMapsCoreConstructors(maps)) return maps;
+
+  if (typeof maps.importLibrary === "function") {
+    try {
+      const mapsLib = await maps.importLibrary("maps");
+      if (mapsLib && typeof maps.Map !== "function" && typeof mapsLib.Map === "function") {
+        maps.Map = mapsLib.Map;
+      }
+      if (mapsLib && typeof maps.Polyline !== "function" && typeof mapsLib.Polyline === "function") {
+        maps.Polyline = mapsLib.Polyline;
+      }
+      if (mapsLib && typeof maps.LatLngBounds !== "function" && typeof mapsLib.LatLngBounds === "function") {
+        maps.LatLngBounds = mapsLib.LatLngBounds;
+      }
+    } catch {
+      return null;
+    }
+  }
+
+  return hasGoogleMapsCoreConstructors(maps) ? maps : null;
+};
+
+const ensureGoogleMapsConstructors = async () => {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await loadGoogleMapsJs({ forceReload: attempt > 0 });
+
+      const deadline = Date.now() + 6000;
+      while (Date.now() < deadline) {
+        const maps = await resolveGoogleMapsConstructors();
+        if (maps) return maps;
+        await waitMs(90);
+      }
+
+      lastError = new Error("Google Maps constructors are unavailable");
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Google Maps script initialization failed");
+    }
+
+    await waitMs(180 * (attempt + 1));
+  }
+
+  throw lastError ?? new Error("Google Maps constructors are unavailable");
+};
+
+const waitForHostToHaveSize = async (host: HTMLElement, timeoutMs = 2600) => {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const rect = host.getBoundingClientRect();
+    if (rect.width > 10 && rect.height > 10) return true;
+    await waitMs(80);
+  }
+  return false;
 };
 
 type AppScreen =
@@ -450,6 +561,25 @@ const getFirebaseErrorCode = (error: unknown): string => {
     return raw.includes("/") ? raw.split("/").pop() ?? raw : raw;
   }
   return "";
+};
+
+const getFirebaseAuthErrorMessage = (error: unknown): string => {
+  const code = getFirebaseErrorCode(error);
+  if (code === "popup-closed-by-user") return "";
+  if (code === "popup-blocked") {
+    return "ポップアップがブロックされました。ブラウザのポップアップ許可後に再試行してください。";
+  }
+  if (code === "unauthorized-domain") {
+    return "Firebase Authentication の承認済みドメイン設定に現在のドメインが含まれていません。";
+  }
+  if (code === "operation-not-allowed") {
+    return "Firebase AuthenticationでGoogleログインが有効化されていません。";
+  }
+  if (code === "network-request-failed") {
+    return "ネットワーク接続に失敗しました。通信環境を確認して再試行してください。";
+  }
+  if (error instanceof Error && error.message.trim().length > 0) return error.message;
+  return "Googleログインに失敗しました。";
 };
 
 type PersistedFlowDraft = {
@@ -1082,6 +1212,7 @@ const spotTypingStep = 1;
 
 export default function App() {
   const useMockMapBackground =
+    Platform.OS !== "web" &&
     (process.env.EXPO_PUBLIC_USE_MOCK_MAP_BACKGROUND ?? "").trim().toLowerCase() === "true";
   const { width } = useWindowDimensions();
   const contentWidth = useMemo(() => Math.max(0, Math.min(width - 32, 520)), [width]);
@@ -1110,10 +1241,17 @@ export default function App() {
   const mapRef = useRef<MapView | null>(null);
   const mapWebHostRef = useRef<any>(null);
   const mapWebInstanceRef = useRef<any>(null);
+  const mapWebBoundHostRef = useRef<any>(null);
   const mapWebCurrentLocationMarkerRef = useRef<any>(null);
   const mapWebSpotMarkersRef = useRef<any[]>([]);
   const mapWebActiveRoutePolylineRef = useRef<any>(null);
   const mapWebWholeRoutePolylineRef = useRef<any>(null);
+  const readyMapRef = useRef<MapView | null>(null);
+  const readyWebMapHostRef = useRef<any>(null);
+  const readyWebMapInstanceRef = useRef<any>(null);
+  const readyWebBoundHostRef = useRef<any>(null);
+  const readyWebSpotMarkersRef = useRef<any[]>([]);
+  const readyWebRoutePolylineRef = useRef<any>(null);
   const firebaseMissingConfigWarnedRef = useRef(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const persistedFlowDraft = useMemo(() => readPersistedFlowDraft(), []);
@@ -1134,35 +1272,48 @@ export default function App() {
     return window.sessionStorage.getItem(EXPERIENCE_STARTED_AT_STORAGE_KEY) ?? null;
   });
   const [firebaseUid, setFirebaseUid] = useState<string | null>(null);
+  const [isFirebaseSignedIn, setIsFirebaseSignedIn] = useState(false);
+  const [firebaseAvatarUrl, setFirebaseAvatarUrl] = useState<string | null>(null);
+  const [firebaseDisplayName, setFirebaseDisplayName] = useState<string | null>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(() =>
     isUserType(persistedFlowDraft?.selectedUserType) ? persistedFlowDraft.selectedUserType : "新入生",
   );
+  const [isUserTypeAnswered, setIsUserTypeAnswered] = useState(false);
   const [isUserTypeMenuOpen, setIsUserTypeMenuOpen] = useState(false);
   const [selectedFamiliarity, setSelectedFamiliarity] = useState<Familiarity>(() =>
     isFamiliarity(persistedFlowDraft?.selectedFamiliarity)
       ? persistedFlowDraft.selectedFamiliarity
       : "まだあまり慣れていない",
   );
+  const [isFamiliarityAnswered, setIsFamiliarityAnswered] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState<Duration>(() =>
     isDuration(persistedFlowDraft?.selectedDuration) ? persistedFlowDraft.selectedDuration : "20〜30分",
   );
+  const [isDurationAnswered, setIsDurationAnswered] = useState(false);
   const [selectedExplorationStyle, setSelectedExplorationStyle] = useState<ExplorationStyle>(
     isExplorationStyle(persistedFlowDraft?.selectedExplorationStyle)
       ? persistedFlowDraft.selectedExplorationStyle
       : "地図で事前確認",
   );
+  const [isExplorationStyleAnswered, setIsExplorationStyleAnswered] = useState(false);
   const [selectedExperienceExpectation, setSelectedExperienceExpectation] = useState<ExperienceExpectation>(
     isExperienceExpectation(persistedFlowDraft?.selectedExperienceExpectation)
       ? persistedFlowDraft.selectedExperienceExpectation
       : "場所を覚えたい",
   );
+  const [isExperienceExpectationAnswered, setIsExperienceExpectationAnswered] = useState(false);
   const [adminWorldConfig, setAdminWorldConfig] = useState<AdminWorldConfigPayload | null>(null);
   const [generatedQuest, setGeneratedQuest] = useState<GeneratedQuestPayload | null>(null);
   const [generatedQuestSteps, setGeneratedQuestSteps] = useState<GeneratedQuestStep[]>([]);
   const [isGeneratingQuest, setIsGeneratingQuest] = useState(false);
+  const [isLandingGoogleSigningIn, setIsLandingGoogleSigningIn] = useState(false);
+  const [landingAuthError, setLandingAuthError] = useState<string | null>(null);
+  const [isHeaderAuthMenuOpen, setIsHeaderAuthMenuOpen] = useState(false);
+  const [headerAuthMenuError, setHeaderAuthMenuError] = useState<string | null>(null);
+  const [isHeaderAuthSigningOut, setIsHeaderAuthSigningOut] = useState(false);
   const [preparingVisibleStep, setPreparingVisibleStep] = useState(0);
 
   const baseSpots = useMemo(
@@ -1199,6 +1350,7 @@ export default function App() {
         scenarioTexts: generatedScenarioTexts.length > 0 ? generatedScenarioTexts : fallbackScenarioTexts,
         aoyagiNote: catalogSpot?.aoyagiNote ?? '',
         aoyagiNoteAfter: catalogSpot?.aoyagiNoteAfter,
+        nextHint: catalogSpot?.nextHint,
         quiz: catalogSpot?.quiz ?? { question: '', options: [], correctLabel: 'A' as const, explanation: '' },
       });
       seen.add(id);
@@ -1254,8 +1406,15 @@ export default function App() {
   const [liveCurrentLocation, setLiveCurrentLocation] = useState<Coordinate | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [webMapError, setWebMapError] = useState<string | null>(null);
+  const webMapErrorRef = useRef<string | null>(null);
+  const [readyWebMapError, setReadyWebMapError] = useState<string | null>(null);
+  const readyWebMapErrorRef = useRef<string | null>(null);
   const [wholeRouteDirectionsCoordinates, setWholeRouteDirectionsCoordinates] = useState<Coordinate[] | null>(null);
   const [activeRouteDirectionsCoordinates, setActiveRouteDirectionsCoordinates] = useState<Coordinate[] | null>(null);
+  const [readyRouteDirectionsCoordinates, setReadyRouteDirectionsCoordinates] = useState<Coordinate[] | null>(null);
+  const [readySelectedSpotIndex, setReadySelectedSpotIndex] = useState(() =>
+    clampSpotIndex(persistedFlowDraft?.currentSpotIndex, spotCatalog.length),
+  );
   const [currentSpotIndex, setCurrentSpotIndex] = useState(() =>
     clampSpotIndex(persistedFlowDraft?.currentSpotIndex, spotCatalog.length),
   );
@@ -1274,7 +1433,7 @@ export default function App() {
   const [spotScenarioSegmentIndex, setSpotScenarioSegmentIndex] = useState(0);
   const [spotTypedCharCount, setSpotTypedCharCount] = useState(0);
   const [isSpotTypingDone, setIsSpotTypingDone] = useState(true);
-  const [spotPhase, setSpotPhase] = useState<'note' | 'story' | 'noteAfter' | 'quiz' | 'quizResult'>('note');
+  const [spotPhase, setSpotPhase] = useState<'note' | 'story' | 'noteAfter' | 'quiz' | 'quizResult' | 'nextHintStory'>('note');
   const [quizSelectedLabel, setQuizSelectedLabel] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
   const [quizCorrectCount, setQuizCorrectCount] = useState(0);
   const landingHeroAnim = useRef(new Animated.Value(screen === "landing" ? 0 : 1)).current;
@@ -1317,6 +1476,7 @@ export default function App() {
       : currentSpot.aoyagiNoteAfter
         ? "続きを読む"
         : "クイズに挑戦";
+  const nextSpot = safeCurrentSpotIndex < spots.length - 1 ? spots[safeCurrentSpotIndex + 1] : null;
   const goalSpot = spots[spots.length - 1];
   const fallbackOrigin = useMemo<Coordinate>(() => {
     if (safeCurrentSpotIndex === 0) return currentLocation;
@@ -1326,12 +1486,15 @@ export default function App() {
   const activeCurrentLocation = routeOrigin;
   const activeTargetIndex = isExperienceCompleted ? -1 : safeCurrentSpotIndex;
   const allSpotCoordinates = useMemo(() => spots.map((spot) => spot.coordinate), [spots]);
+  const safeReadySelectedSpotIndex = clampSpotIndex(readySelectedSpotIndex, spots.length);
+  const readySelectedSpot = spots[safeReadySelectedSpotIndex] ?? spots[0] ?? spotCatalog[0];
+  const readyMapRegion = useMemo(() => createRegionFromCoordinates(allSpotCoordinates), [allSpotCoordinates]);
+  const readyRouteCoordinates =
+    readyRouteDirectionsCoordinates && readyRouteDirectionsCoordinates.length > 1
+      ? readyRouteDirectionsCoordinates
+      : allSpotCoordinates;
   const mapFitCoordinates = useMemo(() => [routeOrigin, ...allSpotCoordinates], [routeOrigin, allSpotCoordinates]);
   const mapInitialRegion = useMemo(() => createRegionFromCoordinates(mapFitCoordinates), [mapFitCoordinates]);
-  const webFallbackGoogleEmbedUrl = useMemo(() => {
-    const query = `${mapInitialRegion.latitude},${mapInitialRegion.longitude}`;
-    return `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=15&hl=ja&output=embed`;
-  }, [mapInitialRegion.latitude, mapInitialRegion.longitude]);
   const activeRouteCoordinates = useMemo(
     () => createRouteCoordinates(routeOrigin, currentSpot.coordinate),
     [routeOrigin, currentSpot.coordinate],
@@ -1426,7 +1589,8 @@ export default function App() {
   const effectiveLandingJourneyCaption = adminWorldConfig?.landingJourneyCaption || "移動なしで進める、3ステップの物語体験";
   const effectiveLandingFeaturesTitle = adminWorldConfig?.landingFeaturesTitle || "この体験でできること";
   const effectiveLandingFeaturesCaption = adminWorldConfig?.landingFeaturesCaption || "歩くだけで終わらない、九大の楽しみ方";
-  const effectiveLandingStartButton = adminWorldConfig?.landingStartButton || "冒険をはじめる";
+  const effectiveLandingGoogleStartButton = "Googleログインして冒険を始める";
+  const effectiveLandingGuestStartButton = "ログインせずに冒険を始める";
 
   const effectiveSetupTitle = adminWorldConfig?.setupTitle || "体験の準備をしましょう";
   const effectiveSetupSubtitle =
@@ -1441,6 +1605,12 @@ export default function App() {
   const effectiveSetupDurationHintLong = adminWorldConfig?.setupDurationHintLong || "じっくり";
   const effectiveSetupResearchNote = adminWorldConfig?.setupResearchNote || "※ 研究データとして活用します";
   const effectiveSetupStartButton = adminWorldConfig?.setupStartButton || "体験をつくる";
+  const isSetupFormComplete =
+    isUserTypeAnswered &&
+    isFamiliarityAnswered &&
+    isExplorationStyleAnswered &&
+    isExperienceExpectationAnswered &&
+    isDurationAnswered;
 
   const effectivePreparingTitle = adminWorldConfig?.preparingTitle || "あなたにあった\n体験を整えています";
   const latestGenerationStepLabel =
@@ -2149,6 +2319,7 @@ export default function App() {
 
   const runQuestGeneration = async ({ moveToReady = true }: { moveToReady?: boolean } = {}) => {
     // APIを呼ばずにscenario.tsのデータをそのまま使う
+    setReadySelectedSpotIndex(0);
     setCurrentSpotIndex(0);
     setIsExperienceCompleted(false);
     setSpotScenarioSegmentIndex(0);
@@ -2163,6 +2334,7 @@ export default function App() {
 
   const handleSetupCreateExperiencePress = async () => {
     if (isGeneratingQuest) return;
+    if (!isSetupFormComplete) return;
     ensureExperienceSession();
     setFeedbackOverallRating(null);
     setFeedbackGuidanceScore(null);
@@ -2188,6 +2360,94 @@ export default function App() {
     clearTimeout(step3Timer);
 
     setScreen("ready");
+  };
+
+  const handleLandingStartWithoutLoginPress = () => {
+    if (isLandingGoogleSigningIn) return;
+    setLandingAuthError(null);
+    setScreen("setup");
+  };
+
+  const runGoogleSignInFlow = async (): Promise<{ ok: boolean; errorMessage?: string }> => {
+    const auth = getFirebaseClientAuth();
+    if (!auth) {
+      const missingKeys = getFirebaseMissingEnvKeys();
+      const missing = missingKeys.length > 0 ? ` (${missingKeys.join(", ")})` : "";
+      return { ok: false, errorMessage: `Firebase設定が不足しています${missing}` };
+    }
+
+    if (auth.currentUser?.uid && !auth.currentUser.isAnonymous) {
+      setFirebaseUid(auth.currentUser.uid);
+      return { ok: true };
+    }
+
+    if (Platform.OS !== "web") {
+      return { ok: false, errorMessage: "GoogleログインはWeb版でのみ利用できます。" };
+    }
+
+    setIsLandingGoogleSigningIn(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const result = await signInWithPopup(auth, provider);
+      setFirebaseUid(result.user.uid);
+      return { ok: true };
+    } catch (error) {
+      const message = getFirebaseAuthErrorMessage(error);
+      return message ? { ok: false, errorMessage: message } : { ok: false };
+    } finally {
+      setIsLandingGoogleSigningIn(false);
+    }
+  };
+
+  const handleLandingGoogleSignInPress = async () => {
+    if (isLandingGoogleSigningIn) return;
+    setLandingAuthError(null);
+    const result = await runGoogleSignInFlow();
+    if (!result.ok) {
+      if (result.errorMessage) setLandingAuthError(result.errorMessage);
+      return;
+    }
+    setHeaderAuthMenuError(null);
+    setIsHeaderAuthMenuOpen(false);
+    setScreen("setup");
+  };
+
+  const handleHeaderGoogleSignInPress = async () => {
+    if (isLandingGoogleSigningIn || isFirebaseSignedIn) return;
+    setHeaderAuthMenuError(null);
+    const result = await runGoogleSignInFlow();
+    if (!result.ok) {
+      if (result.errorMessage) setHeaderAuthMenuError(result.errorMessage);
+      return;
+    }
+    setLandingAuthError(null);
+    setIsHeaderAuthMenuOpen(false);
+  };
+
+  const handleHeaderSignOutPress = async () => {
+    if (isHeaderAuthSigningOut || isLandingGoogleSigningIn || !isFirebaseSignedIn) return;
+    setHeaderAuthMenuError(null);
+    const auth = getFirebaseClientAuth();
+    if (!auth) {
+      const missingKeys = getFirebaseMissingEnvKeys();
+      const missing = missingKeys.length > 0 ? ` (${missingKeys.join(", ")})` : "";
+      setHeaderAuthMenuError(`Firebase設定が不足しています${missing}`);
+      return;
+    }
+
+    setIsHeaderAuthSigningOut(true);
+    try {
+      await signOut(auth);
+      setLandingAuthError(null);
+      setIsHeaderAuthMenuOpen(false);
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.trim().length > 0 ? error.message : "ログアウトに失敗しました。";
+      setHeaderAuthMenuError(message);
+    } finally {
+      setIsHeaderAuthSigningOut(false);
+    }
   };
 
   const handleReadyStartPress = async () => {
@@ -2466,6 +2726,11 @@ export default function App() {
       });
       return;
     }
+    setSpotPhase('nextHintStory');
+  };
+
+  const handleNextHintStoryContinue = () => {
+    if (safeCurrentSpotIndex >= spots.length - 1) return;
     runFlowTransition({
       title: "次のルートを準備中",
       body: "マップへ戻ります",
@@ -2807,6 +3072,44 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
+    if (screen === "landing") return;
+    setLandingAuthError(null);
+  }, [screen]);
+
+  useEffect(() => {
+    setIsHeaderAuthMenuOpen(false);
+    setHeaderAuthMenuError(null);
+  }, [screen]);
+
+  useEffect(() => {
+    const auth = getFirebaseClientAuth();
+    if (!auth) {
+      setFirebaseUid(null);
+      setIsFirebaseSignedIn(false);
+      setFirebaseAvatarUrl(null);
+      setFirebaseDisplayName(null);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      if (!nextUser) {
+        setFirebaseUid(null);
+        setIsFirebaseSignedIn(false);
+        setFirebaseAvatarUrl(null);
+        setFirebaseDisplayName(null);
+        return;
+      }
+
+      setFirebaseUid(nextUser.uid);
+      setIsFirebaseSignedIn(!nextUser.isAnonymous);
+      setFirebaseAvatarUrl(nextUser.photoURL ?? null);
+      setFirebaseDisplayName(nextUser.displayName ?? null);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     if (screen !== "spotArrival") return;
     if (cameraPermission?.granted) return;
     void requestCameraPermission();
@@ -2846,6 +3149,24 @@ export default function App() {
 
   useEffect(() => {
     if (screen === "setup") return;
+    setIsUserTypeMenuOpen(false);
+  }, [screen]);
+
+  useEffect(() => {
+    webMapErrorRef.current = webMapError;
+  }, [webMapError]);
+
+  useEffect(() => {
+    readyWebMapErrorRef.current = readyWebMapError;
+  }, [readyWebMapError]);
+
+  useEffect(() => {
+    if (screen !== "setup") return;
+    setIsUserTypeAnswered(false);
+    setIsFamiliarityAnswered(false);
+    setIsExplorationStyleAnswered(false);
+    setIsExperienceExpectationAnswered(false);
+    setIsDurationAnswered(false);
     setIsUserTypeMenuOpen(false);
   }, [screen]);
 
@@ -3126,6 +3447,311 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    setReadySelectedSpotIndex((prev) => clampSpotIndex(prev, spots.length));
+  }, [spots.length]);
+
+  useEffect(() => {
+    if (!GOOGLE_MAPS_WEB_API_KEY || spots.length < 2) {
+      setReadyRouteDirectionsCoordinates(null);
+      return;
+    }
+
+    let cancelled = false;
+    const loadRoutePreview = async () => {
+      try {
+        const route = await fetchRouteDirectionsForSpots(spots);
+        if (cancelled) return;
+        setReadyRouteDirectionsCoordinates(route);
+      } catch {
+        if (!cancelled) {
+          setReadyRouteDirectionsCoordinates(null);
+        }
+      }
+    };
+
+    void loadRoutePreview();
+    return () => {
+      cancelled = true;
+    };
+  }, [spots]);
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    if (screen !== "ready") return;
+    if (useMockMapBackground) return;
+
+    const target = spots[safeReadySelectedSpotIndex]?.coordinate;
+    if (!target) return;
+
+    const timer = setTimeout(() => {
+      readyMapRef.current?.animateToRegion(
+        {
+          latitude: target.latitude,
+          longitude: target.longitude,
+          latitudeDelta: Math.max(0.006, readyMapRegion.latitudeDelta * 0.52),
+          longitudeDelta: Math.max(0.006, readyMapRegion.longitudeDelta * 0.52),
+        },
+        520,
+      );
+    }, 70);
+
+    return () => clearTimeout(timer);
+  }, [
+    readyMapRegion.latitudeDelta,
+    readyMapRegion.longitudeDelta,
+    safeReadySelectedSpotIndex,
+    screen,
+    spots,
+    useMockMapBackground,
+  ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (screen === "ready" && !useMockMapBackground) return;
+
+    readyWebSpotMarkersRef.current.forEach((marker) => marker.setMap(null));
+    readyWebSpotMarkersRef.current = [];
+    if (readyWebRoutePolylineRef.current) {
+      readyWebRoutePolylineRef.current.setMap(null);
+      readyWebRoutePolylineRef.current = null;
+    }
+    readyWebMapInstanceRef.current = null;
+    readyWebBoundHostRef.current = null;
+  }, [screen, useMockMapBackground]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (screen !== "ready") return;
+    if (useMockMapBackground) return;
+
+    let cancelled = false;
+    let isRendering = false;
+    const previousAuthFailureHandler = (globalThis as any).gm_authFailure;
+    (globalThis as any).gm_authFailure = () => {
+      if (cancelled) return;
+      setReadyWebMapError("Google Maps課金設定エラーです。Google Cloud設定を確認してください。");
+    };
+
+    const renderReadyWebMap = async () => {
+      if (cancelled || isRendering) return;
+      isRendering = true;
+      setReadyWebMapError(null);
+
+      if (!GOOGLE_MAPS_WEB_API_KEY) {
+        setReadyWebMapError("Google Maps APIキーが設定されていません。");
+        isRendering = false;
+        return;
+      }
+
+      try {
+        const googleMaps = await ensureGoogleMapsConstructors();
+        if (cancelled) return;
+
+        const host = readyWebMapHostRef.current;
+        if (!host) {
+          setReadyWebMapError("Googleマップを初期化しています。");
+          return;
+        }
+        const hostHasSize = await waitForHostToHaveSize(host);
+        if (!hostHasSize) {
+          setReadyWebMapError("Googleマップ描画領域を初期化しています。");
+          return;
+        }
+
+        const shouldRecreateMap =
+          !readyWebMapInstanceRef.current || readyWebBoundHostRef.current !== host;
+
+        if (shouldRecreateMap) {
+          readyWebSpotMarkersRef.current.forEach((marker) => marker.setMap(null));
+          readyWebSpotMarkersRef.current = [];
+          if (readyWebRoutePolylineRef.current) {
+            readyWebRoutePolylineRef.current.setMap(null);
+            readyWebRoutePolylineRef.current = null;
+          }
+
+          readyWebMapInstanceRef.current = new googleMaps.Map(host, {
+            center: {
+              lat: readyMapRegion.latitude,
+              lng: readyMapRegion.longitude,
+            },
+            zoom: 16,
+            disableDefaultUI: true,
+            clickableIcons: false,
+            gestureHandling: "none",
+            styles: [
+              { featureType: "poi", stylers: [{ saturation: -100 }, { lightness: 16 }] },
+              { featureType: "transit", stylers: [{ saturation: -100 }] },
+              { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+            ],
+          });
+          readyWebBoundHostRef.current = host;
+        }
+
+        const map = readyWebMapInstanceRef.current;
+        if (!map) {
+          setReadyWebMapError("Googleマップを表示できませんでした。");
+          return;
+        }
+
+        if (googleMaps.event?.trigger) {
+          googleMaps.event.trigger(map, "resize");
+        }
+
+        readyWebSpotMarkersRef.current.forEach((marker) => marker.setMap(null));
+        readyWebSpotMarkersRef.current = [];
+
+        if (readyWebRoutePolylineRef.current) {
+          readyWebRoutePolylineRef.current.setMap(null);
+          readyWebRoutePolylineRef.current = null;
+        }
+
+        if (readyRouteCoordinates.length > 1) {
+          readyWebRoutePolylineRef.current = new googleMaps.Polyline({
+            map,
+            path: readyRouteCoordinates.map((coordinate) => ({
+              lat: coordinate.latitude,
+              lng: coordinate.longitude,
+            })),
+            geodesic: true,
+            strokeColor: "#f5ce53",
+            strokeOpacity: 0.95,
+            strokeWeight: 4,
+          });
+        }
+
+        readyWebSpotMarkersRef.current = spots.map((spot, index) => {
+          const isSelected = index === safeReadySelectedSpotIndex;
+          const isStart = index === 0;
+          const isGoal = index === spots.length - 1;
+          const markerLabel = isStart ? "S" : isGoal ? "G" : `${index + 1}`;
+
+          const marker = new googleMaps.Marker({
+            map,
+            position: { lat: spot.coordinate.latitude, lng: spot.coordinate.longitude },
+            title: spot.name,
+            zIndex: isSelected ? 50 : 20,
+            label: {
+              text: markerLabel,
+              color: "#f9f9f7",
+              fontSize: "11px",
+              fontWeight: "700",
+            },
+            icon: {
+              path: googleMaps.SymbolPath.CIRCLE,
+              scale: isSelected ? 11 : 9,
+              fillColor: isStart ? "#475464" : isGoal ? "#745c00" : "#8f979d",
+              fillOpacity: isSelected ? 1 : 0.88,
+              strokeColor: isSelected ? "#f5ce53" : isStart ? "#33414f" : isGoal ? "#4e3c00" : "#6f777d",
+              strokeWeight: isSelected ? 3 : 1.6,
+            },
+          });
+          marker.addListener("click", () => {
+            if (cancelled) return;
+            setReadySelectedSpotIndex(index);
+          });
+          return marker;
+        });
+
+        const target = spots[safeReadySelectedSpotIndex]?.coordinate;
+        if (allSpotCoordinates.length > 1) {
+          const bounds = new googleMaps.LatLngBounds();
+          allSpotCoordinates.forEach((coordinate) => {
+            bounds.extend({ lat: coordinate.latitude, lng: coordinate.longitude });
+          });
+          map.fitBounds(bounds, 52);
+          if (target) {
+            map.panTo({ lat: target.latitude, lng: target.longitude });
+          }
+        } else if (target) {
+          map.setCenter({ lat: target.latitude, lng: target.longitude });
+          map.setZoom(16);
+        }
+
+        const mapReady = await new Promise<boolean>((resolve) => {
+          let settled = false;
+          let timeoutId: ReturnType<typeof setTimeout> | null = null;
+          const settle = (ready: boolean) => {
+            if (settled) return;
+            settled = true;
+            if (timeoutId) clearTimeout(timeoutId);
+            resolve(ready);
+          };
+
+          const idleListener = googleMaps.event.addListenerOnce(map, "idle", () => settle(true));
+          const tilesListener = googleMaps.event.addListenerOnce(map, "tilesloaded", () => settle(true));
+          timeoutId = setTimeout(() => {
+            googleMaps.event.removeListener(idleListener);
+            googleMaps.event.removeListener(tilesListener);
+            settle(false);
+          }, 1800);
+        });
+
+        if (cancelled) return;
+
+        if (!mapReady) {
+          setReadyWebMapError("Googleマップ描画を再試行しています。");
+        } else {
+          setReadyWebMapError(null);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "";
+        if (errorMessage.includes("BillingNotEnabled")) {
+          setReadyWebMapError("Google Maps課金設定エラーです。Google Cloud設定を確認してください。");
+        } else {
+          setReadyWebMapError("Googleマップの初期化に失敗しました。再試行してください。");
+        }
+      } finally {
+        isRendering = false;
+      }
+    };
+
+    void renderReadyWebMap();
+    const retryTimer = setInterval(() => {
+      if (cancelled) return;
+      if (!readyWebMapInstanceRef.current || readyWebMapErrorRef.current) {
+        void renderReadyWebMap();
+      }
+    }, 1800);
+
+    return () => {
+      cancelled = true;
+      clearInterval(retryTimer);
+      (globalThis as any).gm_authFailure = previousAuthFailureHandler;
+    };
+  }, [
+    allSpotCoordinates,
+    readyMapRegion.latitude,
+    readyMapRegion.longitude,
+    readyRouteCoordinates,
+    safeReadySelectedSpotIndex,
+    screen,
+    spots,
+    useMockMapBackground,
+  ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (screen === "map" && !useMockMapBackground) return;
+
+    if (mapWebCurrentLocationMarkerRef.current) {
+      mapWebCurrentLocationMarkerRef.current.setMap(null);
+      mapWebCurrentLocationMarkerRef.current = null;
+    }
+    mapWebSpotMarkersRef.current.forEach((marker) => marker.setMap(null));
+    mapWebSpotMarkersRef.current = [];
+    if (mapWebActiveRoutePolylineRef.current) {
+      mapWebActiveRoutePolylineRef.current.setMap(null);
+      mapWebActiveRoutePolylineRef.current = null;
+    }
+    if (mapWebWholeRoutePolylineRef.current) {
+      mapWebWholeRoutePolylineRef.current.setMap(null);
+      mapWebWholeRoutePolylineRef.current = null;
+    }
+    mapWebInstanceRef.current = null;
+    mapWebBoundHostRef.current = null;
+  }, [screen, useMockMapBackground]);
+
+  useEffect(() => {
     if (Platform.OS === "web") return;
     if (screen !== "map") return;
     if (useMockMapBackground) return;
@@ -3196,33 +3822,56 @@ export default function App() {
     if (useMockMapBackground) return;
 
     let cancelled = false;
+    let isRendering = false;
     const previousAuthFailureHandler = (globalThis as any).gm_authFailure;
     (globalThis as any).gm_authFailure = () => {
       if (cancelled) return;
-      setWebMapError("Google Maps課金設定エラーのため、代替マップで表示します。");
+      setWebMapError("Google Maps課金設定エラーです。Google Cloud設定を確認してください。");
     };
 
     const renderWebMap = async () => {
+      if (cancelled || isRendering) return;
+      isRendering = true;
       setWebMapError(null);
       if (!GOOGLE_MAPS_WEB_API_KEY) {
-        setWebMapError("Google Maps APIキーが設定されていないため、マップを表示できません。");
+        setWebMapError("Google Maps APIキーが設定されていません。");
+        isRendering = false;
         return;
       }
 
       try {
-        await loadGoogleMapsJs();
+        const googleMaps = await ensureGoogleMapsConstructors();
         if (cancelled) return;
 
-        const googleMaps = (globalThis as any)?.google?.maps;
-        if (!googleMaps) {
-          setWebMapError("Google Mapsの読み込みに失敗しました。");
+        const host = mapWebHostRef.current;
+        if (!host) {
+          setWebMapError("Googleマップを初期化しています。");
+          return;
+        }
+        const hostHasSize = await waitForHostToHaveSize(host);
+        if (!hostHasSize) {
+          setWebMapError("Googleマップ描画領域を初期化しています。");
           return;
         }
 
-        if (!mapWebHostRef.current) return;
+        const shouldRecreateMap = !mapWebInstanceRef.current || mapWebBoundHostRef.current !== host;
+        if (shouldRecreateMap) {
+          if (mapWebCurrentLocationMarkerRef.current) {
+            mapWebCurrentLocationMarkerRef.current.setMap(null);
+            mapWebCurrentLocationMarkerRef.current = null;
+          }
+          mapWebSpotMarkersRef.current.forEach((marker) => marker.setMap(null));
+          mapWebSpotMarkersRef.current = [];
+          if (mapWebActiveRoutePolylineRef.current) {
+            mapWebActiveRoutePolylineRef.current.setMap(null);
+            mapWebActiveRoutePolylineRef.current = null;
+          }
+          if (mapWebWholeRoutePolylineRef.current) {
+            mapWebWholeRoutePolylineRef.current.setMap(null);
+            mapWebWholeRoutePolylineRef.current = null;
+          }
 
-        if (!mapWebInstanceRef.current) {
-          mapWebInstanceRef.current = new googleMaps.Map(mapWebHostRef.current, {
+          mapWebInstanceRef.current = new googleMaps.Map(host, {
             center: {
               lat: mapInitialRegion.latitude,
               lng: mapInitialRegion.longitude,
@@ -3238,9 +3887,18 @@ export default function App() {
               { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
             ],
           });
+          mapWebBoundHostRef.current = host;
         }
 
         const map = mapWebInstanceRef.current;
+        if (!map) {
+          setWebMapError("Googleマップを表示できませんでした。");
+          return;
+        }
+
+        if (googleMaps.event?.trigger) {
+          googleMaps.event.trigger(map, "resize");
+        }
 
         if (mapWebCurrentLocationMarkerRef.current) {
           mapWebCurrentLocationMarkerRef.current.setMap(null);
@@ -3260,29 +3918,12 @@ export default function App() {
         }
 
         const toLatLngLiteral = (coordinate: Coordinate) => ({ lat: coordinate.latitude, lng: coordinate.longitude });
-        const directionsService = new googleMaps.DirectionsService();
 
-        const resolveWalkingPath = async (
+        const resolveWalkingPath = (
           origin: Coordinate,
           destination: Coordinate,
           waypoints: Coordinate[] = [],
-        ): Promise<Array<{ lat: number; lng: number }>> => {
-          try {
-            const result = await directionsService.route({
-              origin: toLatLngLiteral(origin),
-              destination: toLatLngLiteral(destination),
-              waypoints: waypoints.map((point) => ({ location: toLatLngLiteral(point) })),
-              travelMode: googleMaps.TravelMode.WALKING,
-              provideRouteAlternatives: false,
-            });
-            const overviewPath = result?.routes?.[0]?.overview_path;
-            if (Array.isArray(overviewPath) && overviewPath.length > 1) {
-              return overviewPath.map((point: any) => ({ lat: point.lat(), lng: point.lng() }));
-            }
-          } catch {
-            // Fallback to straight line when Directions request fails.
-          }
-
+        ): Array<{ lat: number; lng: number }> => {
           return [toLatLngLiteral(origin), ...waypoints.map(toLatLngLiteral), toLatLngLiteral(destination)];
         };
 
@@ -3290,8 +3931,8 @@ export default function App() {
         const wholePath =
           safeCurrentSpotIndex >= spots.length - 1
             ? [toLatLngLiteral(currentSpot.coordinate)]
-            : await resolveWalkingPath(currentSpot.coordinate, goalSpot.coordinate, futureWaypoints);
-        const activePath = await resolveWalkingPath(routeOrigin, currentSpot.coordinate);
+            : resolveWalkingPath(currentSpot.coordinate, goalSpot.coordinate, futureWaypoints);
+        const activePath = resolveWalkingPath(routeOrigin, currentSpot.coordinate);
 
         if (wholePath.length > 1) {
           mapWebWholeRoutePolylineRef.current = new googleMaps.Polyline({
@@ -3376,27 +4017,57 @@ export default function App() {
           bounds.extend({ lat: coordinate.latitude, lng: coordinate.longitude });
         });
         map.fitBounds(bounds);
-        googleMaps.event.addListenerOnce(map, "idle", () => {
-          if (cancelled) return;
-          map.panBy(0, -130);
+        map.panBy(0, -130);
+
+        const mapReady = await new Promise<boolean>((resolve) => {
+          let settled = false;
+          let timeoutId: ReturnType<typeof setTimeout> | null = null;
+          const settle = (ready: boolean) => {
+            if (settled) return;
+            settled = true;
+            if (timeoutId) clearTimeout(timeoutId);
+            resolve(ready);
+          };
+
+          const idleListener = googleMaps.event.addListenerOnce(map, "idle", () => settle(true));
+          const tilesListener = googleMaps.event.addListenerOnce(map, "tilesloaded", () => settle(true));
+          timeoutId = setTimeout(() => {
+            googleMaps.event.removeListener(idleListener);
+            googleMaps.event.removeListener(tilesListener);
+            settle(false);
+          }, 1800);
         });
 
-        setWebMapError(null);
+        if (cancelled) return;
+
+        if (!mapReady) {
+          setWebMapError("Googleマップ描画を再試行しています。");
+        } else {
+          setWebMapError(null);
+        }
       } catch (error) {
-        console.error("Google Maps web render error:", error);
         const errorMessage = error instanceof Error ? error.message : "";
         if (errorMessage.includes("BillingNotEnabled")) {
-          setWebMapError("Google Maps課金設定エラーのため、代替マップで表示します。");
+          setWebMapError("Google Maps課金設定エラーです。Google Cloud設定を確認してください。");
         } else {
-          setWebMapError("Googleマップを表示できませんでした。");
+          setWebMapError("Googleマップの初期化に失敗しました。再試行してください。");
         }
+      } finally {
+        isRendering = false;
       }
     };
 
     void renderWebMap();
+    const retryTimer = setInterval(() => {
+      if (cancelled) return;
+      if (!mapWebInstanceRef.current || webMapErrorRef.current) {
+        void renderWebMap();
+      }
+    }, 1800);
 
     return () => {
       cancelled = true;
+      clearInterval(retryTimer);
       (globalThis as any).gm_authFailure = previousAuthFailureHandler;
     };
   }, [
@@ -3412,6 +4083,88 @@ export default function App() {
     safeCurrentSpotIndex,
     useMockMapBackground,
   ]);
+
+  const renderHeaderAuthBadge = () => {
+    const accessibleLabel = isFirebaseSignedIn
+      ? `ログイン中: ${firebaseDisplayName ?? "Googleユーザー"}`
+      : "ゲストで利用中";
+    const isHeaderAuthActionBusy = isLandingGoogleSigningIn || isHeaderAuthSigningOut;
+    const headerAuthButtonLabel = isHeaderAuthActionBusy
+      ? isFirebaseSignedIn
+        ? "ログアウト中..."
+        : "Googleログイン中..."
+      : isFirebaseSignedIn
+        ? "ログアウト"
+        : "Googleでログイン";
+
+    return (
+      <View style={styles.headerAuthMenuAnchor}>
+        <Pressable
+          accessibilityLabel={accessibleLabel}
+          accessibilityRole="button"
+          onPress={() => {
+            setHeaderAuthMenuError(null);
+            setIsHeaderAuthMenuOpen((prev) => !prev);
+          }}
+          style={({ pressed }) => [styles.headerAuthBadge, pressed && styles.pressed]}
+        >
+          {isFirebaseSignedIn && firebaseAvatarUrl ? (
+            <Image source={{ uri: firebaseAvatarUrl }} style={styles.headerAuthBadgeAvatar} />
+          ) : (
+            <Ionicons name="person-circle-outline" size={26} color={palette.onBackground} />
+          )}
+          <View
+            style={[
+              styles.headerAuthBadgeStatusDot,
+              isFirebaseSignedIn ? styles.headerAuthBadgeStatusDotSignedIn : styles.headerAuthBadgeStatusDotGuest,
+            ]}
+          />
+        </Pressable>
+
+        {isHeaderAuthMenuOpen ? (
+          <View style={styles.headerAuthMenuPanel}>
+            <Text style={styles.headerAuthMenuStatusText}>{accessibleLabel}</Text>
+            <Pressable
+              onPress={isFirebaseSignedIn ? handleHeaderSignOutPress : handleHeaderGoogleSignInPress}
+              disabled={isHeaderAuthActionBusy}
+              style={({ pressed }) => [
+                styles.headerAuthMenuButton,
+                isHeaderAuthActionBusy ? styles.headerAuthMenuButtonDisabled : null,
+                pressed && !isHeaderAuthActionBusy ? styles.pressed : null,
+              ]}
+            >
+              {isHeaderAuthActionBusy ? (
+                <ActivityIndicator size="small" color={palette.onDarkButton} />
+              ) : isFirebaseSignedIn ? (
+                <Ionicons
+                  name="log-out-outline"
+                  size={16}
+                  color={palette.onDarkButton}
+                />
+              ) : (
+                <Ionicons
+                  name="logo-google"
+                  size={16}
+                  color={palette.onDarkButton}
+                />
+              )}
+              <Text
+                style={[
+                  styles.headerAuthMenuButtonText,
+                  isHeaderAuthActionBusy ? styles.headerAuthMenuButtonTextDisabled : null,
+                ]}
+              >
+                {headerAuthButtonLabel}
+              </Text>
+            </Pressable>
+            {headerAuthMenuError ? (
+              <Text style={styles.headerAuthMenuErrorText}>{headerAuthMenuError}</Text>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+    );
+  };
 
   if (screen === "preparing") {
     return (
@@ -3526,11 +4279,15 @@ export default function App() {
   if (screen === "ready") {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
 
         <View style={styles.readyTopBar}>
-          <View style={styles.readyTopInner}>
-            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+          <View style={[styles.topBarInner, { width: contentWidth }]}>
+            <View style={styles.headerSideSpacer} />
+            <View style={styles.brandRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+            {renderHeaderAuthBadge()}
           </View>
         </View>
 
@@ -3591,18 +4348,133 @@ export default function App() {
             <View style={styles.readySectionHeadingBlock}>
               <Text style={styles.readySectionHeading}>EXPLORATION PATH</Text>
             </View>
+
+            <View style={styles.readyMapPreviewCard}>
+              <View style={styles.readyMapPreviewHeader}>
+                <Text style={styles.readyMapPreviewTitle}>ROUTE MAP (API)</Text>
+                <Text style={styles.readyMapPreviewMeta}>
+                  {`${String(safeReadySelectedSpotIndex + 1).padStart(2, "0")} ${readySelectedSpot.name}`}
+                </Text>
+              </View>
+              <View style={styles.readyMapPreviewCanvas}>
+                {useMockMapBackground ? (
+                  <View style={styles.readyMapPreviewMock}>
+                    <Text style={styles.readyMapPreviewMockText}>マッププレビューは省略表示中です</Text>
+                  </View>
+                ) : Platform.OS === "web" ? (
+                  <>
+                    {createElement("div", {
+                      ref: readyWebMapHostRef,
+                      style: {
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: "100%",
+                        height: "100%",
+                      },
+                    })}
+                    {readyWebMapError ? (
+                      <View style={styles.readyMapPreviewFallbackBadge}>
+                        <Text style={styles.readyMapPreviewFallbackBadgeText}>{readyWebMapError}</Text>
+                      </View>
+                    ) : null}
+                  </>
+                ) : (
+                  <MapView
+                    ref={readyMapRef}
+                    key={`ready-map-${spots.map((spot) => spot.id).join("-")}`}
+                    style={styles.readyMapPreviewMap}
+                    provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
+                    initialRegion={readyMapRegion}
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    showsCompass={false}
+                    showsScale={false}
+                  >
+                    {readyRouteCoordinates.length > 1 ? (
+                      <Polyline
+                        coordinates={readyRouteCoordinates}
+                        strokeColor="#f5ce53"
+                        strokeWidth={4}
+                      />
+                    ) : null}
+                    {spots.map((spot, index) => {
+                      const isSelected = index === safeReadySelectedSpotIndex;
+                      const isStart = index === 0;
+                      const isGoal = index === spots.length - 1;
+                      const markerLabel = isStart ? "S" : isGoal ? "G" : `${index + 1}`;
+                      return (
+                        <Marker
+                          key={`ready-spot-${spot.id}`}
+                          coordinate={spot.coordinate}
+                          title={spot.name}
+                          onPress={() => setReadySelectedSpotIndex(index)}
+                        >
+                          <View style={styles.mapSpotMarkerWrap}>
+                            <View
+                              style={[
+                                styles.mapSpotPin,
+                                isStart ? styles.mapSpotPinStart : isGoal ? styles.mapSpotPinGoal : styles.mapSpotPinMuted,
+                                isSelected ? styles.mapSpotPinActiveTargetRing : null,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.mapSpotPinText,
+                                  isStart || isGoal
+                                    ? styles.mapSpotPinTextRole
+                                    : isSelected
+                                      ? styles.mapSpotPinTextActive
+                                      : styles.mapSpotPinTextMuted,
+                                ]}
+                              >
+                                {markerLabel}
+                              </Text>
+                            </View>
+                          </View>
+                        </Marker>
+                      );
+                    })}
+                  </MapView>
+                )}
+
+                <View pointerEvents="none" style={styles.readyMapCenterPinWrap}>
+                  <View style={styles.readyMapCenterPinHalo} />
+                  <Ionicons name="location" size={30} color="#f5ce53" />
+                  <View style={styles.readyMapCenterPinCore} />
+                </View>
+              </View>
+              <Text style={styles.readyMapPreviewHint}>下のスポットカードを選ぶと、地図中心ピンへフォーカスします。</Text>
+            </View>
+
             <View style={styles.readyTimelineWrap}>
               <View style={styles.readyTimelineLine} />
               {spots.map((spot, index) => (
-                <View
+                <Pressable
                   key={spot.id}
-                  style={[
+                  onPress={() => setReadySelectedSpotIndex(index)}
+                  style={({ pressed }) => [
                     styles.readyTimelineItem,
                     index === spots.length - 1 ? styles.readyTimelineItemLast : null,
+                    pressed ? styles.pressed : null,
                   ]}
                 >
-                  <View style={[styles.readyTimelineDot, index === 0 ? styles.readyTimelineDotActive : null]} />
-                  <View style={styles.readyTimelineCard}>
+                  <View
+                    style={[
+                      styles.readyTimelineDot,
+                      index === safeReadySelectedSpotIndex ? styles.readyTimelineDotActive : null,
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.readyTimelineCard,
+                      index === safeReadySelectedSpotIndex ? styles.readyTimelineCardActive : null,
+                    ]}
+                  >
                     <View style={styles.readyTimelineMetaRow}>
                       <Text style={styles.readyTimelineIndex}>{String(index + 1).padStart(2, "0")}</Text>
                       <View style={styles.readyTimelineBeatTag}>
@@ -3617,7 +4489,7 @@ export default function App() {
                     </Text>
                     <Text style={styles.readyTimelineDesc}>{generatedSpotOverviewMap[spot.id] || readySpotOverviewMap[spot.id]}</Text>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </View>
           </Animated.View>
@@ -3702,12 +4574,6 @@ export default function App() {
         </View>
 
         <View style={styles.prologueGrainOverlay} />
-        <Pressable
-          style={({ pressed }) => [styles.gameplayBackButton, pressed && styles.pressed]}
-          onPress={() => setScreen("ready")}
-        >
-          <Ionicons name="chevron-back" size={24} color="#ffffff" />
-        </Pressable>
 
         <View style={styles.prologueContent}>
           <View style={styles.prologueBottomGradient} />
@@ -3828,13 +4694,6 @@ export default function App() {
         <StatusBar style="dark" />
 
         <View style={styles.mapScreen}>
-          <Pressable
-            style={({ pressed }) => [styles.gameplayBackButton, pressed && styles.pressed]}
-            onPress={() => setScreen("prologue")}
-          >
-            <Ionicons name="chevron-back" size={24} color="#ffffff" />
-          </Pressable>
-
           {useMockMapBackground ? (
             <View style={styles.mapMockCanvas}>
               <View style={styles.mapMockToneA} />
@@ -3930,27 +4789,9 @@ export default function App() {
                 },
               })}
               {webMapError ? (
-                <>
-                  {createElement("iframe", {
-                    src: webFallbackGoogleEmbedUrl,
-                    loading: "eager",
-                    allowFullScreen: true,
-                    referrerPolicy: "no-referrer-when-downgrade",
-                    style: {
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      width: "100%",
-                      height: "100%",
-                      border: "none",
-                    },
-                  })}
-                  <View style={styles.mapWebFallback}>
-                    <Text style={styles.mapWebFallbackText}>{webMapError}</Text>
-                  </View>
-                </>
+                <View style={styles.mapWebFallback}>
+                  <Text style={styles.mapWebFallbackText}>{webMapError}</Text>
+                </View>
               ) : null}
             </>
           ) : (
@@ -4092,6 +4933,16 @@ export default function App() {
     const isQuizCorrect = quizSelectedLabel !== null && quizSelectedLabel === currentSpot.quiz.correctLabel;
     const spotNumber = safeCurrentSpotIndex + 1;
     const totalSpots = spots.length;
+    const isSpotQuizPhase =
+      spotPhase === 'quiz' || spotPhase === 'quizResult' || spotPhase === 'nextHintStory';
+    const quizSelectedOption =
+      quizSelectedLabel !== null
+        ? currentSpot.quiz.options.find((opt) => opt.label === quizSelectedLabel) ?? null
+        : null;
+    const quizCorrectOption = currentSpot.quiz.options.find((opt) => opt.label === currentSpot.quiz.correctLabel) ?? null;
+    const nextHintScenarioText =
+      (currentSpot.nextHint ?? "").trim() ||
+      (nextSpot ? `${nextSpot.name}へ向かいます。マップで次の目的地を確認してください。` : "次のシーンへ進みます。");
 
     return (
       <SafeAreaView style={styles.spotSafeArea}>
@@ -4106,26 +4957,13 @@ export default function App() {
           <View style={styles.spotBackgroundOverlay} />
 
           <View style={styles.spotTopBar}>
-            <Pressable
-              style={({ pressed }) => [styles.spotCloseButton, pressed && styles.pressed]}
-              onPress={() => setScreen("map")}
-            >
-              <Ionicons name="close" size={22} color={palette.primary} />
-            </Pressable>
             <View style={styles.spotProgressChip}>
               <Text style={styles.spotProgressChipText}>{`${spotNumber} / ${totalSpots}`}</Text>
             </View>
           </View>
 
           <View style={styles.spotMain}>
-            {/* キャラクター画像（note/story フェーズのみ表示） */}
-            {(spotPhase === 'note' || spotPhase === 'story') ? (
-              <View style={styles.spotCharacterStage}>
-                <Image source={spotArrivalCharacterImage} style={styles.spotCharacterImage} resizeMode="contain" />
-              </View>
-            ) : null}
-
-            <View style={styles.spotBottomSheet}>
+            <View style={[styles.spotBottomSheet, isSpotQuizPhase ? styles.spotBottomSheetQuiz : null]}>
               {/* ヘッダーバッジ行 */}
               <View style={styles.spotSpeakerRow}>
                 <View style={styles.spotSpeakerBadge}>
@@ -4228,13 +5066,17 @@ export default function App() {
 
               {/* ─── フェーズ: quiz ─── */}
               {spotPhase === 'quiz' ? (
-                <>
-                  <View style={styles.quizHeaderRow}>
-                    <View style={styles.quizBadge}>
-                      <Text style={styles.quizBadgeText}>QUIZ</Text>
+                <View style={styles.quizPhaseBody}>
+                  <View style={styles.quizLeadWrap}>
+                    <View style={styles.quizHeaderRow}>
+                      <View style={styles.quizBadge}>
+                        <Text style={styles.quizBadgeText}>QUIZ</Text>
+                      </View>
+                      <Text style={styles.quizQuestionMeta}>{`問題 ${spotNumber}`}</Text>
                     </View>
+                    <Text style={styles.quizPromptText}>最も適切な選択肢を1つ選んでください</Text>
+                    <Text style={styles.quizQuestion}>{currentSpot.quiz.question}</Text>
                   </View>
-                  <Text style={styles.quizQuestion}>{currentSpot.quiz.question}</Text>
                   <View style={styles.quizOptionsWrap}>
                     {currentSpot.quiz.options.map((opt) => (
                       <Pressable
@@ -4242,20 +5084,23 @@ export default function App() {
                         style={({ pressed }) => [styles.quizOption, pressed && styles.quizOptionPressed]}
                         onPress={() => handleQuizSelect(opt.label)}
                       >
-                        <View style={styles.quizOptionLabelBadge}>
-                          <Text style={styles.quizOptionLabelText}>{opt.label}</Text>
+                        <View style={styles.quizOptionContent}>
+                          <View style={styles.quizOptionLabelBadge}>
+                            <Text style={styles.quizOptionLabelText}>{opt.label}</Text>
+                          </View>
+                          <Text style={styles.quizOptionText}>{opt.text}</Text>
                         </View>
-                        <Text style={styles.quizOptionText}>{opt.text}</Text>
+                        <Ionicons name="chevron-forward" size={16} color="rgba(255,245,220,0.72)" />
                       </Pressable>
                     ))}
                   </View>
-                </>
+                </View>
               ) : null}
 
               {/* ─── フェーズ: quizResult ─── */}
               {spotPhase === 'quizResult' ? (
                 <>
-                  <ScrollView style={styles.spotNoteScroll} showsVerticalScrollIndicator={false}>
+                  <View style={styles.quizResultBody}>
                     <View style={styles.quizResultHeaderRow}>
                       <View style={[styles.quizResultBadge, isQuizCorrect ? styles.quizResultBadgeCorrect : styles.quizResultBadgeWrong]}>
                         <Text style={styles.quizResultBadgeText}>
@@ -4264,6 +5109,19 @@ export default function App() {
                       </View>
                       <Text style={styles.quizScoreText}>{`${quizCorrectCount} / ${spotNumber} 正解`}</Text>
                     </View>
+
+                    {quizSelectedOption ? (
+                      <View style={styles.quizResultSummaryWrap}>
+                        <Text style={styles.quizResultSummaryText}>
+                          {`あなたの回答: ${quizSelectedOption.label}. ${quizSelectedOption.text}`}
+                        </Text>
+                        {!isQuizCorrect && quizCorrectOption ? (
+                          <Text style={[styles.quizResultSummaryText, styles.quizResultSummaryCorrectText]}>
+                            {`正解: ${quizCorrectOption.label}. ${quizCorrectOption.text}`}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ) : null}
 
                     <View style={styles.quizResultOptionsWrap}>
                       {currentSpot.quiz.options.map((opt) => {
@@ -4278,27 +5136,33 @@ export default function App() {
                               isSelected && !isCorrectOpt ? styles.quizResultOptionWrong : null,
                             ]}
                           >
-                            <View style={[styles.quizOptionLabelBadge, isCorrectOpt ? styles.quizOptionLabelBadgeCorrect : null]}>
-                              <Text style={styles.quizOptionLabelText}>{opt.label}</Text>
+                            <View style={styles.quizResultOptionContent}>
+                              <View style={[styles.quizOptionLabelBadge, isCorrectOpt ? styles.quizOptionLabelBadgeCorrect : null]}>
+                                <Text style={styles.quizOptionLabelText}>{opt.label}</Text>
+                              </View>
+                              <Text style={[styles.quizOptionText, isCorrectOpt ? styles.quizResultOptionTextCorrect : null]}>{opt.text}</Text>
                             </View>
-                            <Text style={[styles.quizOptionText, isCorrectOpt ? styles.quizResultOptionTextCorrect : null]}>{opt.text}</Text>
+                            {isCorrectOpt ? (
+                              <Ionicons name="checkmark-circle" size={18} color="#81C784" />
+                            ) : isSelected ? (
+                              <Ionicons name="close-circle" size={18} color="#E57373" />
+                            ) : (
+                              <View style={styles.quizResultOptionIconPlaceholder} />
+                            )}
                           </View>
                         );
                       })}
                     </View>
 
-                    <Text style={styles.quizExplanation}>{currentSpot.quiz.explanation}</Text>
-
-                    {/* 次への橋渡し */}
-                    {currentSpot.nextHint ? (
-                      <View style={styles.nextHintWrap}>
-                        <Text style={styles.nextHintLabel}>→ 次のスポットへ</Text>
-                        <Text style={styles.nextHintText}>{currentSpot.nextHint}</Text>
+                    <View style={styles.quizResultInfoWrap}>
+                      <View style={styles.quizExplanationCard}>
+                        <Text style={styles.quizExplanationLabel}>解説</Text>
+                        <Text style={styles.quizExplanation}>{currentSpot.quiz.explanation}</Text>
                       </View>
-                    ) : null}
-                  </ScrollView>
+                    </View>
+                  </View>
 
-                  <View style={styles.spotNextButtonWrap}>
+                  <View style={[styles.spotNextButtonWrap, styles.quizResultNextButtonWrap]}>
                     <Pressable
                       style={({ pressed }) => [
                         styles.spotNextButton,
@@ -4311,6 +5175,33 @@ export default function App() {
                       <Text style={styles.spotNextButtonText}>
                         {safeCurrentSpotIndex >= spots.length - 1 ? 'エピローグへ' : '次のスポットへ'}
                       </Text>
+                      <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
+                    </Pressable>
+                  </View>
+                </>
+              ) : null}
+
+              {/* ─── フェーズ: nextHintStory ─── */}
+              {spotPhase === 'nextHintStory' ? (
+                <>
+                  <View style={styles.spotBridgeStoryWrap}>
+                    <Text style={styles.spotBridgeStoryLabel}>次のスポットへ</Text>
+                    <View style={styles.spotBridgeStoryCard}>
+                      <Text style={styles.spotBridgeStoryText}>{nextHintScenarioText}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.spotNextButtonWrap}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.spotNextButton,
+                        isMapScenarioTransitioning ? styles.mapCardEnabledCtaDisabled : null,
+                        pressed && styles.pressed,
+                      ]}
+                      onPress={handleNextHintStoryContinue}
+                      disabled={isMapScenarioTransitioning}
+                    >
+                      <Text style={styles.spotNextButtonText}>次のスポットへ</Text>
                       <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
                     </Pressable>
                   </View>
@@ -4336,12 +5227,6 @@ export default function App() {
         </View>
 
         <View style={styles.prologueGrainOverlay} />
-        <Pressable
-          style={({ pressed }) => [styles.gameplayBackButton, pressed && styles.pressed]}
-          onPress={() => setScreen("map")}
-        >
-          <Ionicons name="chevron-back" size={24} color="#ffffff" />
-        </Pressable>
 
         <View style={styles.prologueContent}>
           <View style={styles.prologueBottomGradient} />
@@ -4700,11 +5585,13 @@ export default function App() {
         <StatusBar style="dark" />
 
         <View style={styles.setupTopBar}>
-          <Pressable onPress={() => setScreen("landing")} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-            <Ionicons name="arrow-back" size={22} color={palette.onBackground} />
-          </Pressable>
-          <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
-          <View style={styles.setupTopSpacer} />
+          <View style={[styles.topBarInner, { width: contentWidth }]}>
+            <View style={styles.headerSideSpacer} />
+            <View style={styles.brandRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+            {renderHeaderAuthBadge()}
+          </View>
         </View>
 
         <ScrollView
@@ -4735,7 +5622,9 @@ export default function App() {
                   onPress={() => setIsUserTypeMenuOpen((prev) => !prev)}
                   style={({ pressed }) => [styles.userTypeSelectField, pressed && styles.pressed]}
                 >
-                  <Text style={styles.userTypeSelectValue}>{selectedUserType}</Text>
+                  <Text style={isUserTypeAnswered ? styles.userTypeSelectValue : styles.userTypeSelectPlaceholder}>
+                    {isUserTypeAnswered ? selectedUserType : "選択してください"}
+                  </Text>
                   <Ionicons
                     name={isUserTypeMenuOpen ? "chevron-up" : "chevron-down"}
                     size={18}
@@ -4746,12 +5635,13 @@ export default function App() {
                 {isUserTypeMenuOpen ? (
                   <View style={styles.userTypeSelectMenu}>
                     {userTypeOptions.map((option) => {
-                      const selected = selectedUserType === option;
+                      const selected = isUserTypeAnswered && selectedUserType === option;
                       return (
                         <Pressable
                           key={option}
                           onPress={() => {
                             setSelectedUserType(option);
+                            setIsUserTypeAnswered(true);
                             setIsUserTypeMenuOpen(false);
                           }}
                           style={({ pressed }) => [
@@ -4776,11 +5666,14 @@ export default function App() {
               <Text style={styles.setupLabel}>{effectiveSetupFamiliarityLabel}</Text>
               <View style={styles.stackButtons}>
                 {familiarityOptions.map((option) => {
-                  const selected = selectedFamiliarity === option;
+                  const selected = isFamiliarityAnswered && selectedFamiliarity === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedFamiliarity(option)}
+                      onPress={() => {
+                        setSelectedFamiliarity(option);
+                        setIsFamiliarityAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.familiarityButton,
                         selected ? styles.familiaritySelected : styles.familiarityIdle,
@@ -4805,11 +5698,14 @@ export default function App() {
               <Text style={styles.setupResearchNote}>{effectiveSetupResearchNote}</Text>
               <View style={styles.stackButtons}>
                 {explorationStyleOptions.map((option) => {
-                  const selected = selectedExplorationStyle === option;
+                  const selected = isExplorationStyleAnswered && selectedExplorationStyle === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedExplorationStyle(option)}
+                      onPress={() => {
+                        setSelectedExplorationStyle(option);
+                        setIsExplorationStyleAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.familiarityButton,
                         selected ? styles.familiaritySelected : styles.familiarityIdle,
@@ -4834,11 +5730,15 @@ export default function App() {
               <Text style={styles.setupResearchNote}>{effectiveSetupResearchNote}</Text>
               <View style={styles.stackButtons}>
                 {experienceExpectationOptions.map((option) => {
-                  const selected = selectedExperienceExpectation === option;
+                  const selected =
+                    isExperienceExpectationAnswered && selectedExperienceExpectation === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedExperienceExpectation(option)}
+                      onPress={() => {
+                        setSelectedExperienceExpectation(option);
+                        setIsExperienceExpectationAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.familiarityButton,
                         selected ? styles.familiaritySelected : styles.familiarityIdle,
@@ -4866,11 +5766,14 @@ export default function App() {
               </View>
               <View style={styles.durationRow}>
                 {durationOptions.map((option) => {
-                  const selected = selectedDuration === option;
+                  const selected = isDurationAnswered && selectedDuration === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedDuration(option)}
+                      onPress={() => {
+                        setSelectedDuration(option);
+                        setIsDurationAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.durationButton,
                         selected ? styles.durationSelected : styles.durationIdle,
@@ -4900,9 +5803,11 @@ export default function App() {
             style={({ pressed }) => [
               styles.startButton,
               { width: contentWidth },
-              pressed && styles.pressed,
+              !isSetupFormComplete || isGeneratingQuest ? styles.startButtonDisabled : null,
+              pressed && isSetupFormComplete && !isGeneratingQuest ? styles.pressed : null,
             ]}
             onPress={handleSetupCreateExperiencePress}
+            disabled={!isSetupFormComplete || isGeneratingQuest}
           >
             <Text style={styles.startButtonText}>{effectiveSetupStartButton}</Text>
             <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
@@ -5012,9 +5917,13 @@ export default function App() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, { width: contentWidth }]}>
-          <View style={styles.brandRow}>
-            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+        <View style={styles.header}>
+          <View style={[styles.headerInner, { width: contentWidth }]}>
+            <View style={styles.headerSideSpacer} />
+            <View style={styles.brandRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+            {renderHeaderAuthBadge()}
           </View>
         </View>
 
@@ -5133,13 +6042,38 @@ export default function App() {
           setLandingBottomBarHeight((prev) => (prev === measuredHeight ? prev : measuredHeight));
         }}
       >
-        <Pressable
-          style={({ pressed }) => [styles.startButton, { width: contentWidth }, pressed && styles.pressed]}
-          onPress={() => setScreen("setup")}
-        >
-          <Text style={styles.startButtonText}>{effectiveLandingStartButton}</Text>
-          <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
-        </Pressable>
+        <View style={[styles.landingAuthActions, { width: contentWidth }]}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.landingAuthPrimaryButton,
+              pressed && !isLandingGoogleSigningIn ? styles.pressed : null,
+              isLandingGoogleSigningIn ? styles.startButtonDisabled : null,
+            ]}
+            onPress={handleLandingGoogleSignInPress}
+            disabled={isLandingGoogleSigningIn}
+          >
+            <View style={styles.startButtonLabelGroup}>
+              <Text style={styles.landingAuthPrimaryButtonText}>
+                {isLandingGoogleSigningIn ? "Googleログイン中..." : effectiveLandingGoogleStartButton}
+              </Text>
+            </View>
+            {isLandingGoogleSigningIn ? (
+              <ActivityIndicator color={palette.onDarkButton} />
+            ) : (
+              <Ionicons name="logo-google" size={20} color={palette.onDarkButton} />
+            )}
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [styles.landingAuthSecondaryButton, pressed && styles.pressed]}
+            onPress={handleLandingStartWithoutLoginPress}
+            disabled={isLandingGoogleSigningIn}
+          >
+            <Text style={styles.landingAuthSecondaryButtonText}>{effectiveLandingGuestStartButton}</Text>
+            <Ionicons name="arrow-forward" size={20} color={palette.onBackground} />
+          </Pressable>
+        </View>
+        {landingAuthError ? <Text style={styles.landingAuthErrorText}>{landingAuthError}</Text> : null}
       </View>
     </SafeAreaView>
   );
@@ -5184,9 +6118,36 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(245,206,83,0.12)",
   },
   header: {
-    paddingTop: 14,
-    paddingBottom: 20,
+    paddingTop: 6,
+    paddingBottom: 10,
+    width: "100%",
     alignItems: "center",
+    backgroundColor: "#f8f1e6",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(120,102,78,0.18)",
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 18,
+    zIndex: 220,
+    position: "relative",
+  },
+  headerInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 46,
+  },
+  topBarInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "100%",
+  },
+  headerSideSpacer: {
+    width: 42,
+    height: 42,
   },
   brandRow: {
     flexDirection: "row",
@@ -5200,11 +6161,12 @@ const styles = StyleSheet.create({
     color: palette.onBackground,
   },
   brandLogo: {
-    height: 26,
-    width: 130,
+    height: 30,
+    width: 148,
   },
   main: {
     paddingHorizontal: 0,
+    marginTop: 32,
     marginBottom: 18,
   },
   heroWrap: {
@@ -5322,12 +6284,157 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 22,
+    paddingTop: 10,
+    paddingBottom: 16,
     backgroundColor: "rgba(249,249,247,0.96)",
     borderTopWidth: 1,
     borderTopColor: "rgba(173,179,176,0.25)",
     alignItems: "center",
+  },
+  landingAuthActions: {
+    gap: 10,
+  },
+  landingAuthPrimaryButton: {
+    borderRadius: 22,
+    backgroundColor: palette.darkButton,
+    minHeight: 60,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    shadowColor: "#1a1c20",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  landingAuthPrimaryButtonText: {
+    color: palette.onDarkButton,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 22,
+    flexShrink: 1,
+  },
+  landingAuthSecondaryButton: {
+    borderRadius: 16,
+    minHeight: 50,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(255,255,255,0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.5)",
+  },
+  landingAuthSecondaryButtonText: {
+    color: palette.onBackground,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+    flexShrink: 1,
+  },
+  landingAuthErrorText: {
+    marginTop: 8,
+    maxWidth: 900,
+    color: palette.error,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+  headerAuthBadge: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,250,242,0.96)",
+    borderWidth: 1,
+    borderColor: "rgba(140,122,96,0.32)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#4a3b28",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  headerAuthBadgeAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  headerAuthBadgeStatusDot: {
+    position: "absolute",
+    right: 2,
+    bottom: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#fffaf2",
+  },
+  headerAuthBadgeStatusDotSignedIn: {
+    backgroundColor: "#2eb67d",
+  },
+  headerAuthBadgeStatusDotGuest: {
+    backgroundColor: "#8d949a",
+  },
+  headerAuthMenuAnchor: {
+    position: "relative",
+    alignItems: "flex-end",
+    zIndex: 260,
+  },
+  headerAuthMenuPanel: {
+    position: "absolute",
+    top: 50,
+    right: 0,
+    width: 236,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255,250,242,0.98)",
+    borderWidth: 1,
+    borderColor: "rgba(140,122,96,0.34)",
+    gap: 8,
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+    elevation: 30,
+    zIndex: 1200,
+  },
+  headerAuthMenuStatusText: {
+    color: palette.onSurfaceVariant,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "600",
+  },
+  headerAuthMenuButton: {
+    minHeight: 38,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    backgroundColor: palette.darkButton,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  headerAuthMenuButtonDisabled: {
+    backgroundColor: "rgba(158,166,171,0.52)",
+  },
+  headerAuthMenuButtonText: {
+    color: palette.onDarkButton,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  headerAuthMenuButtonTextDisabled: {
+    color: "#5f666c",
+  },
+  headerAuthMenuErrorText: {
+    color: palette.error,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
   },
   startButton: {
     borderRadius: 22,
@@ -5343,6 +6450,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 16,
     elevation: 8,
+  },
+  startButtonDisabled: {
+    backgroundColor: "#9ea6ab",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   startButtonLabelGroup: {
     gap: 4,
@@ -5589,24 +6702,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    height: 68,
-    zIndex: 40,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "rgba(249,249,247,0.8)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.78)",
-    borderWidth: 1,
-    borderColor: "rgba(173,179,176,0.28)",
+    height: 66,
+    zIndex: 220,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#f8f1e6",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(120,102,78,0.18)",
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 18,
   },
   setupBrandStack: {
     alignItems: "center",
@@ -5754,6 +6861,11 @@ const styles = StyleSheet.create({
     color: palette.onBackground,
     fontSize: 15,
     fontWeight: "600",
+  },
+  userTypeSelectPlaceholder: {
+    color: palette.onSurfaceVariant,
+    fontSize: 15,
+    fontWeight: "500",
   },
   userTypeSelectMenu: {
     gap: 8,
@@ -6150,11 +7262,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    zIndex: 90,
-    height: 80,
-    paddingHorizontal: 32,
+    zIndex: 220,
+    height: 66,
+    alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "transparent",
+    backgroundColor: "#f8f1e6",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(120,102,78,0.18)",
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 18,
   },
   readyTopInner: {
     width: "100%",
@@ -6321,6 +7440,115 @@ const styles = StyleSheet.create({
     letterSpacing: 3.3,
     textTransform: "uppercase",
   },
+  readyMapPreviewCard: {
+    marginBottom: 24,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.18)",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 5,
+  },
+  readyMapPreviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 12,
+  },
+  readyMapPreviewTitle: {
+    color: "#7f8a87",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 2.2,
+    textTransform: "uppercase",
+  },
+  readyMapPreviewMeta: {
+    color: palette.onBackground,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  readyMapPreviewCanvas: {
+    height: 228,
+    borderRadius: 18,
+    overflow: "hidden",
+    backgroundColor: "#e7ece9",
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.24)",
+  },
+  readyMapPreviewMap: {
+    width: "100%",
+    height: "100%",
+  },
+  readyMapPreviewMock: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#e7ece9",
+  },
+  readyMapPreviewMockText: {
+    color: palette.onSurfaceVariant,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  readyMapPreviewFallbackBadge: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 12,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.34)",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  readyMapPreviewFallbackBadgeText: {
+    color: palette.onSurfaceVariant,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  readyMapCenterPinWrap: {
+    position: "absolute",
+    left: "50%",
+    top: "50%",
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [{ translateX: -15 }, { translateY: -34 }],
+  },
+  readyMapCenterPinHalo: {
+    position: "absolute",
+    top: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(245,206,83,0.26)",
+  },
+  readyMapCenterPinCore: {
+    position: "absolute",
+    top: 20,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ffffff",
+  },
+  readyMapPreviewHint: {
+    marginTop: 10,
+    color: palette.onSurfaceVariant,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "500",
+  },
   readyTimelineWrap: {
     position: "relative",
     paddingLeft: 64,
@@ -6366,6 +7594,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 20,
     elevation: 4,
+  },
+  readyTimelineCardActive: {
+    borderColor: "rgba(245,206,83,0.72)",
+    backgroundColor: "#fffdf6",
   },
   readyTimelineMetaRow: {
     flexDirection: "row",
@@ -6804,20 +8036,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 22,
-  },
-  gameplayBackButton: {
-    position: "absolute",
-    top: 22,
-    left: 16,
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    zIndex: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.35)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.22)",
   },
   prologueBottomGradient: {
     ...StyleSheet.absoluteFillObject,
@@ -7392,19 +8610,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     alignItems: "flex-start",
   },
-  spotCloseButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(249,249,247,0.82)",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 14,
-    elevation: 5,
-  },
   spotCameraHintWrap: {
     position: "absolute",
     top: 26,
@@ -7426,26 +8631,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     zIndex: 12,
   },
-  spotCharacterStage: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 154,
-    height: "56%",
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    pointerEvents: "none",
-    zIndex: 2,
-  },
-  spotCharacterImage: {
-    width: "72%",
-    minWidth: 240,
-    maxWidth: 460,
-    height: "100%",
-    maxHeight: 640,
-    transform: [{ translateY: 10 }],
-  },
   spotBottomSheet: {
     position: "relative",
     zIndex: 18,
@@ -7462,6 +8647,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 24,
     elevation: 8,
+  },
+  spotBottomSheetQuiz: {
+    flex: 1,
+    marginTop: 96,
+    paddingTop: 18,
+    paddingBottom: 20,
   },
   spotSpeakerBadge: {
     alignSelf: "flex-start",
@@ -7839,7 +9030,15 @@ const styles = StyleSheet.create({
   quizHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 10,
+  },
+  quizPhaseBody: {
+    flex: 1,
+    justifyContent: "space-between",
+  },
+  quizLeadWrap: {
+    gap: 4,
   },
   quizBadge: {
     backgroundColor: palette.tertiaryContainer,
@@ -7853,29 +9052,48 @@ const styles = StyleSheet.create({
     color: palette.onTertiaryContainer,
     letterSpacing: 2,
   },
+  quizQuestionMeta: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "rgba(255,245,220,0.72)",
+    letterSpacing: 0.5,
+  },
+  quizPromptText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "rgba(255,245,220,0.68)",
+    letterSpacing: 0.3,
+  },
   quizQuestion: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "rgba(255,245,220,0.95)",
-    lineHeight: 26,
-    marginBottom: 14,
+    lineHeight: 24,
+    marginBottom: 10,
   },
 
   // ── クイズ: 選択肢 ──
   quizOptionsWrap: {
-    gap: 10,
-    marginBottom: 8,
+    gap: 8,
+    marginBottom: 2,
   },
   quizOption: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    justifyContent: "space-between",
+    gap: 8,
     backgroundColor: "rgba(255,245,220,0.10)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,245,220,0.20)",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  quizOptionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    flex: 1,
   },
   quizOptionPressed: {
     backgroundColor: "rgba(255,245,220,0.20)",
@@ -7899,18 +9117,24 @@ const styles = StyleSheet.create({
     color: "#3D2E08",
   },
   quizOptionText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "rgba(255,245,220,0.92)",
-    lineHeight: 22,
+    lineHeight: 20,
     flex: 1,
   },
 
   // ── クイズ結果: ヘッダー ──
+  quizResultBody: {
+    flex: 1,
+    gap: 8,
+    justifyContent: "space-between",
+  },
   quizResultHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 4,
   },
   quizResultBadge: {
     borderRadius: 10,
@@ -7934,22 +9158,45 @@ const styles = StyleSheet.create({
     color: "rgba(255,245,220,0.70)",
     fontWeight: "600",
   },
+  quizResultSummaryWrap: {
+    gap: 2,
+    marginBottom: 2,
+  },
+  quizResultSummaryText: {
+    color: "rgba(255,245,220,0.84)",
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "600",
+  },
+  quizResultSummaryCorrectText: {
+    color: "#A5D6A7",
+  },
 
   // ── クイズ結果: 選択肢ハイライト ──
   quizResultOptionsWrap: {
-    gap: 8,
-    marginBottom: 10,
+    gap: 6,
+    marginBottom: 2,
   },
   quizResultOption: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+    alignItems: "flex-start",
+    gap: 10,
     backgroundColor: "rgba(255,245,220,0.07)",
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(255,245,220,0.15)",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  quizResultOptionContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    flex: 1,
+  },
+  quizResultOptionIconPlaceholder: {
+    width: 18,
+    height: 18,
   },
   quizResultOptionCorrect: {
     backgroundColor: "rgba(76,175,80,0.20)",
@@ -7965,38 +9212,64 @@ const styles = StyleSheet.create({
   },
 
   // ── クイズ解説 ──
-  quizExplanation: {
-    fontSize: 13,
-    lineHeight: 22,
-    color: "rgba(255,245,220,0.80)",
+  quizResultInfoWrap: {
+    gap: 6,
+  },
+  quizExplanationCard: {
     backgroundColor: "rgba(255,245,220,0.08)",
     borderRadius: 10,
-    padding: 12,
-    marginBottom: 10,
+    padding: 10,
     borderLeftWidth: 3,
     borderLeftColor: "rgba(245,206,83,0.60)",
+    gap: 2,
   },
-
-  // ── 次への橋渡し ──
-  nextHintWrap: {
-    backgroundColor: "rgba(245,206,83,0.12)",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 4,
-    borderLeftWidth: 3,
-    borderLeftColor: "rgba(245,206,83,0.50)",
-  },
-  nextHintLabel: {
+  quizExplanationLabel: {
     fontSize: 11,
     fontWeight: "700",
-    color: "rgba(245,206,83,0.80)",
+    color: "rgba(245,206,83,0.86)",
     letterSpacing: 0.5,
-    marginBottom: 4,
+  },
+  quizExplanation: {
+    fontSize: 12,
+    lineHeight: 19,
+    color: "rgba(255,245,220,0.80)",
+    backgroundColor: "transparent",
+    borderRadius: 0,
+    padding: 0,
+    marginBottom: 0,
+    borderLeftWidth: 0,
+    borderLeftColor: "transparent",
+  },
+
+  // ── クイズ後の遷移シナリオ ──
+  spotBridgeStoryWrap: {
+    flex: 1,
+    justifyContent: "center",
+    gap: 8,
+  },
+  spotBridgeStoryLabel: {
+    color: "rgba(245,206,83,0.86)",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.5,
     textTransform: "uppercase",
   },
-  nextHintText: {
-    fontSize: 13,
-    lineHeight: 21,
-    color: "rgba(255,245,220,0.85)",
+  spotBridgeStoryCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,232,196,0.2)",
+    backgroundColor: "rgba(18,13,8,0.42)",
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  spotBridgeStoryText: {
+    color: "rgba(255,255,255,0.96)",
+    fontSize: 16,
+    lineHeight: 28,
+    fontWeight: "500",
+    letterSpacing: -0.1,
+  },
+  quizResultNextButtonWrap: {
+    paddingTop: 8,
   },
 });
