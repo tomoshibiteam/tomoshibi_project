@@ -1,4 +1,5 @@
 import { StatusBar } from "expo-status-bar";
+import { scenario, type Quiz as ScenarioQuiz } from "./src/data/scenario";
 import { Ionicons } from "@expo/vector-icons";
 import React, { createElement, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -81,80 +82,44 @@ type Spot = {
   name: string;
   coordinate: Coordinate;
   scenarioTexts: string[];
+  aoyagiNote: string;
+  aoyagiNoteAfter?: string;
+  quiz: ScenarioQuiz;
 };
 
-const spotCatalog: Spot[] = [
-  {
-    id: "center-zone",
-    name: "Center Zone",
-    coordinate: { latitude: 33.5978, longitude: 130.2204 },
-    scenarioTexts: [
-      "センターゾーンは、講義棟と生活導線が重なる伊都キャンパスの基点です。",
-      "朝の移動、昼の休憩、夕方の帰路。時間帯で表情が変わる流れを、ここで読み解きましょう。",
-    ],
-  },
-  {
-    id: "big-orange",
-    name: "Big Orange",
-    coordinate: { latitude: 33.59895, longitude: 130.2169 },
-    scenarioTexts: [
-      "ビッグオレンジは、案内・食事・待ち合わせが集まる生活拠点です。",
-      "迷ったときの再集合地点として覚えておくと、キャンパス内の移動が安定します。",
-    ],
-  },
-  {
-    id: "innovation-plaza",
-    name: "Innovation Plaza",
-    coordinate: { latitude: 33.59735, longitude: 130.2192 },
-    scenarioTexts: [
-      "Innovation Plazaでは、授業のアイデアが試作と対話へ変わっていきます。",
-      "展示や発表の痕跡を追うと、研究が社会へ出ていく手前の熱量が見えてきます。",
-    ],
-  },
-  {
-    id: "central-library",
-    name: "中央図書館",
-    coordinate: { latitude: 33.5961, longitude: 130.2184 },
-    scenarioTexts: [
-      "中央図書館は、静かな集中と調べものの速度を両立させる知の中枢です。",
-      "紙の資料と電子ジャーナルを行き来しながら、問いを深める作法がここにあります。",
-    ],
-  },
-  {
-    id: "research-commons",
-    name: "Research Commons",
-    coordinate: { latitude: 33.59645, longitude: 130.2171 },
-    scenarioTexts: [
-      "Research Commonsでは、分野を越えた研究者同士の相談が日常的に生まれます。",
-      "壁のポスター1枚から共同研究が始まることもある。ここは発見が連鎖する場です。",
-    ],
-  },
-  {
-    id: "west-gate",
-    name: "West Gate",
-    coordinate: { latitude: 33.5952, longitude: 130.2159 },
-    scenarioTexts: [
-      "West Gateは、キャンパスの知と外の街をつなぐ出口です。",
-      "6地点で拾った視点を一本に束ねて、次の行動へ持ち帰りましょう。",
-    ],
-  },
-];
+// スポット座標マップ（v5 シナリオIDに対応する実座標）
+const spotCoordinateMap: Record<string, Coordinate> = {
+  "yamakawa":    { latitude: 33.5970,  longitude: 130.2195 },
+  "oumei":       { latitude: 33.5975,  longitude: 130.2200 },
+  "koukousha":   { latitude: 33.5968,  longitude: 130.2175 },
+  "teiteisha":   { latitude: 33.5967,  longitude: 130.2173 },
+  "chikashoku":  { latitude: 33.5963,  longitude: 130.2180 },
+  "bigsky":      { latitude: 33.5961,  longitude: 130.2184 },
+  "foucault":    { latitude: 33.5955,  longitude: 130.2145 },
+};
+
+// scenario.ts のスポット定義から spotCatalog を生成する
+const spotCatalog: Spot[] = scenario.spots.map((scenarioSpot) => ({
+  id: scenarioSpot.id,
+  name: scenarioSpot.name,
+  coordinate: spotCoordinateMap[scenarioSpot.id] ?? { latitude: 33.5968, longitude: 130.2188 },
+  scenarioTexts: scenarioSpot.story
+    .split('\n\n')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0),
+  aoyagiNote: scenarioSpot.aoyagiNote,
+  aoyagiNoteAfter: scenarioSpot.aoyagiNoteAfter,
+  quiz: scenarioSpot.quiz,
+}));
 
 const spotCatalogMap = spotCatalog.reduce<Record<string, Spot>>((acc, spot) => {
   acc[spot.id] = spot;
   return acc;
 }, {});
 
-const START_SPOT_ID: Spot["id"] = "center-zone";
-const GOAL_SPOT_ID: Spot["id"] = "west-gate";
-const FIXED_CENTER_ZONE_ROUTE_IDS: Spot["id"][] = [
-  "center-zone",
-  "big-orange",
-  "innovation-plaza",
-  "central-library",
-  "research-commons",
-  "west-gate",
-];
+const START_SPOT_ID: Spot["id"] = scenario.spots[0]?.id ?? "yamakawa";
+const GOAL_SPOT_ID: Spot["id"] = scenario.spots[scenario.spots.length - 1]?.id ?? "foucault";
+const FIXED_CENTER_ZONE_ROUTE_IDS: Spot["id"][] = scenario.spots.map((s) => s.id);
 
 type StoryArcPhase = "起" | "承" | "転" | "結";
 type StoryArcMeta = {
@@ -164,42 +129,48 @@ type StoryArcMeta = {
   trivia: string;
 };
 
-const storyArcMetaMap: Record<Spot["id"], StoryArcMeta> = {
-  "center-zone": {
+const storyArcMetaMap: Record<string, StoryArcMeta> = {
+  "yamakawa": {
     phase: "起",
-    beat: "交差点の起点",
-    mapLead: "まずは人の流れを観測して、伊都キャンパスの基準線をつくります。",
-    trivia: "講義棟群の結節点として、移動導線を把握しやすいエリアです。",
+    beat: "百年前の贈り物",
+    mapLead: "センターゾーンの広場に、初代総長の銅像があります。",
+    trivia: "山川健次郎は会津藩士出身で、東京帝大・九大両方の総長を務めた人物です。",
   },
-  "big-orange": {
+  "oumei": {
     phase: "承",
-    beat: "日常導線の鍵",
-    mapLead: "生活機能が集まる拠点を押さえ、迷わない回遊の土台を固めます。",
-    trivia: "案内・食事・待ち合わせが重なるため、再集合ポイントとして有効です。",
+    beat: "3000年前の詩の名前",
+    mapLead: "センター2号館4階に、鳥の鳴き声が宿る広場があります。",
+    trivia: "「嚶鳴」は詩経に由来し、仲間と切磋琢磨する姿を表します。",
   },
-  "innovation-plaza": {
+  "koukousha": {
     phase: "承",
-    beat: "挑戦の実験場",
-    mapLead: "学びが実践へ切り替わる現場を通り、視点を一段上げます。",
-    trivia: "展示や試作の更新が多く、時期で見えるテーマが変わります。",
+    beat: "学生が選んだ1500年前の詩",
+    mapLead: "センターゾーン西側の木造建物で、名前の由来を探ります。",
+    trivia: "「皎皎舎」の名は学生公募で決定。書棚2万冊の自学ゾーンとカフェが共存します。",
   },
-  "central-library": {
+  "teiteisha": {
+    phase: "承",
+    beat: "百年越しの畳の記憶",
+    mapLead: "皎皎舎の隣に、旧制高校から続く畳の伝統が息づいています。",
+    trivia: "旧制福岡高校（1921年創立）→六本松→伊都キャンパスと引き継がれた場所です。",
+  },
+  "chikashoku": {
     phase: "転",
-    beat: "知の深部へ",
-    mapLead: "静かな空間へ移り、情報を集める段階から問いを磨く段階へ進みます。",
-    trivia: "紙資料と電子資料の両輪で、短時間でも調査密度を高めやすい拠点です。",
+    beat: "地の底の隠れ家",
+    mapLead: "センターゾーンの半地下に、外からは気づきにくい食堂があります。",
+    trivia: "センターゾーン最多の座席数。テラス席から崖山の景色が見えます。",
   },
-  "research-commons": {
+  "bigsky": {
     phase: "転",
-    beat: "分野横断の火花",
-    mapLead: "研究の対話が生まれる場所で、物語の核心となる視点を接続します。",
-    trivia: "異分野の会話から新規テーマが立ち上がる、共創型の学習空間です。",
+    beat: "まだ形のなかった空への想像",
+    mapLead: "中央図書館の屋上に、空が大きく見える食堂があります。",
+    trivia: "公募で選ばれた名前。まだ完成していない食堂を想像して贈られた言葉です。",
   },
-  "west-gate": {
+  "foucault": {
     phase: "結",
-    beat: "外へ持ち帰る結末",
-    mapLead: "キャンパス内部で得た発見を、日常行動へ持ち帰る終着点です。",
-    trivia: "移動の出口として、学内の学びを次の場所へ運ぶスイッチになります。",
+    beat: "振り子が教えてくれること",
+    mapLead: "ウエスト2号館のアトリウムで、地球の自転を目で見ることができます。",
+    trivia: "1851年にフーコーがパリで行った実験の再現。振り子は地球が回っていることを示します。",
   },
 };
 const fallbackStoryArcMeta: StoryArcMeta = {
@@ -434,11 +405,13 @@ const durationSpotCountMap: Record<Duration, number> = {
   "20〜30分": 6,
   "30〜45分": 6,
 };
+// scenario.spots の中間スポット（最初と最後を除く）を familiarity に関係なく全使用
+const _scenarioMiddleIds = scenario.spots.slice(1, -1).map((s) => s.id);
 const familiarityMiddleSpotPriority: Record<Familiarity, Spot["id"][]> = {
-  はじめて来た: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
-  まだあまり慣れていない: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
-  何度か来たことがある: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
-  よく来ている: ["big-orange", "innovation-plaza", "central-library", "research-commons"],
+  はじめて来た:          _scenarioMiddleIds,
+  まだあまり慣れていない: _scenarioMiddleIds,
+  何度か来たことがある:   _scenarioMiddleIds,
+  よく来ている:          _scenarioMiddleIds,
 };
 
 const buildExperienceSpots = (selectedFamiliarity: Familiarity, selectedDuration: Duration): Spot[] => {
@@ -655,35 +628,7 @@ type GeneratedQuestStep = {
   detail: string;
 };
 
-type QuestGenerationApiResponse = {
-  ok: boolean;
-  quest?: GeneratedQuestPayload;
-  steps?: GeneratedQuestStep[];
-  stepTraces?: Array<{
-    id?: string;
-    program?: string;
-    inputVars?: Record<string, unknown>;
-    outputVars?: Record<string, unknown>;
-    aiPrompt?: {
-      provider?: string;
-      model?: string;
-      temperature?: number;
-      systemPrompt?: string;
-      userPrompt?: string;
-    };
-  }>;
-  generatedAt?: string;
-  executedUntilStep?: string;
-  error?: string;
-};
 
-const createQuestRequestId = () =>
-  `kyudai-web-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-
-const clipForBrowserLog = (value: string, maxLength = 1200) => {
-  if (value.length <= maxLength) return value;
-  return `${value.slice(0, maxLength)}... [truncated ${value.length - maxLength} chars]`;
-};
 
 const emitPreviewDebugLog = (event: string, payload?: Record<string, unknown>) => {
   if (Platform.OS !== "web") return;
@@ -968,166 +913,7 @@ const readPersistedFlowDraft = (): PersistedFlowDraft | null => {
   }
 };
 
-const DEFAULT_QUEST_API_PATH = "/api/kyudai-mvp/quest/generate";
 
-const resolveQuestApiUrl = () => {
-  const explicit = normalizeText(process.env.EXPO_PUBLIC_KYUDAI_QUEST_API_URL);
-  if (explicit) return explicit;
-
-  if (Platform.OS === "web" && typeof window !== "undefined") {
-    try {
-      const referrer = normalizeText(document.referrer);
-      if (referrer) {
-        const origin = new URL(referrer).origin;
-        return `${origin}${DEFAULT_QUEST_API_PATH}`;
-      }
-      const origin = window.location.origin;
-      if (origin.includes(":8082")) {
-        return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
-      }
-      return `${origin}${DEFAULT_QUEST_API_PATH}`;
-    } catch {
-      return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
-    }
-  }
-
-  return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
-};
-
-const requestGeneratedQuest = async (input: {
-  simulationInputs: {
-    userType: UserType;
-    familiarity: Familiarity;
-    duration: Duration;
-    explorationStyle: ExplorationStyle;
-    experienceExpectation: ExperienceExpectation;
-  };
-  worldConfig: AdminWorldConfigPayload | null;
-}) => {
-  const endpoint = resolveQuestApiUrl();
-  const requestId = createQuestRequestId();
-  const startedAt = Date.now();
-  const requestBody = {
-    simulationInputs: input.simulationInputs,
-    worldConfig: input.worldConfig,
-  };
-
-  console.groupCollapsed(`[kyudai-mvp][${requestId}] generation.request`);
-  console.info("endpoint", endpoint);
-  console.info("simulationInputs", input.simulationInputs);
-  console.info("worldConfigKeys", input.worldConfig ? Object.keys(input.worldConfig) : []);
-  console.info("hasQuestGenerationConfig", Boolean(input.worldConfig?.questGenerationConfig));
-  console.groupEnd();
-  emitPreviewDebugLog("generation.request", {
-    requestId,
-    endpoint,
-    simulationInputs: input.simulationInputs,
-    worldConfigKeys: input.worldConfig ? Object.keys(input.worldConfig) : [],
-    hasQuestGenerationConfig: Boolean(input.worldConfig?.questGenerationConfig),
-  });
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-request-id": requestId,
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  const rawText = await response.text();
-  let payload: QuestGenerationApiResponse | null = null;
-  try {
-    payload = JSON.parse(rawText) as QuestGenerationApiResponse;
-  } catch {
-    payload = null;
-  }
-
-  if (!payload) {
-    console.error(`[kyudai-mvp][${requestId}] generation.response.parse_error`, {
-      status: response.status,
-      statusText: response.statusText,
-      elapsedMs: Date.now() - startedAt,
-      rawTextPreview: clipForBrowserLog(rawText, 3000),
-    });
-    emitPreviewDebugLog("generation.response.parse_error", {
-      requestId,
-      status: response.status,
-      statusText: response.statusText,
-      elapsedMs: Date.now() - startedAt,
-      rawTextPreview: clipForBrowserLog(rawText, 1200),
-    });
-    throw new Error("クエスト生成APIのレスポンスJSON解析に失敗しました。");
-  }
-
-  if (!response.ok || !payload.ok || !payload.quest) {
-    console.error(`[kyudai-mvp][${requestId}] generation.response.error`, {
-      status: response.status,
-      statusText: response.statusText,
-      elapsedMs: Date.now() - startedAt,
-      payload,
-    });
-    emitPreviewDebugLog("generation.response.error", {
-      requestId,
-      status: response.status,
-      statusText: response.statusText,
-      elapsedMs: Date.now() - startedAt,
-      payload,
-    });
-    throw new Error(payload.error || "クエスト生成APIの実行に失敗しました。");
-  }
-
-  const steps = Array.isArray(payload.steps) ? payload.steps : [];
-  const stepTraces = Array.isArray(payload.stepTraces) ? payload.stepTraces : [];
-  console.group(`[kyudai-mvp][${requestId}] generation.response.success`);
-  console.info("meta", {
-    status: response.status,
-    elapsedMs: Date.now() - startedAt,
-    generatedAt: payload.generatedAt ?? null,
-    executedUntilStep: payload.executedUntilStep ?? null,
-    stepsCount: steps.length,
-    stepTracesCount: stepTraces.length,
-  });
-  if (steps.length > 0) {
-    console.table(
-      steps.map((step) => ({
-        id: step.id,
-        label: step.label,
-        status: step.status,
-        detail: step.detail,
-      })),
-    );
-    console.info("steps.detail", steps);
-  }
-  if (stepTraces.length > 0) {
-    console.info("stepTraces.detail", stepTraces);
-  }
-  console.info("ready.output", {
-    generatedStoryName: payload.quest.generatedStoryName,
-    readyHeroLead: payload.quest.readyHeroLead,
-    readySummaryTitle: payload.quest.readySummaryTitle,
-    readySummaryText: payload.quest.readySummaryText,
-    spotsCount: Array.isArray(payload.quest.spots) ? payload.quest.spots.length : 0,
-    spotIds: Array.isArray(payload.quest.spots) ? payload.quest.spots.map((spot) => spot.id) : [],
-  });
-  console.groupEnd();
-  emitPreviewDebugLog("generation.response.success", {
-    requestId,
-    status: response.status,
-    elapsedMs: Date.now() - startedAt,
-    generatedAt: payload.generatedAt ?? null,
-    steps: steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail })),
-    ready: {
-      generatedStoryName: payload.quest.generatedStoryName,
-      readyHeroLead: payload.quest.readyHeroLead,
-      readySummaryTitle: payload.quest.readySummaryTitle,
-      readySummaryText: payload.quest.readySummaryText,
-      spotIds: Array.isArray(payload.quest.spots) ? payload.quest.spots.map((spot) => spot.id) : [],
-    },
-  });
-
-  return payload;
-};
 
 type FeatureCard = {
   id: string;
@@ -1224,19 +1010,19 @@ const readyDurationLabelMap: Record<Duration, string> = {
   "30〜45分": "6地点を深く味わう",
 };
 
-const readySpotOverviewMap: Record<Spot["id"], string> = {
-  "center-zone": "講義棟群への導線が交わる基点。まず人の流れを読み解く導入地点です。",
-  "big-orange": "案内・食事・待ち合わせが集約された生活拠点。迷った時の再集合ポイントです。",
-  "innovation-plaza": "学びを試作へ変える実験拠点。展示や発表から挑戦の文脈を拾えます。",
-  "central-library": "静寂と探索が共存する知の中枢。紙と電子の資料を横断して問いを深めます。",
-  "research-commons": "異分野の対話が立ち上がる共創空間。研究がつながる瞬間を観測できます。",
-  "west-gate": "学内で得た視点を外へ持ち帰る終着点。6地点の経験を日常へ接続します。",
+// 各スポットの説明文（Ready画面EXPLORATION PATH用）
+const readySpotOverviewMap: Record<string, string> = {
+  "central-library":    "古い本に挟まれた虫食いの手紙を発見する。差出人は旧制高校時代の学生「青柳」。「學び舎とは何か」── 7つの場所を巡る旅が始まる。",
+  "yamakawa-statue":    "手紙の「初代の目が見つめる先」を追い、誰も立ち止まらない胸像の前へ。会津藩士の少年が大学人になった軌跡に、百年の問いの起源を見る。",
+  "uzuranaki-plaza":    "「鳥が鳴き交う空の下」── だが鳥はいない。プレートに刻まれた「嚶鳴」の二文字に、三千年前の詩経の言葉が隠されていた。",
+  "kokotei":            "「月の光が包む學び舎を探せ」── 名前に詩が隠される法則に気づいたあなたは、公募で選ばれた名前の由来を解き明かす。",
+  "teiteitei":          "皎皎舎の隣に佇むもう一棟。51畳の畳空間に、旧制福岡高校から百年かけて引き継がれた「学生が集う場」の伝統が宿る。青柳の正体が浮かぶ。",
+  "mogumogo-cafeteria": "「腹が減っては學問はできぬ」── 半地下に隠された食堂で、とり天親子丼を食べながら、青柳もまた飯を食う普通の学生だったと気づく。",
+  "foucault-pendulum":  "手紙の全文が解読される。振り子のように場所も人も変わり続ける。だが名前は残る。── 「學び舎とは、想いを込めた場所のことだ」",
 };
 
-const defaultPrologueNarrationText =
-  "九州大学伊都キャンパスが建っているこの場所には、\n大学ができるよりずっと前から、人が集まり、物が行き交い、何かが作られ、残されてきた時間がある。\n\nその流れを、ひとつのファイルにまとめようとした人がいた。\n昔この地域で起きていたことを、\n今のキャンパスの場所と一枚ずつ結びつけて読めるようにするためのファイルだ。\n\nけれど、そのファイルは完成しなかった。\n途中のページが抜けたまま、最後まで読めなくなっている。\n\nあなたはこれから、澪先輩と一緒に、その抜けたページを探しに行く。\n集めるのは、ただの紙ではない。\nそれぞれのページには、昔この地域で実際に起きていたことが書かれている。\n\n外から人や物が届いていたこと。\n人が集まり、やり取りが起きていたこと。\n何かを作る営みがあったこと。\nその跡が、今まで残っていること。\n\nページを集めて最後まで読めたとき、\nただキャンパスを歩くだけでは見えない、もうひとつの九州大学が見えてくる。\n\nなぜ今、ここに九州大学伊都キャンパスがあるのか。\nその答えを読むために、石ヶ原ファイルを完成させよう。";
-const defaultEpilogueNarrationText =
-  "石ヶ原ファイルは、ここで閉じられる。\n\nあなたが集めたページに書かれていたのは、\n昔この地域で本当に起きていたことだった。\n\n外から人や物が届いたこと。\n人が集まり、やり取りが生まれたこと。\n何かを作る営みがあったこと。\nその跡が、今まで残っていたこと。\n\n最後まで読んでわかるのは、\nそれが昔の出来事で終わっていない、ということだ。\n\n今、あなたが歩いている九州大学伊都キャンパスもまた、\nその続きの上にある。\n\nここは、何もない場所に突然できた大学ではない。\nもっと前から、人が来て、集まり、何かを生み出し、残してきた土地の、いちばん新しい形だ。\n\nだから次にこのキャンパスを歩くとき、\nあなたが見るのは、ただの建物ではない。\n\n昔から続いてきた流れの、その先にある今の九州大学だ。";
+const defaultPrologueNarrationText = scenario.prologue;
+const defaultEpilogueNarrationText = scenario.epilogue;
 const narrationPageMaxChars = 170;
 
 const splitNarrationIntoPages = (raw: string, maxChars = narrationPageMaxChars): string[] => {
@@ -1377,7 +1163,7 @@ export default function App() {
   const [generatedQuest, setGeneratedQuest] = useState<GeneratedQuestPayload | null>(null);
   const [generatedQuestSteps, setGeneratedQuestSteps] = useState<GeneratedQuestStep[]>([]);
   const [isGeneratingQuest, setIsGeneratingQuest] = useState(false);
-  const [questGenerationError, setQuestGenerationError] = useState<string | null>(null);
+  const [preparingVisibleStep, setPreparingVisibleStep] = useState(0);
 
   const baseSpots = useMemo(
     () => buildExperienceSpots(selectedFamiliarity, selectedDuration),
@@ -1411,6 +1197,9 @@ export default function App() {
           longitude,
         },
         scenarioTexts: generatedScenarioTexts.length > 0 ? generatedScenarioTexts : fallbackScenarioTexts,
+        aoyagiNote: catalogSpot?.aoyagiNote ?? '',
+        aoyagiNoteAfter: catalogSpot?.aoyagiNoteAfter,
+        quiz: catalogSpot?.quiz ?? { question: '', options: [], correctLabel: 'A' as const, explanation: '' },
       });
       seen.add(id);
     }
@@ -1480,10 +1269,14 @@ export default function App() {
   const [isPrologueTypingDone, setIsPrologueTypingDone] = useState(false);
   const [isEpilogueTypingDone, setIsEpilogueTypingDone] = useState(false);
   const [prologuePageIndex, setProloguePageIndex] = useState(0);
+  const [prologueShowNote, setPrologueShowNote] = useState(false);
   const [epiloguePageIndex, setEpiloguePageIndex] = useState(0);
   const [spotScenarioSegmentIndex, setSpotScenarioSegmentIndex] = useState(0);
   const [spotTypedCharCount, setSpotTypedCharCount] = useState(0);
   const [isSpotTypingDone, setIsSpotTypingDone] = useState(true);
+  const [spotPhase, setSpotPhase] = useState<'note' | 'story' | 'noteAfter' | 'quiz' | 'quizResult'>('note');
+  const [quizSelectedLabel, setQuizSelectedLabel] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
+  const [quizCorrectCount, setQuizCorrectCount] = useState(0);
   const landingHeroAnim = useRef(new Animated.Value(screen === "landing" ? 0 : 1)).current;
   const landingCardsAnim = useRef(new Animated.Value(screen === "landing" ? 0 : 1)).current;
   const setupHeroAnim = useRef(new Animated.Value(screen === "setup" ? 0 : 1)).current;
@@ -1521,9 +1314,9 @@ export default function App() {
     ? adminWorldConfig?.spotNextButton || "次へ"
     : hasNextScenarioInSpot
       ? adminWorldConfig?.spotNextButton || "次へ"
-      : safeCurrentSpotIndex >= spots.length - 1
-        ? adminWorldConfig?.spotFinishButton || "エピローグへ"
-        : adminWorldConfig?.spotBackToMapButton || "マップに戻る";
+      : currentSpot.aoyagiNoteAfter
+        ? "続きを読む"
+        : "クイズに挑戦";
   const goalSpot = spots[spots.length - 1];
   const fallbackOrigin = useMemo<Coordinate>(() => {
     if (safeCurrentSpotIndex === 0) return currentLocation;
@@ -1652,35 +1445,49 @@ export default function App() {
   const effectivePreparingTitle = adminWorldConfig?.preparingTitle || "あなたにあった\n体験を整えています";
   const latestGenerationStepLabel =
     generatedQuestSteps.length > 0 ? generatedQuestSteps[generatedQuestSteps.length - 1]?.label : undefined;
-  const effectivePreparingBody = questGenerationError
-    ? `${adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。"}\n${questGenerationError}`
-    : isGeneratingQuest
-      ? `${adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。"}\n現在: ${latestGenerationStepLabel ?? "ステップ1〜8を実行中"}`
-      : adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。";
-  const effectivePreparingStatusDone = generatedQuest
-    ? "ステップ1〜8の生成を完了しました"
-    : adminWorldConfig?.preparingStatusDone || "条件を整理しています";
-  const effectivePreparingStatusProgress = questGenerationError
-    ? "生成に失敗しました。再試行するかデフォルト体験で続行できます。"
-    : isGeneratingQuest
-      ? latestGenerationStepLabel
-        ? `${latestGenerationStepLabel}を処理中です`
-        : "AI生成フローを実行しています"
-      : adminWorldConfig?.preparingStatusProgress || "体験の流れを整えています";
+  const effectivePreparingBody = isGeneratingQuest
+    ? `${adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。"}\n現在: ${latestGenerationStepLabel ?? "条件を整理しています"}`
+    : adminWorldConfig?.preparingBody || "伊都キャンパスの空気や流れに合わせて、\nこれから歩く物語を準備しています。";
+  // ステップ演出テキスト（preparingVisibleStep 0→1→2 で段階的に進む）
+  const preparingStepLabels: [string, string, string] = [
+    adminWorldConfig?.preparingStatusDone || "条件を整理しています",
+    adminWorldConfig?.preparingStatusProgress || "最初の場所を準備しています",
+    adminWorldConfig?.preparingStatusPending || "体験の流れを整えています",
+  ];
+  const effectivePreparingStatusDone =
+    preparingVisibleStep >= 1
+      ? preparingStepLabels[0]
+      : generatedQuest
+        ? "あなたにあった体験を整えています"
+        : preparingStepLabels[0];
+  const effectivePreparingStatusProgress =
+    preparingVisibleStep >= 2
+      ? preparingStepLabels[1]
+      : isGeneratingQuest
+        ? latestGenerationStepLabel
+          ? `${latestGenerationStepLabel}を処理中です`
+          : preparingStepLabels[1]
+        : adminWorldConfig?.preparingStatusProgress || "体験の流れを整えています";
   const effectivePreparingStatusPending =
-    adminWorldConfig?.preparingStatusPending || "最初の場所を準備しています";
+    preparingVisibleStep >= 2
+      ? preparingStepLabels[2]
+      : adminWorldConfig?.preparingStatusPending || "最初の場所を準備しています";
   const effectivePreparingSkipButton = adminWorldConfig?.preparingSkipButton || "次へ";
   const effectivePreparingFooter = adminWorldConfig?.preparingFooter || "まもなく始まります";
 
-  const readyStoryLead = "九大センターゾーン発 観測航路";
+  const readyStoryBrand = "TOMOSHIBI × 九州大学伊都キャンパス";
+  const readyStoryLeadDefault = "名前を解く旅";
   const generatedStoryName = normalizeText(generatedQuest?.generatedStoryName);
-  const readyStoryTone = normalizeText(generatedQuest?.storyTone) || readyStoryToneMap[selectedFamiliarity];
-  const effectiveReadyChapterLabel = adminWorldConfig?.readyChapterLabel || "CHAPTER 01";
+  // ヒーロー3行目は常に固定サブタイトル
+  const readyStoryTone = "── 百年の手紙 ──";
+  // 1行目: ブランドラベル（小さいテキスト）
+  const effectiveReadyChapterLabel = adminWorldConfig?.readyChapterLabel || readyStoryBrand;
+  // 2行目: メインタイトル
   const effectiveReadyStoryLead =
-    normalizeText(generatedQuest?.readyHeroLead) || adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLead;
+    normalizeText(generatedQuest?.readyHeroLead) || adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLeadDefault;
   const effectiveReadySummaryTitle =
-    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "体験の準備が整いました";
-  const effectiveReadyGeneratedStoryLabel = adminWorldConfig?.readyGeneratedStoryLabel || "生成された物語名";
+    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "── 百年の手紙 ──";
+  const effectiveReadyGeneratedStoryLabel = adminWorldConfig?.readyGeneratedStoryLabel || "STORY PREMISE";
   const effectiveReadyStartButton = adminWorldConfig?.readyStartButton || "物語を始める";
   const effectiveReadyTransitionTitle = adminWorldConfig?.readyTransitionTitle || "プロローグへ移動中";
   const effectiveReadyTransitionBody = adminWorldConfig?.readyTransitionBody || "物語の扉をひらいています";
@@ -1705,7 +1512,7 @@ export default function App() {
   const currentEpilogueNarrationText = epilogueNarrationPages[safeEpiloguePageIndex] ?? "";
   const hasNextProloguePage = safeProloguePageIndex < prologueLastPageIndex;
   const hasNextEpiloguePage = safeEpiloguePageIndex < epilogueLastPageIndex;
-  const prologueCtaLabel = hasNextProloguePage ? "次のページへ" : effectivePrologueCtaText;
+  const prologueCtaLabel = hasNextProloguePage ? "次のページへ" : prologueShowNote ? effectivePrologueCtaText : "ノートを開く";
   const epilogueCtaLabel = hasNextEpiloguePage ? "次のページへ" : effectiveEpilogueCtaText;
 
   const effectiveSpotMapInfoLine1 = adminWorldConfig?.spotMapInfoLine1 || currentStoryArcMeta.mapLead;
@@ -1749,8 +1556,8 @@ export default function App() {
       ? (readySectionWidth - readyHintGap * (readyHintColumns - 1)) / readyHintColumns
       : readySectionWidth;
   const readyStoryTagline = useMemo(
-    () => `${spots[0]?.name ?? "最初のスポット"}から${spots[spots.length - 1]?.name ?? "最後のスポット"}まで、${readyDurationLabelMap[selectedDuration]}の${selectedDuration}体験`,
-    [selectedDuration, spots],
+    () => `虫食いだらけの手紙。各スポットのクイズを解くたびに断片が一つずつ現れ、最後のフーコーの振り子で手紙の全文が解読される。`,
+    [],
   );
   const readyStorySynopsis = useMemo(() => {
     const generatedSummaryText = normalizeText(generatedQuest?.readySummaryText);
@@ -1758,14 +1565,8 @@ export default function App() {
     if (adminWorldConfig?.readySummaryText) return adminWorldConfig.readySummaryText;
     if (adminWorldConfig?.description) return adminWorldConfig.description;
 
-    const familiarityView: Record<Familiarity, string> = {
-      はじめて来た: "初来訪でも迷わないように",
-      まだあまり慣れていない: "日常導線をつかみ直せるように",
-      何度か来たことがある: "既知の景色を再解釈できるように",
-      よく来ている: "慣れた導線を知識として言語化できるように",
-    };
-    return `${familiarityView[selectedFamiliarity]}、Center Zone起点の6地点を起承転結で巡る構成です。各スポットで豆知識を物語へ変換し、最後にWest Gateで全体を接続します。`;
-  }, [adminWorldConfig?.description, adminWorldConfig?.readySummaryText, generatedQuest?.readySummaryText, selectedFamiliarity]);
+    return `中央図書館で見つけた百年前の手紙。旧制高校の学生「青柳」が未来の学生に残した問い「學び舎とは何か」7つの場所を巡り、答えを見つけ出せ。`;
+  }, [adminWorldConfig?.description, adminWorldConfig?.readySummaryText, generatedQuest?.readySummaryText]);
   const readyFamiliarityChipLabel = useMemo(() => {
     const familiarityLabelMap: Record<Familiarity, string> = {
       はじめて来た: "はじめて",
@@ -1808,43 +1609,43 @@ export default function App() {
       {
         id: "ready-user",
         icon: "school-outline",
-        label: "対象ユーザー",
-        value: selectedUserType,
+        label: "対象",
+        value: "新入生・キャンパス未体験者",
       },
       {
         id: "ready-familiarity",
-        icon: "sparkles-outline",
-        label: "慣れの度合い",
-        value: readyFamiliarityChipLabel,
+        icon: "time-outline",
+        label: "所要",
+        value: "15〜20分",
       },
       {
         id: "ready-duration",
-        icon: "time-outline",
-        label: "想定時間",
-        value: readyDurationChipLabel,
+        icon: "git-branch-outline",
+        label: "構成",
+        value: "起承転結 × 7地点",
       },
     ],
-    [readyDurationChipLabel, readyFamiliarityChipLabel, selectedUserType],
+    [],
   );
   const readyTips = useMemo<ReadyTip[]>(
     () => [
       {
         id: "ready-tip-a",
-        icon: "map-outline",
-        title: "導線を観測",
-        body: "現在地から次スポットまでの導線を先に把握すると、起承転結の流れが読みやすくなります。",
+        icon: "mail-outline",
+        title: "手紙を読み解く",
+        body: "各スポットに到着してクイズに正解すると、虫食いの手紙の断片が一つ現れます。全7片を集めると手紙の全文が解読されます。",
       },
       {
         id: "ready-tip-b",
-        icon: "book-outline",
-        title: "豆知識を回収",
-        body: "到着後の本文は、各スポットの機能や使われ方を物語に変換した内容で構成されています。",
+        icon: "ear-outline",
+        title: "名前に耳を澄ます",
+        body: "このキャンパスの施設名には、三千年前の詩や百年前の伝統が隠されています。プレートや看板の文字に注意してみてください。",
       },
       {
         id: "ready-tip-c",
-        icon: "create-outline",
-        title: "出口で接続",
-        body: "最後にWest Gateで全体を振り返ると、次に取る行動が具体化しやすくなります。",
+        icon: "infinite-outline",
+        title: "振り子で接続する",
+        body: "最後のスポットで物語が完成します。7つの場所で得た視点が、明日からのキャンパスの景色を変えるでしょう。",
       },
     ],
     [],
@@ -2347,120 +2148,17 @@ export default function App() {
   };
 
   const runQuestGeneration = async ({ moveToReady = true }: { moveToReady?: boolean } = {}) => {
-    if (isGeneratingQuest) return false;
+    // APIを呼ばずにscenario.tsのデータをそのまま使う
+    setCurrentSpotIndex(0);
+    setIsExperienceCompleted(false);
+    setSpotScenarioSegmentIndex(0);
+    setSpotTypedCharCount(0);
+    setIsSpotTypingDone(true);
 
-    const sessionId = ensureExperienceSession();
-    console.info("[kyudai-mvp] runQuestGeneration.start", {
-      moveToReady,
-      sessionId,
-      simulationInputs: {
-        userType: selectedUserType,
-        familiarity: selectedFamiliarity,
-        duration: selectedDuration,
-        explorationStyle: selectedExplorationStyle,
-        experienceExpectation: selectedExperienceExpectation,
-      },
-      hasWorldConfig: Boolean(adminWorldConfig),
-      worldConfigKeys: adminWorldConfig ? Object.keys(adminWorldConfig) : [],
-    });
-    emitPreviewDebugLog("runQuestGeneration.start", {
-      moveToReady,
-      sessionId,
-      simulationInputs: {
-        userType: selectedUserType,
-        familiarity: selectedFamiliarity,
-        duration: selectedDuration,
-        explorationStyle: selectedExplorationStyle,
-        experienceExpectation: selectedExperienceExpectation,
-      },
-      hasWorldConfig: Boolean(adminWorldConfig),
-      worldConfigKeys: adminWorldConfig ? Object.keys(adminWorldConfig) : [],
-    });
-    setIsGeneratingQuest(true);
-    setQuestGenerationError(null);
-    setGeneratedQuest(null);
-    setGeneratedQuestSteps([]);
-
-    try {
-      const result = await requestGeneratedQuest({
-        simulationInputs: {
-          userType: selectedUserType,
-          familiarity: selectedFamiliarity,
-          duration: selectedDuration,
-          explorationStyle: selectedExplorationStyle,
-          experienceExpectation: selectedExperienceExpectation,
-        },
-        worldConfig: adminWorldConfig,
-      });
-
-      setGeneratedQuest(result.quest ?? null);
-      setGeneratedQuestSteps(Array.isArray(result.steps) ? result.steps : []);
-      setCurrentSpotIndex(0);
-      setIsExperienceCompleted(false);
-      setSpotScenarioSegmentIndex(0);
-      setSpotTypedCharCount(0);
-      setIsSpotTypingDone(true);
-
-      console.info("[kyudai-mvp] runQuestGeneration.success.apply", {
-        generatedStoryName: result.quest?.generatedStoryName,
-        readyHeroLead: result.quest?.readyHeroLead,
-        readySummaryTitle: result.quest?.readySummaryTitle,
-        readySummaryText: result.quest?.readySummaryText,
-        steps: Array.isArray(result.steps)
-          ? result.steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail }))
-          : [],
-      });
-      emitPreviewDebugLog("runQuestGeneration.success.apply", {
-        generatedStoryName: result.quest?.generatedStoryName,
-        readyHeroLead: result.quest?.readyHeroLead,
-        readySummaryTitle: result.quest?.readySummaryTitle,
-        readySummaryText: result.quest?.readySummaryText,
-        steps: Array.isArray(result.steps)
-          ? result.steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail }))
-          : [],
-      });
-
-      await persistSessionDocument(
-        sessionId,
-        {
-          status: "generated",
-          generatedAt: new Date().toISOString(),
-          setup: {
-            userType: selectedUserType,
-            familiarity: selectedFamiliarity,
-            duration: selectedDuration,
-            explorationStyle: selectedExplorationStyle,
-            experienceExpectation: selectedExperienceExpectation,
-          },
-          generation: {
-            steps: Array.isArray(result.steps) ? result.steps : [],
-            quest: result.quest ?? null,
-          },
-        },
-        "generation",
-      );
-
-      if (moveToReady) {
-        setScreen("ready");
-      }
-      return true;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error && error.message.trim().length > 0
-          ? error.message
-          : "クエスト生成に失敗しました。";
-      console.error("[kyudai-mvp] Quest generation failed", {
-        errorMessage,
-        error,
-      });
-      emitPreviewDebugLog("runQuestGeneration.error", {
-        errorMessage,
-      });
-      setQuestGenerationError(errorMessage);
-      return false;
-    } finally {
-      setIsGeneratingQuest(false);
+    if (moveToReady) {
+      setScreen("ready");
     }
+    return true;
   };
 
   const handleSetupCreateExperiencePress = async () => {
@@ -2473,8 +2171,23 @@ export default function App() {
     setFeedbackExpectationScore(null);
     setFeedbackReuseIntent(null);
     setFeedbackComment("");
+
+    // Preparing 画面に遷移してステップ演出をリセット
+    setPreparingVisibleStep(0);
     setScreen("preparing");
-    await runQuestGeneration({ moveToReady: true });
+
+    // ステップ演出: 1500ms後にステップ2、3000ms後にステップ3へ
+    const step2Timer = setTimeout(() => setPreparingVisibleStep(1), 1500);
+    const step3Timer = setTimeout(() => setPreparingVisibleStep(2), 3000);
+
+    // API完了と最低4500ms表示を並列待機
+    const minDisplayPromise = new Promise<void>((resolve) => setTimeout(resolve, 4500));
+    await Promise.all([runQuestGeneration({ moveToReady: false }), minDisplayPromise]);
+
+    clearTimeout(step2Timer);
+    clearTimeout(step3Timer);
+
+    setScreen("ready");
   };
 
   const handleReadyStartPress = async () => {
@@ -2562,10 +2275,9 @@ export default function App() {
     if (screen !== "ready") return;
     if (generatedQuest) return;
     if (isGeneratingQuest) return;
-    if (questGenerationError) return;
 
     void runQuestGeneration({ moveToReady: false });
-  }, [generatedQuest, isGeneratingQuest, questGenerationError, runQuestGeneration, screen]);
+  }, [generatedQuest, isGeneratingQuest, runQuestGeneration, screen]);
 
   const handlePrologueNarrationPress = () => {
     if (screen !== "prologue") return;
@@ -2726,6 +2438,25 @@ export default function App() {
       return;
     }
 
+    // 物語終了 → noteAfterがあれば表示、なければクイズへ
+    if (currentSpot.aoyagiNoteAfter) {
+      setSpotPhase('noteAfter');
+    } else {
+      setSpotPhase('quiz');
+      setQuizSelectedLabel(null);
+    }
+  };
+
+  const handleQuizSelect = (label: 'A' | 'B' | 'C' | 'D') => {
+    if (quizSelectedLabel !== null) return;
+    setQuizSelectedLabel(label);
+    if (label === currentSpot.quiz.correctLabel) {
+      setQuizCorrectCount((prev) => prev + 1);
+    }
+    setSpotPhase('quizResult');
+  };
+
+  const handleQuizContinue = () => {
     if (safeCurrentSpotIndex >= spots.length - 1) {
       runFlowTransition({
         title: "物語を結んでいます",
@@ -2744,10 +2475,13 @@ export default function App() {
   };
 
   const handleSpotScenarioTextPress = () => {
-    if (screen !== "spotArrival") return;
-    if (isSpotTypingDone) return;
-    setSpotTypedCharCount(spotScenarioChars.length);
-    setIsSpotTypingDone(true);
+    if (screen !== "spotArrival" || spotPhase !== 'story') return;
+    if (!isSpotTypingDone) {
+      setSpotTypedCharCount(spotScenarioChars.length);
+      setIsSpotTypingDone(true);
+      return;
+    }
+    handleSpotScenarioNextPress();
   };
 
   const renderFlowTransitionOverlay = () => (
@@ -2812,7 +2546,6 @@ export default function App() {
       setFeedbackComment("");
       setGeneratedQuest(null);
       setGeneratedQuestSteps([]);
-      setQuestGenerationError(null);
       setIsGeneratingQuest(false);
       setIsSubmittingFeedback(false);
       setScreen("landing");
@@ -3082,10 +2815,12 @@ export default function App() {
   useEffect(() => {
     if (screen !== "spotArrival") return;
     setSpotScenarioSegmentIndex(0);
-  }, [screen, currentSpot.id]);
+    setSpotPhase(currentSpot.aoyagiNote ? 'note' : 'story');
+    setQuizSelectedLabel(null);
+  }, [screen, currentSpot.id, currentSpot.aoyagiNote]);
 
   useEffect(() => {
-    if (screen !== "spotArrival") return;
+    if (screen !== "spotArrival" || spotPhase !== 'story') return;
 
     setSpotTypedCharCount(0);
     setIsSpotTypingDone(false);
@@ -3107,7 +2842,7 @@ export default function App() {
     }, spotTypingIntervalMs);
 
     return () => clearInterval(interval);
-  }, [screen, currentSpot.id, spotScenarioSegmentIndex, spotScenarioChars.length]);
+  }, [screen, currentSpot.id, spotScenarioSegmentIndex, spotScenarioChars.length, spotPhase]);
 
   useEffect(() => {
     if (screen === "setup") return;
@@ -3180,6 +2915,7 @@ export default function App() {
   useEffect(() => {
     if (screen !== "prologue") return;
     setProloguePageIndex(0);
+    setPrologueShowNote(false);
   }, [screen, prologueNarrationPages.length]);
 
   useEffect(() => {
@@ -3727,9 +3463,9 @@ export default function App() {
           <View style={[styles.preparingStatusWrap, { width: Math.min(contentWidth, 300) }]}>
             <View style={styles.statusRow}>
               <Ionicons
-                name={generatedQuest ? "checkmark-circle" : questGenerationError ? "alert-circle" : "checkmark-circle"}
+                name="checkmark-circle"
                 size={21}
-                color={generatedQuest ? palette.tertiaryContainer : questGenerationError ? palette.error : palette.tertiaryContainer}
+                color={palette.tertiaryContainer}
               />
               <Text style={styles.statusDoneText}>{effectivePreparingStatusDone}</Text>
             </View>
@@ -3767,11 +3503,6 @@ export default function App() {
             ]}
             onPress={() => {
               if (isGeneratingQuest) return;
-              if (questGenerationError) {
-                setQuestGenerationError(null);
-                void runQuestGeneration({ moveToReady: true });
-                return;
-              }
               if (generatedQuest) {
                 setScreen("ready");
                 return;
@@ -3781,16 +3512,11 @@ export default function App() {
             disabled={isGeneratingQuest}
           >
             <Text style={styles.preparingSkipButtonText}>
-              {isGeneratingQuest ? "生成中..." : questGenerationError ? "再試行する" : generatedQuest ? effectivePreparingSkipButton : "生成を開始"}
+              {isGeneratingQuest ? "生成中..." : generatedQuest ? effectivePreparingSkipButton : "生成を開始"}
             </Text>
           </Pressable>
-          {questGenerationError && !isGeneratingQuest ? (
-            <Pressable style={({ pressed }) => [styles.preparingFallbackLink, pressed && styles.pressed]} onPress={() => setScreen("ready")}>
-              <Text style={styles.preparingFallbackLinkText}>デフォルト体験で続行</Text>
-            </Pressable>
-          ) : null}
           <Text style={styles.preparingFooterText}>
-            {questGenerationError ? "生成に失敗しました。再試行またはデフォルト体験で進めます。" : effectivePreparingFooter}
+            {effectivePreparingFooter}
           </Text>
         </View>
       </SafeAreaView>
@@ -3845,9 +3571,11 @@ export default function App() {
             <View style={styles.readyGeneratedStoryCard}>
               <Text style={styles.readyGeneratedStoryLabel}>{effectiveReadyGeneratedStoryLabel}</Text>
               <Text style={styles.readyGeneratedStoryText}>
-                {generatedStoryName || `${effectiveReadyStoryLead} ${readyStoryTone}`}
+                {generatedStoryName || `「この手紙を見つけた未来の學徒へ。私は問いを残す。『學び舎とは何か。』答えが知りたければ、七つの場所を訪ねなさい。── 青柳」`}
               </Text>
-              <Text style={styles.readyGeneratedStorySubtext}>{readyStoryTagline}</Text>
+              <Text style={styles.readyGeneratedStorySubtext}>
+                {readyStoryTagline || "虫食いだらけの手紙。各スポットのクイズを解くたびに断片が一つずつ現れ、最後のフーコーの振り子で手紙の全文が解読される。"}
+              </Text>
             </View>
             <View style={styles.readyChipRow}>
               {readyInputItems.map((item) => (
@@ -3905,6 +3633,15 @@ export default function App() {
                 </View>
               ))}
             </View>
+          </Animated.View>
+
+          <Animated.View style={[{ width: readySectionWidth, alignItems: "center", paddingTop: 32, paddingBottom: 8, gap: 8 }, readyCardsAnimatedStyle]}>
+            <Text style={[styles.footerCopy, { textAlign: "center", textTransform: "none", letterSpacing: 0.4, fontSize: 12, color: palette.onSurfaceVariant }]}>
+              TOMOSHIBI — 見過ごしていた景色に、あなただけの物語が宿る。
+            </Text>
+            <Text style={[styles.footerCopy, { textAlign: "center", textTransform: "none", letterSpacing: 0.2, fontSize: 10, color: palette.outlineVariant }]}>
+              ※ 登場人物「青柳」および「手紙」はフィクションです
+            </Text>
           </Animated.View>
         </ScrollView>
 
@@ -3976,44 +3713,59 @@ export default function App() {
           <View style={styles.prologueBottomGradient} />
 
           <Animated.View style={[styles.prologueCenterStack, prologueContentAnimatedStyle]}>
-            <Pressable style={styles.prologueNarrationPressArea} onPress={handlePrologueNarrationPress}>
-              <View style={styles.prologueTextWrap}>
-                {prologueNarrationPages.length > 1 ? (
-                  <Text style={styles.storyNarrationPageIndicator}>
-                    {safeProloguePageIndex + 1} / {prologueNarrationPages.length}
-                  </Text>
-                ) : null}
-                <Text style={styles.prologueTypewriterText}>
-                  {prologueNarrationChars.map((char, index) => {
-                    if (char === "\n") {
-                      return (
-                        <Text key={`prologue-break-${index}`} style={styles.prologueTypewriterChar}>
-                          {"\n"}
-                        </Text>
-                      );
-                    }
-
-                    return (
-                      <Animated.Text
-                        key={`prologue-char-${index}`}
-                        style={[
-                          styles.prologueTypewriterChar,
-                          {
-                            opacity: prologueTypingAnim.interpolate({
-                              inputRange: [index - 0.72, index, index + 0.92],
-                              outputRange: [0, 0.2, 1],
-                              extrapolate: "clamp",
-                            }),
-                          },
-                        ]}
-                      >
-                        {char}
-                      </Animated.Text>
-                    );
-                  })}
-                </Text>
+            {prologueShowNote ? (
+              /* ── 青柳ノート 表紙ページ ── */
+              <View style={styles.prologueNoteWrap}>
+                <View style={styles.aoyagiNoteCard}>
+                  <View style={styles.aoyagiNoteHeaderRow}>
+                    <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
+                    <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
+                    <Text style={styles.aoyagiNotePageLabel}>はじめに</Text>
+                  </View>
+                  <View style={styles.aoyagiNoteDivider} />
+                  <Text style={styles.aoyagiNoteBody}>{scenario.prologueNote}</Text>
+                </View>
               </View>
-            </Pressable>
+            ) : (
+              <Pressable style={styles.prologueNarrationPressArea} onPress={handlePrologueNarrationPress}>
+                <View style={styles.prologueTextWrap}>
+                  {prologueNarrationPages.length > 1 ? (
+                    <Text style={styles.storyNarrationPageIndicator}>
+                      {safeProloguePageIndex + 1} / {prologueNarrationPages.length}
+                    </Text>
+                  ) : null}
+                  <Text style={styles.prologueTypewriterText}>
+                    {prologueNarrationChars.map((char, index) => {
+                      if (char === "\n") {
+                        return (
+                          <Text key={`prologue-break-${index}`} style={styles.prologueTypewriterChar}>
+                            {"\n"}
+                          </Text>
+                        );
+                      }
+
+                      return (
+                        <Animated.Text
+                          key={`prologue-char-${index}`}
+                          style={[
+                            styles.prologueTypewriterChar,
+                            {
+                              opacity: prologueTypingAnim.interpolate({
+                                inputRange: [index - 0.72, index, index + 0.92],
+                                outputRange: [0, 0.2, 1],
+                                extrapolate: "clamp",
+                              }),
+                            },
+                          ]}
+                        >
+                          {char}
+                        </Animated.Text>
+                      );
+                    })}
+                  </Text>
+                </View>
+              </Pressable>
+            )}
           </Animated.View>
 
           <Animated.View style={[styles.prologueCtaWrap, prologueCtaAnimatedStyle]}>
@@ -4031,13 +3783,17 @@ export default function App() {
                   setProloguePageIndex((prev) => Math.min(prev + 1, prologueLastPageIndex));
                   return;
                 }
+                if (!prologueShowNote) {
+                  setPrologueShowNote(true);
+                  return;
+                }
                 runFlowTransition({
                   title: "ルートを表示しています",
                   body: "最初のスポットへ向かいましょう",
                   toScreen: "map",
                 });
               }}
-              disabled={!isPrologueTypingDone || (!hasNextProloguePage && isMapScenarioTransitioning)}
+              disabled={!isPrologueTypingDone || (prologueShowNote && !hasNextProloguePage && isMapScenarioTransitioning)}
             >
               <Text style={styles.prologueCtaText}>{prologueCtaLabel}</Text>
               <Ionicons name="arrow-forward" size={30} color="#2d3432" />
@@ -4333,6 +4089,10 @@ export default function App() {
   }
 
   if (screen === "spotArrival") {
+    const isQuizCorrect = quizSelectedLabel !== null && quizSelectedLabel === currentSpot.quiz.correctLabel;
+    const spotNumber = safeCurrentSpotIndex + 1;
+    const totalSpots = spots.length;
+
     return (
       <SafeAreaView style={styles.spotSafeArea}>
         <StatusBar style="light" />
@@ -4352,23 +4112,24 @@ export default function App() {
             >
               <Ionicons name="close" size={22} color={palette.primary} />
             </Pressable>
+            <View style={styles.spotProgressChip}>
+              <Text style={styles.spotProgressChipText}>{`${spotNumber} / ${totalSpots}`}</Text>
+            </View>
           </View>
 
-          {!cameraPermission?.granted ? (
-            <View style={styles.spotCameraHintWrap}>
-              <Text style={styles.spotCameraHintText}>AR表示のためカメラの許可が必要です</Text>
-            </View>
-          ) : null}
-
           <View style={styles.spotMain}>
-            <View style={styles.spotCharacterStage}>
-              <Image source={spotArrivalCharacterImage} style={styles.spotCharacterImage} resizeMode="contain" />
-            </View>
+            {/* キャラクター画像（note/story フェーズのみ表示） */}
+            {(spotPhase === 'note' || spotPhase === 'story') ? (
+              <View style={styles.spotCharacterStage}>
+                <Image source={spotArrivalCharacterImage} style={styles.spotCharacterImage} resizeMode="contain" />
+              </View>
+            ) : null}
 
             <View style={styles.spotBottomSheet}>
+              {/* ヘッダーバッジ行 */}
               <View style={styles.spotSpeakerRow}>
                 <View style={styles.spotSpeakerBadge}>
-                  <Text style={styles.spotSpeakerBadgeText}>{effectiveSpotSpeakerBadge}</Text>
+                  <Text style={styles.spotSpeakerBadgeText}>{currentSpot.name}</Text>
                 </View>
                 <View style={styles.spotStoryBeatBadge}>
                   <Text style={styles.spotStoryBeatBadgeText}>
@@ -4376,31 +4137,185 @@ export default function App() {
                   </Text>
                 </View>
               </View>
-              <Text style={styles.spotTriviaText}>{currentStoryArcMeta.trivia}</Text>
 
-              <Pressable style={styles.spotScenarioPressArea} onPress={handleSpotScenarioTextPress}>
-                <Text style={styles.spotScenarioText}>
-                  {spotScenarioChars.slice(0, spotTypedCharCount).join("")}
-                  {!isSpotTypingDone ? <Text style={styles.spotScenarioCursor}>|</Text> : null}
-                </Text>
-              </Pressable>
+              {/* ─── フェーズ: note ─── */}
+              {spotPhase === 'note' ? (
+                <>
+                  <ScrollView style={styles.spotNoteScroll} showsVerticalScrollIndicator={false}>
+                    <View style={styles.aoyagiNoteCard}>
+                      <View style={styles.aoyagiNoteHeaderRow}>
+                        <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
+                        <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
+                        <Text style={styles.aoyagiNotePageLabel}>{`p.${spotNumber} / ${totalSpots}`}</Text>
+                      </View>
+                      <View style={styles.aoyagiNoteDivider} />
+                      <Text style={styles.aoyagiNoteBody}>{currentSpot.aoyagiNote}</Text>
+                    </View>
+                  </ScrollView>
+                  <View style={styles.spotNextButtonWrap}>
+                    <Pressable
+                      style={({ pressed }) => [styles.spotNoteButton, pressed && styles.pressed]}
+                      onPress={() => setSpotPhase('story')}
+                    >
+                      <Text style={styles.spotNoteButtonText}>物語を読む</Text>
+                      <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.9)" />
+                    </Pressable>
+                  </View>
+                </>
+              ) : null}
 
-              <View style={styles.spotNextButtonWrap}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.spotNextButton,
-                    isMapScenarioTransitioning ? styles.mapCardEnabledCtaDisabled : null,
-                    pressed && styles.pressed,
-                  ]}
-                  onPress={handleSpotScenarioNextPress}
-                  accessibilityRole="button"
-                  accessibilityLabel={spotNextButtonLabel}
-                  disabled={isMapScenarioTransitioning}
-                >
-                  <Text style={styles.spotNextButtonText}>{spotNextButtonLabel}</Text>
-                  <Ionicons name="arrow-forward" size={22} color={palette.onDarkButton} />
-                </Pressable>
-              </View>
+              {/* ─── フェーズ: story ─── */}
+              {spotPhase === 'story' ? (
+                <>
+                  {spotScenarioTexts.length > 1 ? (
+                    <Text style={styles.spotScenarioProgress}>
+                      {`${spotScenarioSegmentIndex + 1} / ${spotScenarioTexts.length}`}
+                    </Text>
+                  ) : null}
+
+                  <Pressable style={styles.spotScenarioPressArea} onPress={handleSpotScenarioTextPress}>
+                    <Text style={styles.spotScenarioText}>
+                      {spotScenarioChars.slice(0, spotTypedCharCount).join("")}
+                      {!isSpotTypingDone ? <Text style={styles.spotScenarioCursor}>|</Text> : null}
+                    </Text>
+                    {isSpotTypingDone && hasNextScenarioInSpot ? (
+                      <Text style={styles.spotScenarioTapHint}>タップして次の段落へ</Text>
+                    ) : null}
+                  </Pressable>
+
+                  <View style={styles.spotNextButtonWrap}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.spotNextButton,
+                        isMapScenarioTransitioning ? styles.mapCardEnabledCtaDisabled : null,
+                        pressed && styles.pressed,
+                      ]}
+                      onPress={handleSpotScenarioNextPress}
+                      disabled={isMapScenarioTransitioning}
+                    >
+                      <Text style={styles.spotNextButtonText}>{spotNextButtonLabel}</Text>
+                      <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
+                    </Pressable>
+                  </View>
+                </>
+              ) : null}
+
+              {/* ─── フェーズ: noteAfter ─── */}
+              {spotPhase === 'noteAfter' ? (
+                <>
+                  <ScrollView style={styles.spotNoteScroll} showsVerticalScrollIndicator={false}>
+                    <View style={styles.aoyagiNoteCard}>
+                      <View style={styles.aoyagiNoteHeaderRow}>
+                        <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
+                        <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
+                        <Text style={styles.aoyagiNotePageLabel}>{`p.${spotNumber} / ${totalSpots}`}</Text>
+                      </View>
+                      <View style={styles.aoyagiNoteDivider} />
+                      <Text style={styles.aoyagiNoteBody}>{currentSpot.aoyagiNoteAfter}</Text>
+                    </View>
+                  </ScrollView>
+                  <View style={styles.spotNextButtonWrap}>
+                    <Pressable
+                      style={({ pressed }) => [styles.spotNoteButton, pressed && styles.pressed]}
+                      onPress={() => { setSpotPhase('quiz'); setQuizSelectedLabel(null); }}
+                    >
+                      <Text style={styles.spotNoteButtonText}>クイズに挑戦</Text>
+                      <Ionicons name="arrow-forward" size={20} color="rgba(255,255,255,0.9)" />
+                    </Pressable>
+                  </View>
+                </>
+              ) : null}
+
+              {/* ─── フェーズ: quiz ─── */}
+              {spotPhase === 'quiz' ? (
+                <>
+                  <View style={styles.quizHeaderRow}>
+                    <View style={styles.quizBadge}>
+                      <Text style={styles.quizBadgeText}>QUIZ</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.quizQuestion}>{currentSpot.quiz.question}</Text>
+                  <View style={styles.quizOptionsWrap}>
+                    {currentSpot.quiz.options.map((opt) => (
+                      <Pressable
+                        key={opt.label}
+                        style={({ pressed }) => [styles.quizOption, pressed && styles.quizOptionPressed]}
+                        onPress={() => handleQuizSelect(opt.label)}
+                      >
+                        <View style={styles.quizOptionLabelBadge}>
+                          <Text style={styles.quizOptionLabelText}>{opt.label}</Text>
+                        </View>
+                        <Text style={styles.quizOptionText}>{opt.text}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              ) : null}
+
+              {/* ─── フェーズ: quizResult ─── */}
+              {spotPhase === 'quizResult' ? (
+                <>
+                  <ScrollView style={styles.spotNoteScroll} showsVerticalScrollIndicator={false}>
+                    <View style={styles.quizResultHeaderRow}>
+                      <View style={[styles.quizResultBadge, isQuizCorrect ? styles.quizResultBadgeCorrect : styles.quizResultBadgeWrong]}>
+                        <Text style={styles.quizResultBadgeText}>
+                          {isQuizCorrect ? '✓  正解！' : '✗  不正解'}
+                        </Text>
+                      </View>
+                      <Text style={styles.quizScoreText}>{`${quizCorrectCount} / ${spotNumber} 正解`}</Text>
+                    </View>
+
+                    <View style={styles.quizResultOptionsWrap}>
+                      {currentSpot.quiz.options.map((opt) => {
+                        const isSelected = opt.label === quizSelectedLabel;
+                        const isCorrectOpt = opt.label === currentSpot.quiz.correctLabel;
+                        return (
+                          <View
+                            key={opt.label}
+                            style={[
+                              styles.quizResultOption,
+                              isCorrectOpt ? styles.quizResultOptionCorrect : null,
+                              isSelected && !isCorrectOpt ? styles.quizResultOptionWrong : null,
+                            ]}
+                          >
+                            <View style={[styles.quizOptionLabelBadge, isCorrectOpt ? styles.quizOptionLabelBadgeCorrect : null]}>
+                              <Text style={styles.quizOptionLabelText}>{opt.label}</Text>
+                            </View>
+                            <Text style={[styles.quizOptionText, isCorrectOpt ? styles.quizResultOptionTextCorrect : null]}>{opt.text}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+
+                    <Text style={styles.quizExplanation}>{currentSpot.quiz.explanation}</Text>
+
+                    {/* 次への橋渡し */}
+                    {currentSpot.nextHint ? (
+                      <View style={styles.nextHintWrap}>
+                        <Text style={styles.nextHintLabel}>→ 次のスポットへ</Text>
+                        <Text style={styles.nextHintText}>{currentSpot.nextHint}</Text>
+                      </View>
+                    ) : null}
+                  </ScrollView>
+
+                  <View style={styles.spotNextButtonWrap}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.spotNextButton,
+                        isMapScenarioTransitioning ? styles.mapCardEnabledCtaDisabled : null,
+                        pressed && styles.pressed,
+                      ]}
+                      onPress={handleQuizContinue}
+                      disabled={isMapScenarioTransitioning}
+                    >
+                      <Text style={styles.spotNextButtonText}>
+                        {safeCurrentSpotIndex >= spots.length - 1 ? 'エピローグへ' : '次のスポットへ'}
+                      </Text>
+                      <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
+                    </Pressable>
+                  </View>
+                </>
+              ) : null}
             </View>
           </View>
 
@@ -7591,25 +7506,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 19,
     fontWeight: "600",
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  spotScenarioProgress: {
+    color: "rgba(255,232,180,0.6)",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginBottom: 10,
   },
   spotScenarioText: {
     color: "rgba(255,255,255,0.96)",
-    fontSize: 20,
-    lineHeight: 36,
+    fontSize: 17,
+    lineHeight: 31,
     fontWeight: "500",
-    letterSpacing: -0.2,
-    marginBottom: 20,
+    letterSpacing: -0.1,
+    textAlign: "left",
+    marginBottom: 8,
   },
   spotScenarioPressArea: {
-    minHeight: 112,
-    justifyContent: "center",
+    minHeight: 120,
+    maxHeight: 220,
+    justifyContent: "flex-start",
+    paddingVertical: 8,
+    overflow: "hidden",
   },
   spotScenarioCursor: {
     color: "rgba(255,245,214,0.96)",
-    fontSize: 20,
-    lineHeight: 36,
+    fontSize: 17,
+    lineHeight: 31,
     fontWeight: "600",
+  },
+  spotScenarioTapHint: {
+    color: "rgba(255,232,180,0.55)",
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 0.6,
+    marginTop: 6,
   },
   spotNextButtonWrap: {
     alignItems: "flex-end",
@@ -7804,5 +7737,266 @@ const styles = StyleSheet.create({
     color: palette.onSurfaceVariant,
     marginTop: 32,
     opacity: 0.6,
+  },
+
+  // ── SpotArrival: ノートスクロールエリア ──
+  spotNoteScroll: {
+    maxHeight: 200,
+    marginBottom: 4,
+  },
+
+  // ── SpotArrival: 進捗チップ ──
+  spotProgressChip: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  spotProgressChipText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: palette.primary,
+    letterSpacing: 0.5,
+  },
+
+  // ── 青柳ノートカード ──
+  aoyagiNoteCard: {
+    backgroundColor: "#FAF6E4",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E8DFB0",
+    padding: 16,
+    marginBottom: 4,
+    shadowColor: "#B8A96A",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  aoyagiNoteHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 10,
+  },
+  aoyagiNoteHeaderIcon: {
+    fontSize: 18,
+  },
+  aoyagiNoteHeaderText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#5C4A12",
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  aoyagiNotePageLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#8B6914",
+    letterSpacing: 0.3,
+    opacity: 0.75,
+  },
+  aoyagiNoteDivider: {
+    height: 1,
+    backgroundColor: "#D4C880",
+    marginBottom: 12,
+    opacity: 0.6,
+  },
+  aoyagiNoteBody: {
+    fontSize: 14,
+    lineHeight: 24,
+    color: "#3D2E08",
+    fontStyle: "italic",
+    letterSpacing: 0.3,
+  },
+
+  // ── プロローグ ノートラッパー ──
+  prologueNoteWrap: {
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    width: "100%",
+  },
+
+  // ── ノートから物語へ遷移ボタン ──
+  spotNoteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#5C4A12",
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+  },
+  spotNoteButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.92)",
+    letterSpacing: 0.8,
+  },
+
+  // ── クイズ: ヘッダー ──
+  quizHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  quizBadge: {
+    backgroundColor: palette.tertiaryContainer,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  quizBadgeText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: palette.onTertiaryContainer,
+    letterSpacing: 2,
+  },
+  quizQuestion: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "rgba(255,245,220,0.95)",
+    lineHeight: 26,
+    marginBottom: 14,
+  },
+
+  // ── クイズ: 選択肢 ──
+  quizOptionsWrap: {
+    gap: 10,
+    marginBottom: 8,
+  },
+  quizOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "rgba(255,245,220,0.10)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,245,220,0.20)",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+  },
+  quizOptionPressed: {
+    backgroundColor: "rgba(255,245,220,0.20)",
+    transform: [{ scale: 0.98 }],
+  },
+  quizOptionLabelBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(245,206,83,0.80)",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  quizOptionLabelBadgeCorrect: {
+    backgroundColor: "#4CAF50",
+  },
+  quizOptionLabelText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#3D2E08",
+  },
+  quizOptionText: {
+    fontSize: 14,
+    color: "rgba(255,245,220,0.92)",
+    lineHeight: 22,
+    flex: 1,
+  },
+
+  // ── クイズ結果: ヘッダー ──
+  quizResultHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+  quizResultBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  quizResultBadgeCorrect: {
+    backgroundColor: "#388E3C",
+  },
+  quizResultBadgeWrong: {
+    backgroundColor: "#C62828",
+  },
+  quizResultBadgeText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#ffffff",
+    letterSpacing: 0.5,
+  },
+  quizScoreText: {
+    fontSize: 13,
+    color: "rgba(255,245,220,0.70)",
+    fontWeight: "600",
+  },
+
+  // ── クイズ結果: 選択肢ハイライト ──
+  quizResultOptionsWrap: {
+    gap: 8,
+    marginBottom: 10,
+  },
+  quizResultOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "rgba(255,245,220,0.07)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,245,220,0.15)",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  quizResultOptionCorrect: {
+    backgroundColor: "rgba(76,175,80,0.20)",
+    borderColor: "rgba(76,175,80,0.50)",
+  },
+  quizResultOptionWrong: {
+    backgroundColor: "rgba(198,40,40,0.15)",
+    borderColor: "rgba(198,40,40,0.40)",
+  },
+  quizResultOptionTextCorrect: {
+    fontWeight: "700",
+    color: "#A5D6A7",
+  },
+
+  // ── クイズ解説 ──
+  quizExplanation: {
+    fontSize: 13,
+    lineHeight: 22,
+    color: "rgba(255,245,220,0.80)",
+    backgroundColor: "rgba(255,245,220,0.08)",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: "rgba(245,206,83,0.60)",
+  },
+
+  // ── 次への橋渡し ──
+  nextHintWrap: {
+    backgroundColor: "rgba(245,206,83,0.12)",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: "rgba(245,206,83,0.50)",
+  },
+  nextHintLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "rgba(245,206,83,0.80)",
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    textTransform: "uppercase",
+  },
+  nextHintText: {
+    fontSize: 13,
+    lineHeight: 21,
+    color: "rgba(255,245,220,0.85)",
   },
 });
