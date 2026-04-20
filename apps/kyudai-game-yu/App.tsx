@@ -1276,6 +1276,7 @@ export default function App() {
   const [firebaseAvatarUrl, setFirebaseAvatarUrl] = useState<string | null>(null);
   const [firebaseDisplayName, setFirebaseDisplayName] = useState<string | null>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [showFeedbackThankyou, setShowFeedbackThankyou] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(() =>
@@ -1417,6 +1418,7 @@ export default function App() {
   const [readySelectedSpotIndex, setReadySelectedSpotIndex] = useState(() =>
     clampSpotIndex(persistedFlowDraft?.currentSpotIndex, spotCatalog.length),
   );
+  const [mapFocusSpotIndex, setMapFocusSpotIndex] = useState<number | null>(null);
   const [currentSpotIndex, setCurrentSpotIndex] = useState(() =>
     clampSpotIndex(persistedFlowDraft?.currentSpotIndex, spotCatalog.length),
   );
@@ -1580,7 +1582,7 @@ export default function App() {
   }, [activeTargetIndex, routeOrigin, spots]);
   const effectiveLandingTopTag = adminWorldConfig?.landingTopTag || "伊都キャンパス探索ナビ";
   const effectiveLandingHeroPanelTitle = adminWorldConfig?.landingHeroPanelTitle || "九大を、物語で知る。";
-  const effectiveLandingHeroPanelBody = adminWorldConfig?.landingHeroPanelBody || "その場で体感する、伊都キャンパス紹介体験";
+  const effectiveLandingHeroPanelBody = adminWorldConfig?.landingHeroPanelBody || "青柳の残したノート";
   const effectiveLandingEyebrow = adminWorldConfig?.landingEyebrow || "九州大学 伊都キャンパス ｜ 実証実験";
   const effectiveLandingHeroTitleLine1 = adminWorldConfig?.landingHeroTitleLine1 || "はじめての伊都を、";
   const effectiveLandingHeroTitleLine2 = adminWorldConfig?.landingHeroTitleLine2 || "物語で知る";
@@ -1651,14 +1653,14 @@ export default function App() {
   const readyStoryLeadDefault = "名前を解く旅";
   const generatedStoryName = normalizeText(generatedQuest?.generatedStoryName);
   // ヒーロー3行目は常に固定サブタイトル
-  const readyStoryTone = "── 青柳ノート";
+  const readyStoryTone = "── 青柳の残したノート";
   // 1行目: ブランドラベル（小さいテキスト）
   const effectiveReadyChapterLabel = adminWorldConfig?.readyChapterLabel || readyStoryBrand;
   // 2行目: メインタイトル
   const effectiveReadyStoryLead =
     normalizeText(generatedQuest?.readyHeroLead) || adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLeadDefault;
   const effectiveReadySummaryTitle =
-    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "青柳ノート · はじめに";
+    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "青柳の残したノート · はじめに";
   const effectiveReadyGeneratedStoryLabel = adminWorldConfig?.readyGeneratedStoryLabel || "STORY PREMISE";
   const effectiveReadyStartButton = adminWorldConfig?.readyStartButton || "物語を始める";
   const effectiveReadyTransitionTitle = adminWorldConfig?.readyTransitionTitle || "プロローグへ移動中";
@@ -1811,7 +1813,7 @@ export default function App() {
       {
         id: "ready-tip-a",
         icon: "book-outline",
-        title: "青柳ノートを読む",
+        title: "青柳の残したノートを読む",
         body: "各スポットに青柳の書き込みがある。読むと次の場所への手がかりがわかる。",
       },
       {
@@ -1824,7 +1826,7 @@ export default function App() {
         id: "ready-tip-c",
         icon: "lock-closed-outline",
         title: "最後のページは7箇所目で",
-        body: "青柳ノートの最後は封がされている。フーコーの振り子の前でだけ開ける約束。",
+        body: "青柳の残したノートの最後は封がされている。フーコーの振り子の前でだけ開ける約束。",
       },
     ],
     [],
@@ -2806,24 +2808,29 @@ export default function App() {
     } catch (error) {
       console.error("[kyudai-mvp] Failed to persist feedback", error);
     } finally {
-      setCurrentSpotIndex(0);
-      setIsExperienceCompleted(false);
-      setLiveCurrentLocation(null);
-      setExperienceSessionId(null);
-      setExperienceStartedAtIso(null);
-      setFeedbackOverallRating(null);
-      setFeedbackGuidanceScore(null);
-      setFeedbackCampusScore(null);
-      setFeedbackVisitIntentScore(null);
-      setFeedbackExpectationScore(null);
-      setFeedbackReuseIntent(null);
-      setFeedbackComment("");
-      setGeneratedQuest(null);
-      setGeneratedQuestSteps([]);
-      setIsGeneratingQuest(false);
       setIsSubmittingFeedback(false);
-      setScreen("landing");
+      setShowFeedbackThankyou(true);
     }
+  };
+
+  const handleFeedbackThankyouClose = () => {
+    setShowFeedbackThankyou(false);
+    setCurrentSpotIndex(0);
+    setIsExperienceCompleted(false);
+    setLiveCurrentLocation(null);
+    setExperienceSessionId(null);
+    setExperienceStartedAtIso(null);
+    setFeedbackOverallRating(null);
+    setFeedbackGuidanceScore(null);
+    setFeedbackCampusScore(null);
+    setFeedbackVisitIntentScore(null);
+    setFeedbackExpectationScore(null);
+    setFeedbackReuseIntent(null);
+    setFeedbackComment("");
+    setGeneratedQuest(null);
+    setGeneratedQuestSteps([]);
+    setIsGeneratingQuest(false);
+    setScreen("landing");
   };
 
   useEffect(() => {
@@ -4436,7 +4443,10 @@ export default function App() {
               {spots.map((spot, index) => (
                 <Pressable
                   key={spot.id}
-                  onPress={() => setReadySelectedSpotIndex(index)}
+                  onPress={() => {
+                    setMapFocusSpotIndex(index);
+                    setScreen("map");
+                  }}
                   style={({ pressed }) => [
                     styles.readyTimelineItem,
                     index === spots.length - 1 ? styles.readyTimelineItemLast : null,
@@ -4468,6 +4478,10 @@ export default function App() {
                       {(storyArcMetaMap[spot.id] ?? fallbackStoryArcMeta).beat}
                     </Text>
                     <Text style={styles.readyTimelineDesc}>{generatedSpotOverviewMap[spot.id] || readySpotOverviewMap[spot.id]}</Text>
+                    <View style={styles.readyTimelineMapHint}>
+                      <Ionicons name="map-outline" size={12} color={palette.onSurfaceVariant} />
+                      <Text style={styles.readyTimelineMapHintText}>マップで確認</Text>
+                    </View>
                   </View>
                 </Pressable>
               ))}
@@ -4560,7 +4574,7 @@ export default function App() {
 
           <Animated.View style={[styles.prologueCenterStack, prologueContentAnimatedStyle, { paddingBottom: prologueCtaHeight }]}>
             {prologueShowNote ? (
-              /* ── 青柳ノート 表紙ページ ── */
+              /* ── 青柳の残したノート 表紙ページ ── */
               <View style={styles.prologueNoteWrap}>
                 <ScrollView
                   style={{ maxHeight: height - prologueCtaHeight - 140 }}
@@ -4570,7 +4584,7 @@ export default function App() {
                   <View style={styles.aoyagiNoteCard}>
                     <View style={styles.aoyagiNoteHeaderRow}>
                       <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
-                      <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
+                      <Text style={styles.aoyagiNoteHeaderText}>青柳の残したノート</Text>
                       <Text style={styles.aoyagiNotePageLabel}>はじめに</Text>
                     </View>
                     <View style={styles.aoyagiNoteDivider} />
@@ -4681,6 +4695,11 @@ export default function App() {
   }
 
   if (screen === "map") {
+    // Ready画面からフォーカスされたスポット（nullの場合は現在のターゲットスポットを使用）
+    const mapDisplaySpot = mapFocusSpotIndex !== null ? (spots[mapFocusSpotIndex] ?? currentSpot) : currentSpot;
+    const mapDisplayStoryArcMeta = storyArcMetaMap[mapDisplaySpot.id] ?? fallbackStoryArcMeta;
+    const mapDisplaySpotMapInfoLine1 = adminWorldConfig?.spotMapInfoLine1 || mapDisplayStoryArcMeta.mapLead;
+    const mapDisplaySpotMapInfoLine2 = adminWorldConfig?.spotMapInfoLine2 || mapDisplayStoryArcMeta.trivia;
     return (
       <SafeAreaView style={styles.mapSafeArea}>
         <StatusBar style="dark" />
@@ -4728,7 +4747,7 @@ export default function App() {
               </View>
 
               {mockMapProjection.spotPoints.map(({ spot, point }, index) => {
-                const isActiveTarget = index === activeTargetIndex;
+                const isFocused = mapFocusSpotIndex !== null ? index === mapFocusSpotIndex : index === activeTargetIndex;
                 const isStart = index === 0;
                 const isGoal = index === spots.length - 1;
                 const markerLabel = isStart ? "S" : isGoal ? "G" : `${index + 1}`;
@@ -4745,7 +4764,7 @@ export default function App() {
                         style={[
                           styles.mapSpotPin,
                           isStart ? styles.mapSpotPinStart : isGoal ? styles.mapSpotPinGoal : styles.mapSpotPinMuted,
-                          isActiveTarget ? styles.mapSpotPinActiveTargetRing : null,
+                          isFocused ? styles.mapSpotPinActiveTargetRing : null,
                         ]}
                       >
                         <Text
@@ -4753,7 +4772,7 @@ export default function App() {
                             styles.mapSpotPinText,
                             isStart || isGoal
                               ? styles.mapSpotPinTextRole
-                              : isActiveTarget
+                              : isFocused
                                 ? styles.mapSpotPinTextActive
                                 : styles.mapSpotPinTextMuted,
                           ]}
@@ -4822,7 +4841,7 @@ export default function App() {
               </Marker>
 
               {spots.map((spot, index) => {
-                const isActiveTarget = index === activeTargetIndex;
+                const isFocused = mapFocusSpotIndex !== null ? index === mapFocusSpotIndex : index === activeTargetIndex;
                 const isStart = index === 0;
                 const isGoal = index === spots.length - 1;
                 const markerLabel = isStart ? "S" : isGoal ? "G" : `${index + 1}`;
@@ -4837,7 +4856,7 @@ export default function App() {
                         style={[
                           styles.mapSpotPin,
                           isStart ? styles.mapSpotPinStart : isGoal ? styles.mapSpotPinGoal : styles.mapSpotPinMuted,
-                          isActiveTarget ? styles.mapSpotPinActiveTargetRing : null,
+                          isFocused ? styles.mapSpotPinActiveTargetRing : null,
                         ]}
                       >
                         <Text
@@ -4845,7 +4864,7 @@ export default function App() {
                             styles.mapSpotPinText,
                             isStart || isGoal
                               ? styles.mapSpotPinTextRole
-                              : isActiveTarget
+                              : isFocused
                                 ? styles.mapSpotPinTextActive
                                 : styles.mapSpotPinTextMuted,
                           ]}
@@ -4878,11 +4897,11 @@ export default function App() {
             <View style={styles.mapBottomCard}>
               <View style={styles.mapCardMain}>
                 <View style={styles.mapCardHeaderRow}>
-                  <Text style={styles.mapCardTitle}>{currentSpot.name}</Text>
+                  <Text style={styles.mapCardTitle}>{mapDisplaySpot.name}</Text>
                   <View style={styles.mapCardMetaWrap}>
                     <View style={styles.mapCardBeatChip}>
                       <Text style={styles.mapCardBeatChipText}>
-                        {`${currentStoryArcMeta.phase}｜${currentStoryArcMeta.beat}`}
+                        {`${mapDisplayStoryArcMeta.phase}｜${mapDisplayStoryArcMeta.beat}`}
                       </Text>
                     </View>
                   </View>
@@ -4890,25 +4909,38 @@ export default function App() {
 
                 <View style={styles.mapCardInfoRow}>
                   <Ionicons name="information-circle" size={22} color={palette.tertiaryContainer} />
-                  <Text style={styles.mapCardInfoText}>{`${effectiveSpotMapInfoLine1}\n${effectiveSpotMapInfoLine2}`}</Text>
+                  <Text style={styles.mapCardInfoText}>{`${mapDisplaySpotMapInfoLine1}\n${mapDisplaySpotMapInfoLine2}`}</Text>
                 </View>
               </View>
 
               <View style={styles.mapCardCtaWrap}>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.mapCardEnabledCta,
-                    (pressed || isMapScenarioTransitioning) && styles.pressed,
-                    isMapScenarioTransitioning ? styles.mapCardEnabledCtaDisabled : null,
-                  ]}
-                  onPress={handleSpotArrivedPress}
-                  disabled={isMapScenarioTransitioning}
-                >
-                  <Ionicons name="book-outline" size={18} color={palette.onBackground} />
-                  <Text style={styles.mapCardEnabledCtaText}>
-                    {isExperienceCompleted ? effectiveSpotMapRestartLabel : effectiveSpotMapArrivedLabel}
-                  </Text>
-                </Pressable>
+                {mapFocusSpotIndex !== null ? (
+                  <Pressable
+                    style={({ pressed }) => [styles.mapCardEnabledCta, pressed && styles.pressed]}
+                    onPress={() => {
+                      setMapFocusSpotIndex(null);
+                      setScreen("ready");
+                    }}
+                  >
+                    <Ionicons name="arrow-back" size={18} color={palette.onBackground} />
+                    <Text style={styles.mapCardEnabledCtaText}>Ready画面に戻る</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.mapCardEnabledCta,
+                      (pressed || isMapScenarioTransitioning) && styles.pressed,
+                      isMapScenarioTransitioning ? styles.mapCardEnabledCtaDisabled : null,
+                    ]}
+                    onPress={handleSpotArrivedPress}
+                    disabled={isMapScenarioTransitioning}
+                  >
+                    <Ionicons name="book-outline" size={18} color={palette.onBackground} />
+                    <Text style={styles.mapCardEnabledCtaText}>
+                      {isExperienceCompleted ? effectiveSpotMapRestartLabel : effectiveSpotMapArrivedLabel}
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             </View>
           </View>
@@ -4975,7 +5007,7 @@ export default function App() {
                     <View style={styles.aoyagiNoteCard}>
                       <View style={styles.aoyagiNoteHeaderRow}>
                         <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
-                        <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
+                        <Text style={styles.aoyagiNoteHeaderText}>青柳の残したノート</Text>
                         <Text style={styles.aoyagiNotePageLabel}>{`p.${spotNumber} / ${totalSpots}`}</Text>
                       </View>
                       <View style={styles.aoyagiNoteDivider} />
@@ -5037,7 +5069,7 @@ export default function App() {
                     <View style={styles.aoyagiNoteCard}>
                       <View style={styles.aoyagiNoteHeaderRow}>
                         <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
-                        <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
+                        <Text style={styles.aoyagiNoteHeaderText}>青柳の残したノート</Text>
                         <Text style={styles.aoyagiNotePageLabel}>{`p.${spotNumber} / ${totalSpots}`}</Text>
                       </View>
                       <View style={styles.aoyagiNoteDivider} />
@@ -5573,6 +5605,33 @@ export default function App() {
             </View>
           </View>
         </ScrollView>
+
+        {/* ── 送信完了ThankYouモーダル ── */}
+        <Modal
+          visible={showFeedbackThankyou}
+          transparent
+          animationType="fade"
+          onRequestClose={handleFeedbackThankyouClose}
+        >
+          <View style={styles.feedbackThankyouOverlay}>
+            <View style={styles.feedbackThankyouPanel}>
+              <View style={styles.feedbackThankyouIconWrap}>
+                <Ionicons name="checkmark-circle" size={56} color={palette.tertiaryContainer} />
+              </View>
+              <Text style={styles.feedbackThankyouTitle}>体験ありがとうございました！</Text>
+              <Text style={styles.feedbackThankyouBody}>
+                {"フィードバックを送信しました。\nあなたの回答は研究に役立てられます。"}
+              </Text>
+              <Text style={styles.feedbackThankyouSub}>── 青柳の残したノートはここで閉じられる</Text>
+              <Pressable
+                style={({ pressed }) => [styles.feedbackThankyouButton, pressed && styles.pressed]}
+                onPress={handleFeedbackThankyouClose}
+              >
+                <Text style={styles.feedbackThankyouButtonText}>トップに戻る</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     );
   }
@@ -7646,6 +7705,18 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontWeight: "400",
   },
+  readyTimelineMapHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 8,
+  },
+  readyTimelineMapHintText: {
+    color: palette.onSurfaceVariant,
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.2,
+  },
   readyHintsSection: {
     marginBottom: 44,
   },
@@ -8009,6 +8080,61 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1.2,
   },
+  feedbackThankyouOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  feedbackThankyouPanel: {
+    backgroundColor: palette.surfaceLowest,
+    borderRadius: 28,
+    paddingHorizontal: 32,
+    paddingTop: 40,
+    paddingBottom: 36,
+    alignItems: "center",
+    width: "100%",
+    maxWidth: 420,
+    gap: 0,
+  },
+  feedbackThankyouIconWrap: {
+    marginBottom: 20,
+  },
+  feedbackThankyouTitle: {
+    color: palette.onBackground,
+    fontSize: 20,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 14,
+    letterSpacing: 0.2,
+  },
+  feedbackThankyouBody: {
+    color: palette.onSurfaceVariant,
+    fontSize: 15,
+    lineHeight: 26,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  feedbackThankyouSub: {
+    color: palette.outlineVariant,
+    fontSize: 13,
+    fontStyle: "italic",
+    textAlign: "center",
+    marginBottom: 28,
+  },
+  feedbackThankyouButton: {
+    backgroundColor: palette.darkButton,
+    borderRadius: 100,
+    paddingHorizontal: 36,
+    paddingVertical: 14,
+  },
+  feedbackThankyouButtonText: {
+    color: palette.onDarkButton,
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+  },
   prologueSafeArea: {
     flex: 1,
     backgroundColor: "#000000",
@@ -8031,9 +8157,10 @@ const styles = StyleSheet.create({
   },
   prologueContent: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     paddingHorizontal: 22,
+    paddingTop: 48,
   },
   prologueBottomGradient: {
     ...StyleSheet.absoluteFillObject,
@@ -8043,7 +8170,7 @@ const styles = StyleSheet.create({
   prologueCenterStack: {
     width: "100%",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   prologueBottomPanel: {
     width: "100%",
@@ -8056,7 +8183,7 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 420,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
   },
   storyNarrationPageIndicator: {
     color: "rgba(255,255,255,0.82)",
@@ -8069,7 +8196,7 @@ const styles = StyleSheet.create({
     width: "100%",
     minHeight: 240,
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     paddingHorizontal: 4,
     paddingVertical: 6,
   },
