@@ -1214,7 +1214,7 @@ export default function App() {
   const useMockMapBackground =
     Platform.OS !== "web" &&
     (process.env.EXPO_PUBLIC_USE_MOCK_MAP_BACKGROUND ?? "").trim().toLowerCase() === "true";
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const contentWidth = useMemo(() => Math.max(0, Math.min(width - 32, 520)), [width]);
   const heroHeight = contentWidth;
   const landingHeroTitleFontSize = useMemo(() => {
@@ -1382,6 +1382,8 @@ export default function App() {
   const [landingBottomBarHeight, setLandingBottomBarHeight] = useState(0);
   const [readyBottomBarHeight, setReadyBottomBarHeight] = useState(0);
   const [setupBottomBarHeight, setSetupBottomBarHeight] = useState(0);
+  const [prologueCtaHeight, setPrologueCtaHeight] = useState(130);
+  const [epilogueCtaHeight, setEpilogueCtaHeight] = useState(130);
   const [feedbackOverallRating, setFeedbackOverallRating] = useState<number | null>(() =>
     parseFiveScale(persistedFlowDraft?.feedbackOverallRating),
   );
@@ -1712,6 +1714,13 @@ export default function App() {
   const effectiveFeedbackCommentNote =
     adminWorldConfig?.feedbackCommentNote || "※ 印象に残ったこと・改善してほしいこと・その他なんでも";
   const effectiveFeedbackSubmitButton = adminWorldConfig?.feedbackSubmitButton || "送信して終了する";
+  const canSubmitFeedback =
+    feedbackOverallRating !== null &&
+    feedbackGuidanceScore !== null &&
+    feedbackCampusScore !== null &&
+    feedbackVisitIntentScore !== null &&
+    feedbackExpectationScore !== null &&
+    feedbackReuseIntent !== null;
   const effectiveFeedbackThanks = adminWorldConfig?.feedbackThanks || "Thank you for your voice";
 
   const prologueNarrationChars = useMemo(() => Array.from(currentPrologueNarrationText), [currentPrologueNarrationText]);
@@ -4248,26 +4257,6 @@ export default function App() {
         </View>
 
         <View style={styles.preparingFooter}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.preparingSkipButton,
-              isGeneratingQuest ? styles.preparingSkipButtonDisabled : null,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => {
-              if (isGeneratingQuest) return;
-              if (generatedQuest) {
-                setScreen("ready");
-                return;
-              }
-              void runQuestGeneration({ moveToReady: true });
-            }}
-            disabled={isGeneratingQuest}
-          >
-            <Text style={styles.preparingSkipButtonText}>
-              {isGeneratingQuest ? "生成中..." : generatedQuest ? effectivePreparingSkipButton : "生成を開始"}
-            </Text>
-          </Pressable>
           <Text style={styles.preparingFooterText}>
             {effectivePreparingFooter}
           </Text>
@@ -4325,15 +4314,6 @@ export default function App() {
               <Text style={styles.readySummaryTitle}>{effectiveReadySummaryTitle}</Text>
             </View>
             <Text style={styles.readySummaryText}>{readyStorySynopsis}</Text>
-            <View style={styles.readyGeneratedStoryCard}>
-              <Text style={styles.readyGeneratedStoryLabel}>{effectiveReadyGeneratedStoryLabel}</Text>
-              <Text style={styles.readyGeneratedStoryText}>
-                {generatedStoryName || `「この手紙を見つけた未来の學徒へ。私は問いを残す。『學び舎とは何か。』答えが知りたければ、七つの場所を訪ねなさい。── 青柳」`}
-              </Text>
-              <Text style={styles.readyGeneratedStorySubtext}>
-                {readyStoryTagline || "虫食いだらけの手紙。各スポットのクイズを解くたびに断片が一つずつ現れ、最後のフーコーの振り子で手紙の全文が解読される。"}
-              </Text>
-            </View>
             <View style={styles.readyChipRow}>
               {readyInputItems.map((item) => (
                 <View key={item.id} style={styles.readyChip}>
@@ -4578,19 +4558,25 @@ export default function App() {
         <View style={styles.prologueContent}>
           <View style={styles.prologueBottomGradient} />
 
-          <Animated.View style={[styles.prologueCenterStack, prologueContentAnimatedStyle]}>
+          <Animated.View style={[styles.prologueCenterStack, prologueContentAnimatedStyle, { paddingBottom: prologueCtaHeight }]}>
             {prologueShowNote ? (
               /* ── 青柳ノート 表紙ページ ── */
               <View style={styles.prologueNoteWrap}>
-                <View style={styles.aoyagiNoteCard}>
-                  <View style={styles.aoyagiNoteHeaderRow}>
-                    <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
-                    <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
-                    <Text style={styles.aoyagiNotePageLabel}>はじめに</Text>
+                <ScrollView
+                  style={{ maxHeight: height - prologueCtaHeight - 140 }}
+                  contentContainerStyle={{ paddingBottom: 4 }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <View style={styles.aoyagiNoteCard}>
+                    <View style={styles.aoyagiNoteHeaderRow}>
+                      <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
+                      <Text style={styles.aoyagiNoteHeaderText}>青柳ノート</Text>
+                      <Text style={styles.aoyagiNotePageLabel}>はじめに</Text>
+                    </View>
+                    <View style={styles.aoyagiNoteDivider} />
+                    <Text style={styles.aoyagiNoteBody}>{scenario.prologueNote}</Text>
                   </View>
-                  <View style={styles.aoyagiNoteDivider} />
-                  <Text style={styles.aoyagiNoteBody}>{scenario.prologueNote}</Text>
-                </View>
+                </ScrollView>
               </View>
             ) : (
               <Pressable style={styles.prologueNarrationPressArea} onPress={handlePrologueNarrationPress}>
@@ -4634,7 +4620,13 @@ export default function App() {
             )}
           </Animated.View>
 
-          <Animated.View style={[styles.prologueCtaWrap, prologueCtaAnimatedStyle]}>
+          <Animated.View
+            style={[styles.prologueCtaWrap, prologueCtaAnimatedStyle]}
+            onLayout={({ nativeEvent }) => {
+              const h = Math.ceil(nativeEvent.layout.height) + 34 + 16;
+              setPrologueCtaHeight((prev) => (prev === h ? prev : h));
+            }}
+          >
             <Pressable
               style={({ pressed }) => [
                 styles.prologueCtaButton,
@@ -4979,7 +4971,7 @@ export default function App() {
               {/* ─── フェーズ: note ─── */}
               {spotPhase === 'note' ? (
                 <>
-                  <ScrollView style={styles.spotNoteScroll} showsVerticalScrollIndicator={false}>
+                  <ScrollView style={[styles.spotNoteScroll, { maxHeight: Math.min(height * 0.3, 240) }]} showsVerticalScrollIndicator={false}>
                     <View style={styles.aoyagiNoteCard}>
                       <View style={styles.aoyagiNoteHeaderRow}>
                         <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
@@ -5041,7 +5033,7 @@ export default function App() {
               {/* ─── フェーズ: noteAfter ─── */}
               {spotPhase === 'noteAfter' ? (
                 <>
-                  <ScrollView style={styles.spotNoteScroll} showsVerticalScrollIndicator={false}>
+                  <ScrollView style={[styles.spotNoteScroll, { maxHeight: Math.min(height * 0.3, 240) }]} showsVerticalScrollIndicator={false}>
                     <View style={styles.aoyagiNoteCard}>
                       <View style={styles.aoyagiNoteHeaderRow}>
                         <Text style={styles.aoyagiNoteHeaderIcon}>📓</Text>
@@ -5231,7 +5223,7 @@ export default function App() {
         <View style={styles.prologueContent}>
           <View style={styles.prologueBottomGradient} />
 
-          <Animated.View style={[styles.prologueCenterStack, epilogueContentAnimatedStyle]}>
+          <Animated.View style={[styles.prologueCenterStack, epilogueContentAnimatedStyle, { paddingBottom: epilogueCtaHeight }]}>
             <Pressable style={styles.prologueNarrationPressArea} onPress={handleEpilogueNarrationPress}>
               <View style={styles.prologueTextWrap}>
                 {epilogueNarrationPages.length > 1 ? (
@@ -5272,7 +5264,13 @@ export default function App() {
             </Pressable>
           </Animated.View>
 
-          <Animated.View style={[styles.prologueCtaWrap, epilogueCtaAnimatedStyle]}>
+          <Animated.View
+            style={[styles.prologueCtaWrap, epilogueCtaAnimatedStyle]}
+            onLayout={({ nativeEvent }) => {
+              const h = Math.ceil(nativeEvent.layout.height) + 34 + 16;
+              setEpilogueCtaHeight((prev) => (prev === h ? prev : h));
+            }}
+          >
             <Pressable
               style={({ pressed }) => [
                 styles.prologueCtaButton,
@@ -5544,11 +5542,11 @@ export default function App() {
               <Pressable
                 style={({ pressed }) => [
                   styles.feedbackSubmitButton,
-                  isSubmittingFeedback && styles.feedbackSubmitButtonDisabled,
-                  pressed && styles.pressed,
+                  (!canSubmitFeedback || isSubmittingFeedback) && styles.feedbackSubmitButtonDisabled,
+                  pressed && canSubmitFeedback && !isSubmittingFeedback && styles.pressed,
                 ]}
                 onPress={handleFeedbackSubmit}
-                disabled={isSubmittingFeedback}
+                disabled={!canSubmitFeedback || isSubmittingFeedback}
               >
                 {isSubmittingFeedback ? (
                   <ActivityIndicator size="small" color={palette.onDarkButton} />
@@ -7800,7 +7798,7 @@ const styles = StyleSheet.create({
   feedbackScrollContent: {
     alignItems: "center",
     paddingTop: 104,
-    paddingBottom: 0,
+    paddingBottom: 48,
   },
   feedbackMain: {
     alignItems: "stretch",
@@ -8932,7 +8930,6 @@ const styles = StyleSheet.create({
 
   // ── SpotArrival: ノートスクロールエリア ──
   spotNoteScroll: {
-    maxHeight: 200,
     marginBottom: 4,
   },
 
