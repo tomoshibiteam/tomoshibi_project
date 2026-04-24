@@ -1,0 +1,19 @@
+{
+  "name": "spots/iwami-station/thumbnail-1776868921153.jpg",
+  "bucket": "tomoshibi-950e2.firebasestorage.app",
+  "metageneration": 1,
+  "generation": 1776868921321,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "cacheControl": "public,max-age=31536000",
+  "downloadTokens": [
+    "2a9fe43d-14bf-4523-ad39-fce0e10db8a2"
+  ],
+  "etag": "P4xHsZwiAPbWyy7IUdreI7/Lxsk",
+  "customMetadata": {},
+  "timeCreated": "2026-04-22T14:42:01.322Z",
+  "updated": "2026-04-22T14:42:01.322Z",
+  "size": 5287823,
+  "md5Hash": "hxDB1lv9o9JHhF4asWzngA==",
+  "crc32c": "3624191861"
+}

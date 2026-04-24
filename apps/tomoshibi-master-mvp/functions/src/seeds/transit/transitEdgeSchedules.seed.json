@@ -1,0 +1,102 @@
+[
+  {
+    "edgeScheduleId": "jr_sanin_higashihama_to_iwami__seed_snapshot",
+    "serviceId": "jr_sanin_higashihama_to_iwami",
+    "mode": "train",
+    "fromNodeId": "higashihama_station",
+    "toNodeId": "iwami_station",
+    "calendarId": "weekday",
+    "timezone": "Asia/Tokyo",
+    "status": "active",
+    "trips": [
+      { "departAt": "06:43", "arriveAt": "06:49", "tripCode": null },
+      { "departAt": "07:26", "arriveAt": "07:32", "tripCode": null },
+      { "departAt": "08:21", "arriveAt": "08:32", "tripCode": null },
+      { "departAt": "09:57", "arriveAt": "10:10", "tripCode": null },
+      { "departAt": "12:15", "arriveAt": "12:20", "tripCode": null },
+      { "departAt": "13:20", "arriveAt": "13:26", "tripCode": null },
+      { "departAt": "15:34", "arriveAt": "15:46", "tripCode": null },
+      { "departAt": "16:35", "arriveAt": "16:45", "tripCode": null },
+      { "departAt": "18:02", "arriveAt": "18:08", "tripCode": null },
+      { "departAt": "19:23", "arriveAt": "19:35", "tripCode": null },
+      { "departAt": "20:23", "arriveAt": "20:29", "tripCode": null },
+      { "departAt": "21:46", "arriveAt": "21:52", "tripCode": null },
+      { "departAt": "23:02", "arriveAt": "23:08", "tripCode": null }
+    ]
+  },
+  {
+    "edgeScheduleId": "jr_sanin_iwami_to_oiwa__seed_snapshot",
+    "serviceId": "jr_sanin_iwami_to_oiwa",
+    "mode": "train",
+    "fromNodeId": "iwami_station",
+    "toNodeId": "oiwa_station",
+    "calendarId": "weekday",
+    "timezone": "Asia/Tokyo",
+    "status": "active",
+    "trips": [
+      { "departAt": "06:49", "arriveAt": "06:53", "tripCode": null },
+      { "departAt": "07:32", "arriveAt": "07:37", "tripCode": null },
+      { "departAt": "08:32", "arriveAt": "08:36", "tripCode": null },
+      { "departAt": "10:10", "arriveAt": "10:15", "tripCode": null },
+      { "departAt": "12:20", "arriveAt": "12:25", "tripCode": null },
+      { "departAt": "13:26", "arriveAt": "13:31", "tripCode": null },
+      { "departAt": "15:46", "arriveAt": "15:50", "tripCode": null },
+      { "departAt": "16:45", "arriveAt": "16:49", "tripCode": null },
+      { "departAt": "18:08", "arriveAt": "18:12", "tripCode": null },
+      { "departAt": "19:35", "arriveAt": "19:40", "tripCode": null },
+      { "departAt": "20:29", "arriveAt": "20:34", "tripCode": null },
+      { "departAt": "21:52", "arriveAt": "21:57", "tripCode": null },
+      { "departAt": "23:08", "arriveAt": "23:12", "tripCode": null }
+    ]
+  },
+  {
+    "edgeScheduleId": "jr_sanin_oiwa_to_iwami__seed_snapshot",
+    "serviceId": "jr_sanin_oiwa_to_iwami",
+    "mode": "train",
+    "fromNodeId": "oiwa_station",
+    "toNodeId": "iwami_station",
+    "calendarId": "weekday",
+    "timezone": "Asia/Tokyo",
+    "status": "active",
+    "trips": [
+      { "departAt": "05:42", "arriveAt": "05:46", "tripCode": null },
+      { "departAt": "06:32", "arriveAt": "06:36", "tripCode": null },
+      { "departAt": "07:12", "arriveAt": "07:17", "tripCode": null },
+      { "departAt": "08:26", "arriveAt": "08:33", "tripCode": null },
+      { "departAt": "10:04", "arriveAt": "10:08", "tripCode": null },
+      { "departAt": "12:37", "arriveAt": "12:42", "tripCode": null },
+      { "departAt": "13:52", "arriveAt": "13:56", "tripCode": null },
+      { "departAt": "15:40", "arriveAt": "15:45", "tripCode": null },
+      { "departAt": "16:41", "arriveAt": "16:46", "tripCode": null },
+      { "departAt": "17:49", "arriveAt": "17:55", "tripCode": null },
+      { "departAt": "19:21", "arriveAt": "19:29", "tripCode": null },
+      { "departAt": "20:53", "arriveAt": "20:57", "tripCode": null },
+      { "departAt": "22:12", "arriveAt": "22:17", "tripCode": null }
+    ]
+  },
+  {
+    "edgeScheduleId": "jr_sanin_iwami_to_higashihama__seed_snapshot",
+    "serviceId": "jr_sanin_iwami_to_higashihama",
+    "mode": "train",
+    "fromNodeId": "iwami_station",
+    "toNodeId": "higashihama_station",
+    "calendarId": "weekday",
+    "timezone": "Asia/Tokyo",
+    "status": "active",
+    "trips": [
+      { "departAt": "05:46", "arriveAt": "05:52", "tripCode": null },
+      { "departAt": "06:36", "arriveAt": "06:42", "tripCode": null },
+      { "departAt": "07:17", "arriveAt": "07:26", "tripCode": null },
+      { "departAt": "08:33", "arriveAt": "08:39", "tripCode": null },
+      { "departAt": "10:08", "arriveAt": "10:14", "tripCode": null },
+      { "departAt": "12:42", "arriveAt": "12:48", "tripCode": null },
+      { "departAt": "13:56", "arriveAt": "14:02", "tripCode": null },
+      { "departAt": "15:45", "arriveAt": "15:50", "tripCode": null },
+      { "departAt": "16:46", "arriveAt": "16:52", "tripCode": null },
+      { "departAt": "17:55", "arriveAt": "18:02", "tripCode": null },
+      { "departAt": "19:29", "arriveAt": "19:35", "tripCode": null },
+      { "departAt": "20:57", "arriveAt": "21:04", "tripCode": null },
+      { "departAt": "22:17", "arriveAt": "22:23", "tripCode": null }
+    ]
+  }
+]

@@ -1,0 +1,6991 @@
+[
+  {
+    "id": "iwami-station",
+    "slug": "iwami-station",
+    "nameJa": "岩美駅",
+    "nameEn": "Iwami Station",
+    "shortName": "岩美駅",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "station_area"
+    ],
+    "tags": [
+      "駅周辺",
+      "鉄道",
+      "観光の起点",
+      "回遊の起点"
+    ],
+    "location": {
+      "lat": 35.5741381,
+      "lng": 134.3352146,
+      "geohash": "wyrd2u5fm7u",
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "浦富",
+      "stationAreaType": "iwami_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 0,
+        "walkMinutes": 1
+      }
+    ],
+    "descriptionShort": "岩美町観光の起点になる山陰本線の駅",
+    "descriptionLong": "JR山陰本線の岩美駅。町内回遊の出発点として使いやすく、観光協会が駅すぐ横にあり、徒歩・バス・レンタサイクルの起点にもなる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": null,
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 30
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus",
+        "train"
+      ],
+      "parkingAvailable": false,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "station_stopover",
+        "photo"
+      ],
+      "moodTags": [
+        "旅の始まり",
+        "ローカル感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "岩美町観光の起点になる山陰本線の駅",
+      "whyVisit": [
+        "駅周辺を体験しやすい",
+        "鉄道を体験しやすい",
+        "観光の起点を体験しやすい",
+        "回遊の起点を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "駅周辺を楽しみたい人",
+        "鉄道を楽しみたい人",
+        "観光の起点を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "岩美駅 iwami station 岩美町観光の起点になる山陰本線の駅 jr山陰本線の岩美駅。町内回遊の出発点として使いやすく、観光協会が駅すぐ横にあり、徒歩・バス・レンタサイクルの起点にもなる。 浦富 鳥取県岩美郡岩美町浦富 駅周辺 鉄道 観光の起点 回遊の起点 station_area"
+  },
+  {
+    "id": "iwami-tourism-association",
+    "slug": "iwami-tourism-association",
+    "nameJa": "岩美町観光協会",
+    "nameEn": "Iwami Tourism Association",
+    "shortName": "観光協会",
+    "status": "published",
+    "primaryCategory": "shop",
+    "secondaryCategories": [
+      "station_area",
+      "souvenir"
+    ],
+    "tags": [
+      "観光案内",
+      "レンタサイクル",
+      "お土産",
+      "駅横"
+    ],
+    "location": {
+      "lat": 35.5738507,
+      "lng": 134.3351488,
+      "geohash": "wyrd2u5bey7",
+      "addressJa": "鳥取県岩美郡岩美町浦富783-8",
+      "areaName": "浦富",
+      "stationAreaType": "iwami_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 33,
+        "walkMinutes": 1
+      }
+    ],
+    "descriptionShort": "観光案内・お土産販売・レンタサイクル受付の拠点",
+    "descriptionLong": "JR岩美駅すぐ横にある観光案内所。観光案内のほか、お土産販売やガイド紹介、レンタサイクル受付などを担う、町内回遊のハブ。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwamikanko.org/about-us/",
+    "instagramUrl": "https://www.instagram.com/iwami_kanko/",
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:00-17:30",
+      "regularHolidaysText": "年末年始（12/30〜1/4）",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 10,
+      "estimatedStayMinutesMax": 25
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "レンタサイクル 普通800円/日・電動1500円/日",
+      "priceMinYen": 800,
+      "priceMaxYen": 1500
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus",
+        "train"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": true,
+      "requiredFirstStopReason": "rental_cycle_pickup"
+    },
+    "plannerAttributes": {
+      "themes": [
+        "station_stopover",
+        "shopping",
+        "activity"
+      ],
+      "moodTags": [
+        "旅の相談",
+        "回遊の起点"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 1,
+      "shoppingScore": 5,
+      "experienceScore": 5,
+      "stationStopoverScore": 5,
+      "priorityScore": 67
+    },
+    "aiContext": {
+      "plannerSummary": "観光案内・お土産販売・レンタサイクル受付の拠点",
+      "whyVisit": [
+        "観光案内を体験しやすい",
+        "レンタサイクルを体験しやすい",
+        "お土産を体験しやすい",
+        "駅横を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "観光案内を楽しみたい人",
+        "レンタサイクルを楽しみたい人",
+        "お土産を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "岩美町観光協会 iwami tourism association 観光協会 観光案内・お土産販売・レンタサイクル受付の拠点 jr岩美駅すぐ横にある観光案内所。観光案内のほか、お土産販売やガイド紹介、レンタサイクル受付などを担う、町内回遊のハブ。 浦富 鳥取県岩美郡岩美町浦富783-8 観光案内 レンタサイクル お土産 駅横 station_area souvenir"
+  },
+  {
+    "id": "kinanse-iwami-roadside-station",
+    "slug": "kinanse-iwami-roadside-station",
+    "nameJa": "道の駅 きなんせ岩美",
+    "nameEn": "Kinanse Iwami Roadside Station",
+    "shortName": "きなんせ岩美",
+    "status": "published",
+    "primaryCategory": "shop",
+    "secondaryCategories": [
+      "souvenir"
+    ],
+    "tags": [
+      "道の駅",
+      "特産品",
+      "買い物",
+      "食事"
+    ],
+    "location": {
+      "lat": 35.5676561,
+      "lng": 134.3256515,
+      "geohash": "wyrd2duuwe9",
+      "addressJa": "鳥取県岩美郡岩美町新井337-4",
+      "areaName": "新井",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 1126,
+        "walkMinutes": 14
+      }
+    ],
+    "descriptionShort": "特産品・農産物・食堂がそろう岩美の物産拠点",
+    "descriptionLong": "地元の水産物や農産物、加工品、お菓子、レストラン・食堂など岩美の魅力が集まる道の駅。車旅の立寄りやお土産購入に便利。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://kinanseiwami.jp/",
+    "instagramUrl": null,
+    "phoneNumber": "0857-73-5155",
+    "operatorName": "株式会社いわみ道の駅",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:00-19:00（1〜2月は18:00まで）",
+      "regularHolidaysText": "1月1日",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 20,
+      "estimatedStayMinutesMax": 60
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "店舗・テナントにより異なる",
+      "priceMinYen": 0,
+      "priceMaxYen": 3000
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "shopping",
+        "family",
+        "station_stopover"
+      ],
+      "moodTags": [
+        "にぎやか",
+        "ローカル感",
+        "買い回り"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 4,
+      "shoppingScore": 5,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 67
+    },
+    "aiContext": {
+      "plannerSummary": "特産品・農産物・食堂がそろう岩美の物産拠点",
+      "whyVisit": [
+        "道の駅を体験しやすい",
+        "特産品を体験しやすい",
+        "買い物を体験しやすい",
+        "食事を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "道の駅を楽しみたい人",
+        "特産品を楽しみたい人",
+        "買い物を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "道の駅 きなんせ岩美 kinanse iwami roadside station きなんせ岩美 特産品・農産物・食堂がそろう岩美の物産拠点 地元の水産物や農産物、加工品、お菓子、レストラン・食堂など岩美の魅力が集まる道の駅。車旅の立寄りやお土産購入に便利。 新井 鳥取県岩美郡岩美町新井337-4 道の駅 特産品 買い物 食事 souvenir"
+  },
+  {
+    "id": "makitani-iris-garden",
+    "slug": "makitani-iris-garden",
+    "nameJa": "牧谷のカキツバタ群落",
+    "nameEn": "Makitani Iris Grove",
+    "shortName": "牧谷カキツバタ",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "花景色",
+      "季節限定",
+      "写真映え",
+      "静かな散策"
+    ],
+    "location": {
+      "lat": 35.58678519908159,
+      "lng": 134.3372727682617,
+      "geohash": "wyrd2ymkj3d",
+      "addressJa": "鳥取県岩美郡岩美町牧谷403",
+      "areaName": "牧谷",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 1419,
+        "walkMinutes": 18
+      }
+    ],
+    "descriptionShort": "5月中旬に紫の花が広がる静かな花の名所",
+    "descriptionLong": "牧谷の又助池周辺に広がるカキツバタ群落。5月初旬から中旬に見頃を迎え、一面が鮮やかな紫に染まる。静かに自然を楽しめる季節スポット。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1436.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 35
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "photo",
+        "relax"
+      ],
+      "moodTags": [
+        "ゆったり",
+        "自然",
+        "季節感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "5月中旬に紫の花が広がる静かな花の名所",
+      "whyVisit": [
+        "花景色を体験しやすい",
+        "季節限定を体験しやすい",
+        "写真映えを体験しやすい",
+        "静かな散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "花景色を楽しみたい人",
+        "季節限定を楽しみたい人",
+        "写真映えを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "牧谷のカキツバタ群落 makitani iris grove 牧谷カキツバタ 5月中旬に紫の花が広がる静かな花の名所 牧谷の又助池周辺に広がるカキツバタ群落。5月初旬から中旬に見頃を迎え、一面が鮮やかな紫に染まる。静かに自然を楽しめる季節スポット。 牧谷 鳥取県岩美郡岩美町牧谷403 花景色 季節限定 写真映え 静かな散策 scenery"
+  },
+  {
+    "id": "uradome-coast",
+    "slug": "uradome-coast",
+    "nameJa": "浦富海岸",
+    "nameEn": "Uradome Coast",
+    "shortName": "浦富海岸",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery",
+      "beach"
+    ],
+    "tags": [
+      "海景観",
+      "絶景",
+      "ジオパーク",
+      "遊歩道",
+      "夕景"
+    ],
+    "location": {
+      "lat": 35.5904335,
+      "lng": 134.325065,
+      "geohash": "wyrd2xh92ce",
+      "addressJa": "鳥取県岩美郡岩美町浦富783-8",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2031,
+        "walkMinutes": 25
+      }
+    ],
+    "descriptionShort": "断崖・洞門・奇岩が連なる岩美町を代表する絶景海岸",
+    "descriptionLong": "東西約15kmのリアス式海岸が続く山陰海岸ジオパークの代表景観。遊歩道や船上から、透明度の高い海とダイナミックな海食地形を楽しめる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1052.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 120
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo",
+        "activity"
+      ],
+      "moodTags": [
+        "開放感",
+        "非日常",
+        "絶景"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "断崖・洞門・奇岩が連なる岩美町を代表する絶景海岸",
+      "whyVisit": [
+        "海景観を体験しやすい",
+        "絶景を体験しやすい",
+        "ジオパークを体験しやすい",
+        "遊歩道を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "海景観を楽しみたい人",
+        "絶景を楽しみたい人",
+        "ジオパークを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "浦富海岸 uradome coast 断崖・洞門・奇岩が連なる岩美町を代表する絶景海岸 東西約15kmのリアス式海岸が続く山陰海岸ジオパークの代表景観。遊歩道や船上から、透明度の高い海とダイナミックな海食地形を楽しめる。 浦富 鳥取県岩美郡岩美町浦富783-8 海景観 絶景 ジオパーク 遊歩道 夕景 scenery beach"
+  },
+  {
+    "id": "uradome-beach",
+    "slug": "uradome-beach",
+    "nameJa": "浦富海水浴場",
+    "nameEn": "Uradome Beach",
+    "shortName": "浦富海水浴場",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "beach",
+      "scenery"
+    ],
+    "tags": [
+      "海水浴",
+      "家族向け",
+      "遠浅",
+      "透明度"
+    ],
+    "location": {
+      "lat": 35.59046076914548,
+      "lng": 134.3250903338379,
+      "geohash": "wyrd2xh93qy",
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2033,
+        "walkMinutes": 25
+      }
+    ],
+    "descriptionShort": "遠浅で透明度が高く、家族連れにも人気の海水浴場",
+    "descriptionLong": "関西方面からも日帰りで行ける人気の海水浴場。遠浅で透明度の高い海が広がり、家族連れにも親しまれている。海開き期間は設備も整う。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1450.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": "海水浴場開設は例年7月下旬〜8月中旬",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 150
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "family",
+        "photo"
+      ],
+      "moodTags": [
+        "開放感",
+        "ファミリー向け"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "遠浅で透明度が高く、家族連れにも人気の海水浴場",
+      "whyVisit": [
+        "海水浴を体験しやすい",
+        "家族向けを体験しやすい",
+        "遠浅を体験しやすい",
+        "透明度を体験しやすい"
+      ],
+      "bestFor": [
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "海水浴を楽しみたい人",
+        "家族向けを楽しみたい人",
+        "遠浅を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "浦富海水浴場 uradome beach 遠浅で透明度が高く、家族連れにも人気の海水浴場 関西方面からも日帰りで行ける人気の海水浴場。遠浅で透明度の高い海が広がり、家族連れにも親しまれている。海開き期間は設備も整う。 浦富 鳥取県岩美郡岩美町浦富 海水浴 家族向け 遠浅 透明度 beach scenery"
+  },
+  {
+    "id": "motofusa-museum",
+    "slug": "motofusa-museum",
+    "nameJa": "モトフサ現代美術館",
+    "nameEn": "Motofusa Contemporary Art Museum",
+    "shortName": "モトフサ美術館",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "美術館",
+      "体験",
+      "雨の日",
+      "アート"
+    ],
+    "location": {
+      "lat": 35.5922595,
+      "lng": 134.3382939,
+      "geohash": "wyrd2zq5vnh",
+      "addressJa": "鳥取県岩美郡岩美町牧谷693-1",
+      "areaName": "牧谷",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2034,
+        "walkMinutes": 25
+      }
+    ],
+    "descriptionShort": "海辺の小さな現代美術館。アート体験もできる",
+    "descriptionLong": "海と緑に囲まれた小さな現代美術館。常設展示に加え、陶芸やアクセサリー作りなどの体験学習も行う。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1441.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-8881",
+    "operatorName": "モトフサ現代美術館",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "10:00-17:00",
+      "regularHolidaysText": "月曜（祝日の場合翌火曜）",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "大人600円ほか",
+      "priceMinYen": 200,
+      "priceMaxYen": 600
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "activity",
+        "photo",
+        "relax",
+        "family"
+      ],
+      "moodTags": [
+        "創作的",
+        "落ち着く",
+        "個性的"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 2,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "海辺の小さな現代美術館。アート体験もできる",
+      "whyVisit": [
+        "美術館を体験しやすい",
+        "体験を体験しやすい",
+        "雨の日を体験しやすい",
+        "アートを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "美術館を楽しみたい人",
+        "体験を楽しみたい人",
+        "雨の日を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "モトフサ現代美術館 motofusa contemporary art museum モトフサ美術館 海辺の小さな現代美術館。アート体験もできる 海と緑に囲まれた小さな現代美術館。常設展示に加え、陶芸やアクセサリー作りなどの体験学習も行う。 牧谷 鳥取県岩美郡岩美町牧谷693-1 美術館 体験 雨の日 アート activity"
+  },
+  {
+    "id": "nagisa-exchange-hall",
+    "slug": "nagisa-exchange-hall",
+    "nameJa": "渚交流館",
+    "nameEn": "Nagisa Exchange Hall",
+    "shortName": "渚交流館",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "マリンアクティビティ",
+      "SUP",
+      "カヤック",
+      "シュノーケル"
+    ],
+    "location": {
+      "lat": 35.5930613,
+      "lng": 134.3386487,
+      "geohash": "wyrd2zw2t7s",
+      "addressJa": "鳥取県岩美郡岩美町牧谷690-20",
+      "areaName": "牧谷",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2127,
+        "walkMinutes": 27
+      }
+    ],
+    "descriptionShort": "浦富海岸エリアのマリンアクティビティ拠点",
+    "descriptionLong": "シュノーケリング、シーカヤック、SUP、サーフィンなど多様な海体験を提供する拠点施設。初心者でも利用しやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://iwami.to/",
+    "instagramUrl": null,
+    "phoneNumber": "0857-73-0118",
+    "operatorName": "NPO Iwami Active Company",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:00-17:00（7〜8月の土曜は18:00まで）",
+      "regularHolidaysText": "月曜、年末年始（夏季無休）",
+      "reservationRequired": true,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 60,
+      "estimatedStayMinutesMax": 180
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "体験メニューごとに異なる",
+      "priceMinYen": 300,
+      "priceMaxYen": 8000
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "activity",
+        "sea_view",
+        "family",
+        "photo"
+      ],
+      "moodTags": [
+        "アクティブ",
+        "非日常",
+        "海を体感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "浦富海岸エリアのマリンアクティビティ拠点",
+      "whyVisit": [
+        "マリンアクティビティを体験しやすい",
+        "SUPを体験しやすい",
+        "カヤックを体験しやすい",
+        "シュノーケルを体験しやすい"
+      ],
+      "bestFor": [
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "マリンアクティビティを楽しみたい人",
+        "SUPを楽しみたい人",
+        "カヤックを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "渚交流館 nagisa exchange hall 浦富海岸エリアのマリンアクティビティ拠点 シュノーケリング、シーカヤック、sup、サーフィンなど多様な海体験を提供する拠点施設。初心者でも利用しやすい。 牧谷 鳥取県岩美郡岩美町牧谷690-20 マリンアクティビティ sup カヤック シュノーケル activity"
+  },
+  {
+    "id": "makitani-beach",
+    "slug": "makitani-beach",
+    "nameJa": "牧谷海水浴場",
+    "nameEn": "Makitani Beach",
+    "shortName": "牧谷海水浴場",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "beach",
+      "scenery"
+    ],
+    "tags": [
+      "海水浴",
+      "白砂",
+      "遠浅",
+      "ファミリー"
+    ],
+    "location": {
+      "lat": 35.5932794,
+      "lng": 134.3370096,
+      "geohash": "wyrd2zt1zhn",
+      "addressJa": "鳥取県岩美郡岩美町牧谷",
+      "areaName": "牧谷",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2135,
+        "walkMinutes": 27
+      }
+    ],
+    "descriptionShort": "白砂と遠浅の海が広がる、家族連れに人気の海水浴場",
+    "descriptionLong": "浦富海水浴場とつながる白浜のビーチ。波が穏やかで透明度の高い遠浅の海が広がり、小さな子ども連れにも人気。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1451.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": "海水浴場開設は例年7月下旬〜8月中旬",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 150
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "family",
+        "photo"
+      ],
+      "moodTags": [
+        "のんびり",
+        "開放感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "白砂と遠浅の海が広がる、家族連れに人気の海水浴場",
+      "whyVisit": [
+        "海水浴を体験しやすい",
+        "白砂を体験しやすい",
+        "遠浅を体験しやすい",
+        "ファミリーを体験しやすい"
+      ],
+      "bestFor": [
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "海水浴を楽しみたい人",
+        "白砂を楽しみたい人",
+        "遠浅を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "牧谷海水浴場 makitani beach 白砂と遠浅の海が広がる、家族連れに人気の海水浴場 浦富海水浴場とつながる白浜のビーチ。波が穏やかで透明度の高い遠浅の海が広がり、小さな子ども連れにも人気。 牧谷 鳥取県岩美郡岩美町牧谷 海水浴 白砂 遠浅 ファミリー beach scenery"
+  },
+  {
+    "id": "umitodaichi-nature-museum",
+    "slug": "umitodaichi-nature-museum",
+    "nameJa": "海と大地の自然館",
+    "nameEn": "Museum of Nature and Earth",
+    "shortName": "自然館",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "学び",
+      "展示館",
+      "ジオパーク",
+      "雨の日"
+    ],
+    "location": {
+      "lat": 35.5934646,
+      "lng": 134.339507,
+      "geohash": "wyrd2zx4cqs",
+      "addressJa": "鳥取県岩美郡岩美町牧谷1794-4",
+      "areaName": "牧谷",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2184,
+        "walkMinutes": 27
+      }
+    ],
+    "descriptionShort": "山陰海岸ジオパークを学べる無料展示館",
+    "descriptionLong": "デジタル地球儀や3D映像、体験コーナーを通じて山陰海岸ジオパークを学べる展示館。雨の日の代替候補にもなる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.pref.tottori.lg.jp/255369.htm",
+    "instagramUrl": null,
+    "phoneNumber": "0857-73-1445",
+    "operatorName": "鳥取県",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:00-17:00（7〜8月の土曜は18:00まで）",
+      "regularHolidaysText": "月曜、年末年始（夏季無休）",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": "無料",
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "family",
+        "activity",
+        "photo"
+      ],
+      "moodTags": [
+        "知的好奇心",
+        "落ち着く"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 2,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "山陰海岸ジオパークを学べる無料展示館",
+      "whyVisit": [
+        "学びを体験しやすい",
+        "展示館を体験しやすい",
+        "ジオパークを体験しやすい",
+        "雨の日を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "学びを楽しみたい人",
+        "展示館を楽しみたい人",
+        "ジオパークを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "海と大地の自然館 museum of nature and earth 自然館 山陰海岸ジオパークを学べる無料展示館 デジタル地球儀や3d映像、体験コーナーを通じて山陰海岸ジオパークを学べる展示館。雨の日の代替候補にもなる。 牧谷 鳥取県岩美郡岩美町牧谷1794-4 学び 展示館 ジオパーク 雨の日 activity"
+  },
+  {
+    "id": "arasuna-shrine",
+    "slug": "arasuna-shrine",
+    "nameJa": "荒砂神社",
+    "nameEn": "Arasuna Shrine",
+    "shortName": "荒砂神社",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "神社",
+      "絶景",
+      "Free!ロケ参考地",
+      "高台"
+    ],
+    "location": {
+      "lat": 35.5908454,
+      "lng": 134.3213957,
+      "geohash": "wyrd2x1geq7",
+      "addressJa": "鳥取県岩美郡岩美町浦富2475-17",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2239,
+        "walkMinutes": 28
+      }
+    ],
+    "descriptionShort": "浦富海岸を見下ろす岩場の上の神社",
+    "descriptionLong": "浦富海水浴場脇の岩場に鎮座する古社。境内裏から浦富海岸を一望でき、歴史と景観の両方を味わえる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1416.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3485",
+    "operatorName": "荒砂神社",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 10,
+      "estimatedStayMinutesMax": 30
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "photo",
+        "sea_view"
+      ],
+      "moodTags": [
+        "静けさ",
+        "神聖さ",
+        "絶景"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "浦富海岸を見下ろす岩場の上の神社",
+      "whyVisit": [
+        "神社を体験しやすい",
+        "絶景を体験しやすい",
+        "Free!ロケ参考地を体験しやすい",
+        "高台を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "神社を楽しみたい人",
+        "絶景を楽しみたい人",
+        "Free!ロケ参考地を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "荒砂神社 arasuna shrine 浦富海岸を見下ろす岩場の上の神社 浦富海水浴場脇の岩場に鎮座する古社。境内裏から浦富海岸を一望でき、歴史と景観の両方を味わえる。 浦富 鳥取県岩美郡岩美町浦富2475-17 神社 絶景 free!ロケ参考地 高台 scenery"
+  },
+  {
+    "id": "oiwa-cherry-line",
+    "slug": "oiwa-cherry-line",
+    "nameJa": "大岩駅の桜並木",
+    "nameEn": "Oiwa Station Cherry Trees",
+    "shortName": "大岩桜並木",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "桜",
+      "春限定",
+      "駅景観",
+      "写真映え"
+    ],
+    "location": {
+      "lat": 35.56684422725054,
+      "lng": 134.3085678400116,
+      "geohash": "wyrd268xbkq",
+      "addressJa": "鳥取県岩美郡岩美町大谷1667",
+      "areaName": "大谷",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 7,
+        "walkMinutes": 1
+      }
+    ],
+    "descriptionShort": "大岩駅前に約1km続く桜並木",
+    "descriptionLong": "大谷平野を背景に、大岩駅の線路脇に約1km続く桜並木。春には列車と桜の景観が楽しめる人気のビュースポット。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1428.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": "例年3月下旬〜4月上旬が見頃",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 10,
+      "estimatedStayMinutesMax": 35
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "train"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "photo",
+        "station_stopover",
+        "relax"
+      ],
+      "moodTags": [
+        "春らしさ",
+        "のどか",
+        "ノスタルジー"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "大岩駅前に約1km続く桜並木",
+      "whyVisit": [
+        "桜を体験しやすい",
+        "春限定を体験しやすい",
+        "駅景観を体験しやすい",
+        "写真映えを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "桜を楽しみたい人",
+        "春限定を楽しみたい人",
+        "駅景観を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "大岩駅の桜並木 oiwa station cherry trees 大岩桜並木 大岩駅前に約1km続く桜並木 大谷平野を背景に、大岩駅の線路脇に約1km続く桜並木。春には列車と桜の景観が楽しめる人気のビュースポット。 大谷 鳥取県岩美郡岩美町大谷1667 桜 春限定 駅景観 写真映え scenery"
+  },
+  {
+    "id": "tago-shrine",
+    "slug": "tago-shrine",
+    "nameJa": "田後神社",
+    "nameEn": "Tago Shrine",
+    "shortName": "田後神社",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "神社",
+      "漁村",
+      "Free!ロケ参考地",
+      "集落散策"
+    ],
+    "location": {
+      "lat": 35.5888763,
+      "lng": 134.3094255,
+      "geohash": "wyrd2qc0hrq",
+      "addressJa": "鳥取県岩美郡岩美町田後501",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2453,
+        "walkMinutes": 31
+      }
+    ],
+    "descriptionShort": "田後の集落に溶け込む、漁村の神社",
+    "descriptionLong": "田後の漁村集落にある神社。ロケ参考地としても知られ、集落歩きとセットで楽しみやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1415.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 10,
+      "estimatedStayMinutesMax": 25
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "bus"
+      ],
+      "parkingAvailable": false,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "photo",
+        "activity"
+      ],
+      "moodTags": [
+        "ローカル感",
+        "静けさ"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "田後の集落に溶け込む、漁村の神社",
+      "whyVisit": [
+        "神社を体験しやすい",
+        "漁村を体験しやすい",
+        "Free!ロケ参考地を体験しやすい",
+        "集落散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "神社を楽しみたい人",
+        "漁村を楽しみたい人",
+        "Free!ロケ参考地を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "田後神社 tago shrine 田後の集落に溶け込む、漁村の神社 田後の漁村集落にある神社。ロケ参考地としても知られ、集落歩きとセットで楽しみやすい。 田後 鳥取県岩美郡岩美町田後501 神社 漁村 free!ロケ参考地 集落散策 scenery"
+  },
+  {
+    "id": "iwami-yukamuri-onsen",
+    "slug": "iwami-yukamuri-onsen",
+    "nameJa": "岩井ゆかむり温泉",
+    "nameEn": "Iwai Yukamuri Onsen",
+    "shortName": "ゆかむり温泉",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "onsen"
+    ],
+    "tags": [
+      "温泉",
+      "日帰り入浴",
+      "湯かむり",
+      "雨の日"
+    ],
+    "location": {
+      "lat": 35.5555377,
+      "lng": 134.3622365,
+      "geohash": "wyrd32xw509",
+      "addressJa": "鳥取県岩美郡岩美町岩井521",
+      "areaName": "岩井",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 3202,
+        "walkMinutes": 40
+      }
+    ],
+    "descriptionShort": "岩井温泉を代表する共同浴場",
+    "descriptionLong": "山陰最古級の岩井温泉を代表する共同浴場。柄杓で湯をかむる独特の風習『湯かむり』でも知られ、地元客にも観光客にも親しまれる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1418.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-73-1670",
+    "operatorName": "岩井ゆかむり温泉",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "6:00-22:00（10:00-10:15、15:45-16:00は清掃消毒で一時中断）",
+      "regularHolidaysText": "不定休",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 40,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "大人380円・小人190円",
+      "priceMinYen": 190,
+      "priceMaxYen": 380
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "relax",
+        "family",
+        "history"
+      ],
+      "moodTags": [
+        "ゆったり",
+        "温まる",
+        "地元感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "night"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 43
+    },
+    "aiContext": {
+      "plannerSummary": "岩井温泉を代表する共同浴場",
+      "whyVisit": [
+        "温泉を体験しやすい",
+        "日帰り入浴を体験しやすい",
+        "湯かむりを体験しやすい",
+        "雨の日を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "温泉を楽しみたい人",
+        "日帰り入浴を楽しみたい人",
+        "湯かむりを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "岩井ゆかむり温泉 iwai yukamuri onsen ゆかむり温泉 岩井温泉を代表する共同浴場 山陰最古級の岩井温泉を代表する共同浴場。柄杓で湯をかむる独特の風習『湯かむり』でも知られ、地元客にも観光客にも親しまれる。 岩井 鳥取県岩美郡岩美町岩井521 温泉 日帰り入浴 湯かむり 雨の日 onsen"
+  },
+  {
+    "id": "iwai-gama-craft",
+    "slug": "iwai-gama-craft",
+    "nameJa": "クラフト館 岩井窯",
+    "nameEn": "Iwai Gama Craft Museum",
+    "shortName": "岩井窯",
+    "status": "published",
+    "primaryCategory": "shop",
+    "secondaryCategories": [
+      "souvenir",
+      "activity"
+    ],
+    "tags": [
+      "窯元",
+      "民藝",
+      "器",
+      "買い物"
+    ],
+    "location": {
+      "lat": 35.5628282,
+      "lng": 134.3688174,
+      "geohash": "wyrd3dh2krs",
+      "addressJa": "鳥取県岩美郡岩美町宇治134-1",
+      "areaName": "宇治",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 3289,
+        "walkMinutes": 41
+      }
+    ],
+    "descriptionShort": "民藝の流れをくむ器に出会える窯元",
+    "descriptionLong": "岩井温泉近くにある窯元・クラフト館。展示や器の購入ができ、静かな山間で民藝の魅力に触れられる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1439.html",
+    "instagramUrl": "https://www.instagram.com/iwaigama/",
+    "phoneNumber": "0857-73-0339",
+    "operatorName": "岩井窯",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "10:00-16:00",
+      "regularHolidaysText": "月・火曜日",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 20,
+      "estimatedStayMinutesMax": 60
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "参考館入館料 200円",
+      "priceMinYen": 200,
+      "priceMaxYen": 200
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "shopping",
+        "history",
+        "relax",
+        "photo"
+      ],
+      "moodTags": [
+        "手仕事",
+        "静けさ",
+        "ローカル感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 2,
+      "foodScore": 1,
+      "shoppingScore": 5,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 57
+    },
+    "aiContext": {
+      "plannerSummary": "民藝の流れをくむ器に出会える窯元",
+      "whyVisit": [
+        "窯元を体験しやすい",
+        "民藝を体験しやすい",
+        "器を体験しやすい",
+        "買い物を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "窯元を楽しみたい人",
+        "民藝を楽しみたい人",
+        "器を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "クラフト館 岩井窯 iwai gama craft museum 岩井窯 民藝の流れをくむ器に出会える窯元 岩井温泉近くにある窯元・クラフト館。展示や器の購入ができ、静かな山間で民藝の魅力に触れられる。 宇治 鳥取県岩美郡岩美町宇治134-1 窯元 民藝 器 買い物 souvenir activity"
+  },
+  {
+    "id": "uradome-cruise",
+    "slug": "uradome-cruise",
+    "nameJa": "浦富海岸 島めぐり遊覧船",
+    "nameEn": "Uradome Cruise",
+    "shortName": "遊覧船",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "遊覧船",
+      "海上から絶景",
+      "海鮮グルメ近接"
+    ],
+    "location": {
+      "lat": 35.5795156,
+      "lng": 134.2978137,
+      "geohash": "wyrd2j09ty7",
+      "addressJa": "鳥取県岩美郡岩美町大谷2182",
+      "areaName": "大谷",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 1709,
+        "walkMinutes": 21
+      }
+    ],
+    "descriptionShort": "海上から浦富海岸の絶景を楽しむ定番体験",
+    "descriptionLong": "浦富海岸の海食地形や岩礁美を海上から間近に楽しめる遊覧船。船上ならではの視点で岩美ブルーを体感できる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1417.html",
+    "instagramUrl": "https://www.instagram.com/saninmatsushima/",
+    "phoneNumber": "0857-73-1212",
+    "operatorName": "山陰松島遊覧",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:30-15:30",
+      "regularHolidaysText": "天候により運休・冬季休業（12月〜2月末）",
+      "reservationRequired": false,
+      "lastEntryTime": "15:30",
+      "estimatedStayMinutesMin": 45,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "大人1,800円・小人900円",
+      "priceMinYen": 900,
+      "priceMaxYen": 1800
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo",
+        "activity",
+        "family"
+      ],
+      "moodTags": [
+        "非日常",
+        "爽快",
+        "観光定番"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 4,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 5,
+      "priorityScore": 83
+    },
+    "aiContext": {
+      "plannerSummary": "海上から浦富海岸の絶景を楽しむ定番体験",
+      "whyVisit": [
+        "遊覧船を体験しやすい",
+        "海上から絶景を体験しやすい",
+        "海鮮グルメ近接を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "遊覧船を楽しみたい人",
+        "海上から絶景を楽しみたい人",
+        "海鮮グルメ近接を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "浦富海岸 島めぐり遊覧船 uradome cruise 遊覧船 海上から浦富海岸の絶景を楽しむ定番体験 浦富海岸の海食地形や岩礁美を海上から間近に楽しめる遊覧船。船上ならではの視点で岩美ブルーを体感できる。 大谷 鳥取県岩美郡岩美町大谷2182 海上から絶景 海鮮グルメ近接 activity"
+  },
+  {
+    "id": "kamogaiso",
+    "slug": "kamogaiso",
+    "nameJa": "鴨ヶ磯",
+    "nameEn": "Kamogaiso",
+    "shortName": "鴨ヶ磯",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery",
+      "beach"
+    ],
+    "tags": [
+      "絶景",
+      "磯",
+      "遊歩道",
+      "海景観"
+    ],
+    "location": {
+      "lat": 35.5886064,
+      "lng": 134.3015939,
+      "geohash": "wyrd2neqtvn",
+      "addressJa": "鳥取県岩美郡岩美町田後",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2500,
+        "walkMinutes": 31
+      }
+    ],
+    "descriptionShort": "入り江と小島が織りなす、浦富海岸を代表する景勝地",
+    "descriptionLong": "小鴨ヶ磯・椿谷・大鴨ヶ磯の三つの浜を総称する景勝地。複雑な入り江と小島の景観が美しく、遊歩道散策にも向く。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1419.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 20,
+      "estimatedStayMinutesMax": 60
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo",
+        "activity"
+      ],
+      "moodTags": [
+        "開放感",
+        "絶景",
+        "非日常"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "入り江と小島が織りなす、浦富海岸を代表する景勝地",
+      "whyVisit": [
+        "絶景を体験しやすい",
+        "磯を体験しやすい",
+        "遊歩道を体験しやすい",
+        "海景観を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "絶景を楽しみたい人",
+        "磯を楽しみたい人",
+        "遊歩道を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "鴨ヶ磯 kamogaiso 入り江と小島が織りなす、浦富海岸を代表する景勝地 小鴨ヶ磯・椿谷・大鴨ヶ磯の三つの浜を総称する景勝地。複雑な入り江と小島の景観が美しく、遊歩道散策にも向く。 田後 鳥取県岩美郡岩美町田後 絶景 磯 遊歩道 海景観 scenery beach"
+  },
+  {
+    "id": "higashihama-beach",
+    "slug": "higashihama-beach",
+    "nameJa": "東浜海水浴場",
+    "nameEn": "Higashihama Beach",
+    "shortName": "東浜海水浴場",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "beach",
+      "scenery"
+    ],
+    "tags": [
+      "海水浴",
+      "磯遊び",
+      "透明度",
+      "東浜駅近く"
+    ],
+    "location": {
+      "lat": 35.600513,
+      "lng": 134.3576345,
+      "geohash": "wyrd92uhpb9",
+      "addressJa": "鳥取県岩美郡岩美町陸上",
+      "areaName": "陸上",
+      "stationAreaType": "higashihama_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 464,
+        "walkMinutes": 6
+      }
+    ],
+    "descriptionShort": "小島が点在し、磯遊びにも向く東浜の海岸",
+    "descriptionLong": "透明度の高い海と点在する小島が特徴の海水浴場。東浜駅側からアクセスしやすく、磯遊びや海辺散策にも向く。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1452.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": "海水浴場開設は7月下旬〜8月中旬",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 150
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "train"
+      ],
+      "parkingAvailable": false,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "family",
+        "photo"
+      ],
+      "moodTags": [
+        "開放感",
+        "夏らしさ"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "小島が点在し、磯遊びにも向く東浜の海岸",
+      "whyVisit": [
+        "海水浴を体験しやすい",
+        "磯遊びを体験しやすい",
+        "透明度を体験しやすい",
+        "東浜駅近くを体験しやすい"
+      ],
+      "bestFor": [
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "海水浴を楽しみたい人",
+        "磯遊びを楽しみたい人",
+        "透明度を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "東浜海水浴場 higashihama beach 小島が点在し、磯遊びにも向く東浜の海岸 透明度の高い海と点在する小島が特徴の海水浴場。東浜駅側からアクセスしやすく、磯遊びや海辺散策にも向く。 陸上 鳥取県岩美郡岩美町陸上 海水浴 磯遊び 透明度 東浜駅近く beach scenery"
+  },
+  {
+    "id": "higashihama-bbq-house",
+    "slug": "higashihama-bbq-house",
+    "nameJa": "東浜海岸野外施設（バーベキューハウス）",
+    "nameEn": "Higashihama BBQ House",
+    "shortName": "東浜BBQ",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "バーベキュー",
+      "海辺",
+      "団体利用"
+    ],
+    "location": {
+      "lat": 35.6017675,
+      "lng": 134.3666049,
+      "geohash": "wyrd994g2f6",
+      "addressJa": "鳥取県岩美郡岩美町陸上604-16",
+      "areaName": "陸上",
+      "stationAreaType": "higashihama_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 424,
+        "walkMinutes": 5
+      }
+    ],
+    "descriptionShort": "海辺でバーベキューを楽しめる野外施設",
+    "descriptionLong": "東浜海岸近くでバーベキューを楽しめる野外施設。海辺のレジャーを組み込みたいときに使いやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1442.html",
+    "instagramUrl": null,
+    "phoneNumber": "090-7774-1026",
+    "operatorName": "東浜観光協会",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "利用条件は要確認",
+      "regularHolidaysText": null,
+      "reservationRequired": true,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 60,
+      "estimatedStayMinutesMax": 180
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "施設使用料 100円/人",
+      "priceMinYen": 100,
+      "priceMaxYen": 100
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "rental_cycle",
+        "car",
+        "train"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "activity",
+        "family",
+        "sea_view"
+      ],
+      "moodTags": [
+        "にぎやか",
+        "アウトドア"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "long_stay"
+      ],
+      "withWho": [
+        "friends",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "海辺でバーベキューを楽しめる野外施設",
+      "whyVisit": [
+        "バーベキューを体験しやすい",
+        "海辺を体験しやすい",
+        "団体利用を体験しやすい"
+      ],
+      "bestFor": [
+        "友人旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "バーベキューを楽しみたい人",
+        "海辺を楽しみたい人",
+        "団体利用を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "東浜海岸野外施設（バーベキューハウス） higashihama bbq house 東浜bbq 海辺でバーベキューを楽しめる野外施設 東浜海岸近くでバーベキューを楽しめる野外施設。海辺のレジャーを組み込みたいときに使いやすい。 陸上 鳥取県岩美郡岩美町陸上604-16 バーベキュー 海辺 団体利用 activity"
+  },
+  {
+    "id": "manayaki-pottery",
+    "slug": "manayaki-pottery",
+    "nameJa": "真名かいろうの里（真名焼陶芸体験）",
+    "nameEn": "Manayaki Pottery",
+    "shortName": "真名焼",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "陶芸体験",
+      "窯元",
+      "里山",
+      "要予約"
+    ],
+    "location": {
+      "lat": 35.5493631,
+      "lng": 134.3720613,
+      "geohash": "wyrd1xwdpcw",
+      "addressJa": "鳥取県岩美郡岩美町真名1064-2",
+      "areaName": "真名",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 4324,
+        "walkMinutes": 54
+      }
+    ],
+    "descriptionShort": "里山の工房で楽しむ真名焼の陶芸体験",
+    "descriptionLong": "真名地区の自然に囲まれた工房。地元の粘土を使った真名焼の器づくりや陶芸体験を楽しめる、予約型の体験スポット。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1429.html",
+    "instagramUrl": null,
+    "phoneNumber": "0857-37-5322",
+    "operatorName": "真名かいろうの里",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:00-18:00（要連絡）",
+      "regularHolidaysText": "不定休",
+      "reservationRequired": true,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 60,
+      "estimatedStayMinutesMax": 150
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "陶芸体験 2,500円/人",
+      "priceMinYen": 2500,
+      "priceMaxYen": 2500
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "activity",
+        "history",
+        "photo",
+        "relax"
+      ],
+      "moodTags": [
+        "手仕事",
+        "里山",
+        "落ち着く"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 2,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "里山の工房で楽しむ真名焼の陶芸体験",
+      "whyVisit": [
+        "陶芸体験を体験しやすい",
+        "窯元を体験しやすい",
+        "里山を体験しやすい",
+        "要予約を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "陶芸体験を楽しみたい人",
+        "窯元を楽しみたい人",
+        "里山を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "真名かいろうの里（真名焼陶芸体験） manayaki pottery 真名焼 里山の工房で楽しむ真名焼の陶芸体験 真名地区の自然に囲まれた工房。地元の粘土を使った真名焼の器づくりや陶芸体験を楽しめる、予約型の体験スポット。 真名 鳥取県岩美郡岩美町真名1064-2 陶芸体験 窯元 里山 要予約 activity"
+  },
+  {
+    "id": "higashihama-station",
+    "slug": "higashihama-station",
+    "nameJa": "東浜駅",
+    "nameEn": "Higashihama Station",
+    "shortName": "東浜駅",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "station_area"
+    ],
+    "tags": [
+      "駅周辺",
+      "鉄道",
+      "海岸アクセス",
+      "東浜エリアの起点"
+    ],
+    "location": {
+      "lat": 35.6,
+      "lng": 134.3648,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町陸上",
+      "areaName": "陸上",
+      "stationAreaType": "higashihama_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 0,
+        "walkMinutes": 1
+      }
+    ],
+    "descriptionShort": "東浜海岸や陸上岬方面の最寄りとなる山陰本線の駅",
+    "descriptionLong": "JR山陰本線の東浜駅。東浜海水浴場や陸上岬方面への玄関口で、海辺の景観や沿線散策の起点にしやすい駅。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": null,
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "bus",
+        "train",
+        "car"
+      ],
+      "parkingAvailable": false,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "station_stopover",
+        "photo"
+      ],
+      "moodTags": [
+        "旅の始まり",
+        "ローカル感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "東浜海岸や陸上岬方面の最寄りとなる山陰本線の駅",
+      "whyVisit": [
+        "駅周辺を体験しやすい",
+        "鉄道を体験しやすい",
+        "海岸アクセスを体験しやすい",
+        "東浜エリアの起点を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "駅周辺を楽しみたい人",
+        "鉄道を楽しみたい人",
+        "海岸アクセスを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "東浜駅 higashihama station 東浜海岸や陸上岬方面の最寄りとなる山陰本線の駅 jr山陰本線の東浜駅。東浜海水浴場や陸上岬方面への玄関口で、海辺の景観や沿線散策の起点にしやすい駅。 陸上 鳥取県岩美郡岩美町陸上 駅周辺 鉄道 海岸アクセス 東浜エリアの起点 station_area"
+  },
+  {
+    "id": "oiwa-station",
+    "slug": "oiwa-station",
+    "nameJa": "大岩駅",
+    "nameEn": "Oiwa Station",
+    "shortName": "大岩駅",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "station_area"
+    ],
+    "tags": [
+      "駅周辺",
+      "鉄道",
+      "遊覧船アクセス",
+      "大岩エリアの起点"
+    ],
+    "location": {
+      "lat": 35.5669,
+      "lng": 134.3084,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町大谷",
+      "areaName": "大谷",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 0,
+        "walkMinutes": 1
+      }
+    ],
+    "descriptionShort": "遊覧船や鴨ヶ磯方面に向かいやすい山陰本線の駅",
+    "descriptionLong": "JR山陰本線の大岩駅。浦富海岸島めぐり遊覧船のりばや鴨ヶ磯、田後方面へのアクセス拠点として使いやすい小さな駅。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": null,
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "bus",
+        "train",
+        "car"
+      ],
+      "parkingAvailable": false,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "station_stopover",
+        "photo"
+      ],
+      "moodTags": [
+        "旅の始まり",
+        "静かな駅"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "遊覧船や鴨ヶ磯方面に向かいやすい山陰本線の駅",
+      "whyVisit": [
+        "駅周辺を体験しやすい",
+        "鉄道を体験しやすい",
+        "遊覧船アクセスを体験しやすい",
+        "大岩エリアの起点を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "駅周辺を楽しみたい人",
+        "鉄道を楽しみたい人",
+        "遊覧船アクセスを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "大岩駅 oiwa station 遊覧船や鴨ヶ磯方面に向かいやすい山陰本線の駅 jr山陰本線の大岩駅。浦富海岸島めぐり遊覧船のりばや鴨ヶ磯、田後方面へのアクセス拠点として使いやすい小さな駅。 大谷 鳥取県岩美郡岩美町大谷 駅周辺 鉄道 遊覧船アクセス 大岩エリアの起点 station_area"
+  },
+  {
+    "id": "tago-park-observatory",
+    "slug": "tago-park-observatory",
+    "nameJa": "田後公園展望台",
+    "nameEn": "Tago Park Observatory",
+    "shortName": "田後展望台",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "展望台",
+      "海景観",
+      "夕景",
+      "写真映え"
+    ],
+    "location": {
+      "lat": 35.5918,
+      "lng": 134.3038,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町田後",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2200,
+        "walkMinutes": 28
+      }
+    ],
+    "descriptionShort": "田後の断崖と日本海を見渡す定番展望スポット",
+    "descriptionLong": "田後地区北端の日和山にある展望台。黒島や菜種五島、城原海岸などを広く見渡せ、夕景も美しい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwamikanko.org/sightseeing/3597/",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo",
+        "relax"
+      ],
+      "moodTags": [
+        "開放感",
+        "絶景"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "田後の断崖と日本海を見渡す定番展望スポット",
+      "whyVisit": [
+        "展望台を体験しやすい",
+        "海景観を体験しやすい",
+        "夕景を体験しやすい",
+        "写真映えを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "展望台を楽しみたい人",
+        "海景観を楽しみたい人",
+        "夕景を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "田後公園展望台 tago park observatory 田後展望台 田後の断崖と日本海を見渡す定番展望スポット 田後地区北端の日和山にある展望台。黒島や菜種五島、城原海岸などを広く見渡せ、夕景も美しい。 田後 鳥取県岩美郡岩美町田後 展望台 海景観 夕景 写真映え scenery"
+  },
+  {
+    "id": "senganmatsushima",
+    "slug": "senganmatsushima",
+    "nameJa": "千貫松島",
+    "nameEn": "Senganmatsushima",
+    "shortName": "千貫松島",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "奇岩",
+      "海景観",
+      "ジオパーク",
+      "展望"
+    ],
+    "location": {
+      "lat": 35.5862,
+      "lng": 134.297,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町網代",
+      "areaName": "網代",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2500,
+        "walkMinutes": 32
+      }
+    ],
+    "descriptionShort": "網代沖に浮かぶ松島のような奇岩景観",
+    "descriptionLong": "浦富海岸西側、網代周辺から望める奇岩群。海食地形の迫力と松の緑の対比が美しい、山陰海岸ジオパークらしい景観スポット。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1422.html",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo"
+      ],
+      "moodTags": [
+        "絶景",
+        "ダイナミック"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "網代沖に浮かぶ松島のような奇岩景観",
+      "whyVisit": [
+        "奇岩を体験しやすい",
+        "海景観を体験しやすい",
+        "ジオパークを体験しやすい",
+        "展望を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "奇岩を楽しみたい人",
+        "海景観を楽しみたい人",
+        "ジオパークを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "千貫松島 senganmatsushima 網代沖に浮かぶ松島のような奇岩景観 浦富海岸西側、網代周辺から望める奇岩群。海食地形の迫力と松の緑の対比が美しい、山陰海岸ジオパークらしい景観スポット。 網代 鳥取県岩美郡岩美町網代 奇岩 海景観 ジオパーク 展望 scenery"
+  },
+  {
+    "id": "nanatsu-goshima",
+    "slug": "nanatsu-goshima",
+    "nameJa": "菜種五島",
+    "nameEn": "Nanatsu Goshima",
+    "shortName": "菜種五島",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "奇岩",
+      "田後",
+      "海景観",
+      "遊覧船"
+    ],
+    "location": {
+      "lat": 35.5893,
+      "lng": 134.3015,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町田後",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2300,
+        "walkMinutes": 30
+      }
+    ],
+    "descriptionShort": "田後沖に浮かぶ大小の島々が連なる名景",
+    "descriptionLong": "田後公園展望台や周辺海岸から望める岩礁群。海上・陸上のどちらからも変化のある景観を楽しめる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/spot/detail_1426.html",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo"
+      ],
+      "moodTags": [
+        "開放感",
+        "非日常"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "田後沖に浮かぶ大小の島々が連なる名景",
+      "whyVisit": [
+        "奇岩を体験しやすい",
+        "田後を体験しやすい",
+        "海景観を体験しやすい",
+        "遊覧船を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "奇岩を楽しみたい人",
+        "田後を楽しみたい人",
+        "海景観を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "菜種五島 nanatsu goshima 田後沖に浮かぶ大小の島々が連なる名景 田後公園展望台や周辺海岸から望める岩礁群。海上・陸上のどちらからも変化のある景観を楽しめる。 田後 鳥取県岩美郡岩美町田後 奇岩 海景観 遊覧船 scenery"
+  },
+  {
+    "id": "nishiwaki-coast",
+    "slug": "nishiwaki-coast",
+    "nameJa": "西脇海岸",
+    "nameEn": "Nishiwaki Coast",
+    "shortName": "西脇海岸",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery",
+      "beach"
+    ],
+    "tags": [
+      "海岸",
+      "絶景",
+      "エメラルドグリーン",
+      "展望"
+    ],
+    "location": {
+      "lat": 35.5868,
+      "lng": 134.3058,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町網代",
+      "areaName": "網代",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2600,
+        "walkMinutes": 34
+      }
+    ],
+    "descriptionShort": "エメラルドグリーンの海と小島が美しい海岸景観",
+    "descriptionLong": "透明度の高い海と小島群、松の緑が織りなす景色が印象的な海岸。展望台や海岸線からの眺めが美しい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwami_spot",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo",
+        "relax"
+      ],
+      "moodTags": [
+        "開放感",
+        "静けさ"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "エメラルドグリーンの海と小島が美しい海岸景観",
+      "whyVisit": [
+        "海岸を体験しやすい",
+        "絶景を体験しやすい",
+        "エメラルドグリーンを体験しやすい",
+        "展望を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "海岸を楽しみたい人",
+        "絶景を楽しみたい人",
+        "エメラルドグリーンを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "西脇海岸 nishiwaki coast エメラルドグリーンの海と小島が美しい海岸景観 透明度の高い海と小島群、松の緑が織りなす景色が印象的な海岸。展望台や海岸線からの眺めが美しい。 網代 鳥取県岩美郡岩美町網代 海岸 絶景 エメラルドグリーン 展望 scenery beach"
+  },
+  {
+    "id": "ryujin-cave",
+    "slug": "ryujin-cave",
+    "nameJa": "龍神洞",
+    "nameEn": "Ryujin Cave",
+    "shortName": "龍神洞",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery",
+      "activity"
+    ],
+    "tags": [
+      "洞門",
+      "洞窟",
+      "ジオパーク",
+      "海景観"
+    ],
+    "location": {
+      "lat": 35.5898,
+      "lng": 134.3078,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町網代",
+      "areaName": "網代",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2500,
+        "walkMinutes": 33
+      }
+    ],
+    "descriptionShort": "海食で生まれた洞門・洞窟地形を間近に感じる景勝地",
+    "descriptionLong": "浦富海岸を代表する海食洞のひとつ。周辺の奇岩景観と合わせて、ジオパークらしい迫力ある地形を楽しめる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwami_spot",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo",
+        "activity"
+      ],
+      "moodTags": [
+        "ダイナミック",
+        "非日常"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "海食で生まれた洞門・洞窟地形を間近に感じる景勝地",
+      "whyVisit": [
+        "洞門を体験しやすい",
+        "洞窟を体験しやすい",
+        "ジオパークを体験しやすい",
+        "海景観を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "洞門を楽しみたい人",
+        "洞窟を楽しみたい人",
+        "ジオパークを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "龍神洞 ryujin cave 海食で生まれた洞門・洞窟地形を間近に感じる景勝地 浦富海岸を代表する海食洞のひとつ。周辺の奇岩景観と合わせて、ジオパークらしい迫力ある地形を楽しめる。 網代 鳥取県岩美郡岩美町網代 洞門 洞窟 ジオパーク 海景観 scenery activity"
+  },
+  {
+    "id": "shirohara-coast",
+    "slug": "shirohara-coast",
+    "nameJa": "城原海岸",
+    "nameEn": "Shirohara Coast",
+    "shortName": "城原海岸",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery",
+      "beach"
+    ],
+    "tags": [
+      "海岸",
+      "奇岩",
+      "海景観",
+      "ジオパーク"
+    ],
+    "location": {
+      "lat": 35.5864,
+      "lng": 134.2998,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町田後",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2500,
+        "walkMinutes": 32
+      }
+    ],
+    "descriptionShort": "奇岩と断崖が連なる力強い海岸景観",
+    "descriptionLong": "田後と網代の中間に広がる海岸景観。奇岩や断崖の変化があり、ジオパークらしい海岸の迫力を感じやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwami_spot",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo"
+      ],
+      "moodTags": [
+        "ダイナミック",
+        "荒々しさ"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "奇岩と断崖が連なる力強い海岸景観",
+      "whyVisit": [
+        "海岸を体験しやすい",
+        "奇岩を体験しやすい",
+        "海景観を体験しやすい",
+        "ジオパークを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "海岸を楽しみたい人",
+        "奇岩を楽しみたい人",
+        "海景観を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "城原海岸 shirohara coast 奇岩と断崖が連なる力強い海岸景観 田後と網代の中間に広がる海岸景観。奇岩や断崖の変化があり、ジオパークらしい海岸の迫力を感じやすい。 田後 鳥取県岩美郡岩美町田後 海岸 奇岩 海景観 ジオパーク scenery beach"
+  },
+  {
+    "id": "kugami-cape",
+    "slug": "kugami-cape",
+    "nameJa": "陸上岬",
+    "nameEn": "Kugami Cape",
+    "shortName": "陸上岬",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "岬",
+      "海景観",
+      "東浜",
+      "朝日"
+    ],
+    "location": {
+      "lat": 35.6067,
+      "lng": 134.3746,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町陸上",
+      "areaName": "陸上",
+      "stationAreaType": "higashihama_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 1800,
+        "walkMinutes": 23
+      }
+    ],
+    "descriptionShort": "東端の海食崖と海を見渡す東浜側の岬",
+    "descriptionLong": "岩美町東側の海景観を象徴する岬。東浜海岸や日本海を見渡しやすく、海沿いドライブや散策の目的地になる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwami_spot",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo",
+        "relax"
+      ],
+      "moodTags": [
+        "開放感",
+        "静けさ"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "morning",
+        "daytime",
+        "sunset"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "東端の海食崖と海を見渡す東浜側の岬",
+      "whyVisit": [
+        "岬を体験しやすい",
+        "海景観を体験しやすい",
+        "東浜を体験しやすい",
+        "朝日を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "岬を楽しみたい人",
+        "海景観を楽しみたい人",
+        "東浜を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "陸上岬 kugami cape 東端の海食崖と海を見渡す東浜側の岬 岩美町東側の海景観を象徴する岬。東浜海岸や日本海を見渡しやすく、海沿いドライブや散策の目的地になる。 陸上 鳥取県岩美郡岩美町陸上 岬 海景観 東浜 朝日 scenery"
+  },
+  {
+    "id": "kobaneo-beach",
+    "slug": "kobaneo-beach",
+    "nameJa": "小羽尾海水浴場",
+    "nameEn": "Kobaneo Beach",
+    "shortName": "小羽尾海水浴場",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "beach",
+      "scenery"
+    ],
+    "tags": [
+      "海水浴",
+      "海岸",
+      "東浜エリア",
+      "静かな浜"
+    ],
+    "location": {
+      "lat": 35.6012,
+      "lng": 134.3728,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町陸上",
+      "areaName": "陸上",
+      "stationAreaType": "higashihama_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 1600,
+        "walkMinutes": 20
+      }
+    ],
+    "descriptionShort": "東浜エリアの比較的静かな海水浴場",
+    "descriptionLong": "東浜周辺の海岸景観のひとつ。夏季は海水浴、オフシーズンは静かな海辺の散策を楽しみやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwami_spot",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "family",
+        "photo"
+      ],
+      "moodTags": [
+        "ゆったり",
+        "開放感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "東浜エリアの比較的静かな海水浴場",
+      "whyVisit": [
+        "海水浴を体験しやすい",
+        "海岸を体験しやすい",
+        "東浜エリアを体験しやすい",
+        "静かな浜を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "海水浴を楽しみたい人",
+        "海岸を楽しみたい人",
+        "東浜エリアを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "小羽尾海水浴場 kobaneo beach 東浜エリアの比較的静かな海水浴場 東浜周辺の海岸景観のひとつ。夏季は海水浴、オフシーズンは静かな海辺の散策を楽しみやすい。 陸上 鳥取県岩美郡岩美町陸上 海水浴 海岸 東浜エリア 静かな浜 beach scenery"
+  },
+  {
+    "id": "ajiro-port",
+    "slug": "ajiro-port",
+    "nameJa": "網代港",
+    "nameEn": "Ajiro Port",
+    "shortName": "網代港",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "港町",
+      "漁港",
+      "散策",
+      "海鮮"
+    ],
+    "location": {
+      "lat": 35.5806,
+      "lng": 134.2942,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町大谷",
+      "areaName": "網代",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 1700,
+        "walkMinutes": 22
+      }
+    ],
+    "descriptionShort": "遊覧船のりばや飲食にも近い漁港エリア",
+    "descriptionLong": "網代漁港周辺は、遊覧船のりばや港の風景、飲食店などがまとまるエリア。海辺の回遊や食と景観の組み合わせに向く。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwamilunch",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "seafood",
+        "station_stopover",
+        "photo"
+      ],
+      "moodTags": [
+        "ローカル感",
+        "港町"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 4,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 73
+    },
+    "aiContext": {
+      "plannerSummary": "遊覧船のりばや飲食にも近い漁港エリア",
+      "whyVisit": [
+        "港町を体験しやすい",
+        "漁港を体験しやすい",
+        "散策を体験しやすい",
+        "海鮮を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "港町を楽しみたい人",
+        "漁港を楽しみたい人",
+        "散策を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "網代港 ajiro port 遊覧船のりばや飲食にも近い漁港エリア 網代漁港周辺は、遊覧船のりばや港の風景、飲食店などがまとまるエリア。海辺の回遊や食と景観の組み合わせに向く。 網代 鳥取県岩美郡岩美町大谷 港町 漁港 散策 海鮮 activity"
+  },
+  {
+    "id": "tago-port",
+    "slug": "tago-port",
+    "nameJa": "田後港",
+    "nameEn": "Tago Port",
+    "shortName": "田後港",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "港町",
+      "漁村",
+      "海鮮",
+      "散策"
+    ],
+    "location": {
+      "lat": 35.5885,
+      "lng": 134.309,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町田後",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2500,
+        "walkMinutes": 32
+      }
+    ],
+    "descriptionShort": "漁村の暮らしと港の景観を感じる田後の港",
+    "descriptionLong": "田後の漁港周辺は、漁村の暮らしや海産物の雰囲気を感じやすいエリア。田後神社や展望台と合わせて歩くと港町の魅力が伝わる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwamikanko.org/sightseeing/4806/",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "seafood",
+        "photo",
+        "history"
+      ],
+      "moodTags": [
+        "ローカル感",
+        "港町"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 4,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "漁村の暮らしと港の景観を感じる田後の港",
+      "whyVisit": [
+        "港町を体験しやすい",
+        "漁村を体験しやすい",
+        "海鮮を体験しやすい",
+        "散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "港町を楽しみたい人",
+        "漁村を楽しみたい人",
+        "海鮮を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "田後港 tago port 漁村の暮らしと港の景観を感じる田後の港 田後の漁港周辺は、漁村の暮らしや海産物の雰囲気を感じやすいエリア。田後神社や展望台と合わせて歩くと港町の魅力が伝わる。 田後 鳥取県岩美郡岩美町田後 港町 漁村 海鮮 散策 activity"
+  },
+  {
+    "id": "yokoo-terraced-rice-fields",
+    "slug": "yokoo-terraced-rice-fields",
+    "nameJa": "横尾の棚田",
+    "nameEn": "Yokoo Terraced Rice Fields",
+    "shortName": "横尾棚田",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "棚田",
+      "里山",
+      "景観",
+      "季節風景"
+    ],
+    "location": {
+      "lat": 35.5682,
+      "lng": 134.3508,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町横尾",
+      "areaName": "横尾",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2800,
+        "walkMinutes": 36
+      }
+    ],
+    "descriptionShort": "里山の地形を活かした棚田景観が美しいスポット",
+    "descriptionLong": "日本棚田百選に選ばれる横尾の棚田。四季によって表情が変わり、里山の風景を静かに味わえる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "relax",
+        "photo",
+        "history"
+      ],
+      "moodTags": [
+        "ゆったり",
+        "里山",
+        "季節感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "里山の地形を活かした棚田景観が美しいスポット",
+      "whyVisit": [
+        "棚田を体験しやすい",
+        "里山を体験しやすい",
+        "景観を体験しやすい",
+        "季節風景を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "棚田を楽しみたい人",
+        "里山を楽しみたい人",
+        "景観を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "横尾の棚田 yokoo terraced rice fields 横尾棚田 里山の地形を活かした棚田景観が美しいスポット 日本棚田百選に選ばれる横尾の棚田。四季によって表情が変わり、里山の風景を静かに味わえる。 横尾 鳥取県岩美郡岩美町横尾 棚田 里山 景観 季節風景 scenery"
+  },
+  {
+    "id": "anakannon",
+    "slug": "anakannon",
+    "nameJa": "穴観音",
+    "nameEn": "Ana Kannon",
+    "shortName": "穴観音",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "史跡",
+      "信仰",
+      "洞窟",
+      "静かな散策"
+    ],
+    "location": {
+      "lat": 35.5637,
+      "lng": 134.3458,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町横尾",
+      "areaName": "横尾",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2600,
+        "walkMinutes": 33
+      }
+    ],
+    "descriptionShort": "岩のくぼみに祀られた観音像を訪ねる静かな史跡",
+    "descriptionLong": "山裾の岩場に祀られた観音像で、岩美町内の歴史・信仰文化を感じられるスポット。周辺散策と組み合わせやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "relax"
+      ],
+      "moodTags": [
+        "静けさ",
+        "ローカル感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 43
+    },
+    "aiContext": {
+      "plannerSummary": "岩のくぼみに祀られた観音像を訪ねる静かな史跡",
+      "whyVisit": [
+        "史跡を体験しやすい",
+        "信仰を体験しやすい",
+        "洞窟を体験しやすい",
+        "静かな散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "史跡を楽しみたい人",
+        "信仰を楽しみたい人",
+        "洞窟を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "穴観音 ana kannon 岩のくぼみに祀られた観音像を訪ねる静かな史跡 山裾の岩場に祀られた観音像で、岩美町内の歴史・信仰文化を感じられるスポット。周辺散策と組み合わせやすい。 横尾 鳥取県岩美郡岩美町横尾 史跡 信仰 洞窟 静かな散策 scenery"
+  },
+  {
+    "id": "takanosaka-kofun-park",
+    "slug": "takanosaka-kofun-park",
+    "nameJa": "高野坂古墳公園",
+    "nameEn": "Takanosaka Kofun Park",
+    "shortName": "高野坂古墳",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "古墳",
+      "歴史",
+      "公園",
+      "散策"
+    ],
+    "location": {
+      "lat": 35.5718,
+      "lng": 134.3193,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町大谷",
+      "areaName": "大谷",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 1000,
+        "walkMinutes": 13
+      },
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 1700,
+        "walkMinutes": 22
+      }
+    ],
+    "descriptionShort": "古墳を中心に歴史散策ができる公園",
+    "descriptionLong": "古墳を含む歴史公園。海景観中心の旅に、少し違う文脈の立寄り先として加えやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "family"
+      ],
+      "moodTags": [
+        "落ち着き",
+        "学び"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "古墳を中心に歴史散策ができる公園",
+      "whyVisit": [
+        "古墳を体験しやすい",
+        "歴史を体験しやすい",
+        "公園を体験しやすい",
+        "散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "古墳を楽しみたい人",
+        "歴史を楽しみたい人",
+        "公園を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "高野坂古墳公園 takanosaka kofun park 高野坂古墳 古墳を中心に歴史散策ができる公園 古墳を含む歴史公園。海景観中心の旅に、少し違う文脈の立寄り先として加えやすい。 大谷 鳥取県岩美郡岩美町大谷 古墳 歴史 公園 散策 activity"
+  },
+  {
+    "id": "shichiyama-pass-stone-path",
+    "slug": "shichiyama-pass-stone-path",
+    "nameJa": "駟馳山峠の石畳道",
+    "nameEn": "Shichiyama Pass Stone Path",
+    "shortName": "駟馳山峠",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "石畳道",
+      "歴史街道",
+      "散策",
+      "山道"
+    ],
+    "location": {
+      "lat": 35.5535,
+      "lng": 134.389,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町岩井",
+      "areaName": "岩井",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 4700,
+        "walkMinutes": 60
+      }
+    ],
+    "descriptionShort": "歴史を感じる石畳の峠道を歩ける史跡",
+    "descriptionLong": "山陰道の歴史を感じる石畳道。岩井温泉と合わせて、温泉街とは異なる歴史散策の要素を加えられる。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "activity",
+        "relax"
+      ],
+      "moodTags": [
+        "静けさ",
+        "歴史感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple"
+      ],
+      "physicalLoad": "high",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "歴史を感じる石畳の峠道を歩ける史跡",
+      "whyVisit": [
+        "石畳道を体験しやすい",
+        "歴史街道を体験しやすい",
+        "散策を体験しやすい",
+        "山道を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "石畳道を楽しみたい人",
+        "歴史街道を楽しみたい人",
+        "散策を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "駟馳山峠の石畳道 shichiyama pass stone path 駟馳山峠 歴史を感じる石畳の峠道を歩ける史跡 山陰道の歴史を感じる石畳道。岩井温泉と合わせて、温泉街とは異なる歴史散策の要素を加えられる。 岩井 鳥取県岩美郡岩美町岩井 石畳道 歴史街道 散策 山道 activity"
+  },
+  {
+    "id": "karakawa-wetland",
+    "slug": "karakawa-wetland",
+    "nameJa": "唐川湿原",
+    "nameEn": "Karakawa Wetland",
+    "shortName": "唐川湿原",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "湿原",
+      "自然観察",
+      "花景観",
+      "里山"
+    ],
+    "location": {
+      "lat": 35.614,
+      "lng": 134.33,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町唐川",
+      "areaName": "唐川",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 5600,
+        "walkMinutes": 72
+      }
+    ],
+    "descriptionShort": "町花カキツバタでも知られる山あいの湿原",
+    "descriptionLong": "中国地方を代表する湿原のひとつ。季節の花や湿地の自然観察を楽しめる、海辺とは異なる岩美町の自然スポット。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "relax",
+        "photo",
+        "family"
+      ],
+      "moodTags": [
+        "静けさ",
+        "自然"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "町花カキツバタでも知られる山あいの湿原",
+      "whyVisit": [
+        "湿原を体験しやすい",
+        "自然観察を体験しやすい",
+        "花景観を体験しやすい",
+        "里山を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "湿原を楽しみたい人",
+        "自然観察を楽しみたい人",
+        "花景観を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "唐川湿原 karakawa wetland 町花カキツバタでも知られる山あいの湿原 中国地方を代表する湿原のひとつ。季節の花や湿地の自然観察を楽しめる、海辺とは異なる岩美町の自然スポット。 唐川 鳥取県岩美郡岩美町唐川 湿原 自然観察 花景観 里山 scenery"
+  },
+  {
+    "id": "ikoi-no-sato",
+    "slug": "ikoi-no-sato",
+    "nameJa": "いこいの里",
+    "nameEn": "Ikoi no Sato",
+    "shortName": "いこいの里",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "キャンプ",
+      "公園",
+      "自然体験",
+      "家族向け"
+    ],
+    "location": {
+      "lat": 35.584,
+      "lng": 134.349,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町大坂",
+      "areaName": "大坂",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 3900,
+        "walkMinutes": 50
+      }
+    ],
+    "descriptionShort": "自然の中で遊べるレクリエーション拠点",
+    "descriptionLong": "広場や自然体験の要素があり、家族やグループで過ごしやすい憩いの施設。海辺とは違う過ごし方を提案しやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "施設により異なる",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 120
+    },
+    "pricing": {
+      "priceType": "unknown",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "walk"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "family",
+        "activity",
+        "relax"
+      ],
+      "moodTags": [
+        "のびのび",
+        "自然"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 43
+    },
+    "aiContext": {
+      "plannerSummary": "自然の中で遊べるレクリエーション拠点",
+      "whyVisit": [
+        "キャンプを体験しやすい",
+        "公園を体験しやすい",
+        "自然体験を体験しやすい",
+        "家族向けを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "キャンプを楽しみたい人",
+        "公園を楽しみたい人",
+        "自然体験を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "いこいの里 ikoi no sato 自然の中で遊べるレクリエーション拠点 広場や自然体験の要素があり、家族やグループで過ごしやすい憩いの施設。海辺とは違う過ごし方を提案しやすい。 大坂 鳥取県岩美郡岩美町大坂 キャンプ 公園 自然体験 家族向け activity"
+  },
+  {
+    "id": "old-iwami-mine",
+    "slug": "old-iwami-mine",
+    "nameJa": "旧岩美鉱山跡",
+    "nameEn": "Old Iwami Mine",
+    "shortName": "旧岩美鉱山",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "鉱山遺構",
+      "歴史",
+      "産業遺産"
+    ],
+    "location": {
+      "lat": 35.5548,
+      "lng": 134.33,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町荒金",
+      "areaName": "荒金",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 4500,
+        "walkMinutes": 58
+      }
+    ],
+    "descriptionShort": "岩美町の産業史を感じる鉱山跡周辺",
+    "descriptionLong": "岩美町の産業の歴史に関わる旧鉱山跡。史跡として静かに見学・散策できるエリア。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history"
+      ],
+      "moodTags": [
+        "歴史感",
+        "静けさ"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 43
+    },
+    "aiContext": {
+      "plannerSummary": "岩美町の産業史を感じる鉱山跡周辺",
+      "whyVisit": [
+        "鉱山遺構を体験しやすい",
+        "歴史を体験しやすい",
+        "産業遺産を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "鉱山遺構を楽しみたい人",
+        "歴史を楽しみたい人",
+        "産業遺産を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "旧岩美鉱山跡 old iwami mine 旧岩美鉱山 岩美町の産業史を感じる鉱山跡周辺 岩美町の産業の歴史に関わる旧鉱山跡。史跡として静かに見学・散策できるエリア。 荒金 鳥取県岩美郡岩美町荒金 鉱山遺構 歴史 産業遺産 activity"
+  },
+  {
+    "id": "arakane-gyojayama",
+    "slug": "arakane-gyojayama",
+    "nameJa": "荒金行者山",
+    "nameEn": "Arakane Gyojayama",
+    "shortName": "行者山",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "山岳信仰",
+      "ハイキング",
+      "歴史",
+      "自然"
+    ],
+    "location": {
+      "lat": 35.5588,
+      "lng": 134.3235,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町荒金",
+      "areaName": "荒金",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 5200,
+        "walkMinutes": 67
+      }
+    ],
+    "descriptionShort": "山岳信仰の面影を感じる内陸の山",
+    "descriptionLong": "行者信仰ゆかりの山。自然と歴史が重なるスポットで、歩くこと自体を目的にした旅に向く。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "activity",
+        "relax"
+      ],
+      "moodTags": [
+        "静けさ",
+        "自然"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "bad"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "normal_stop",
+        "long_stay"
+      ],
+      "withWho": [
+        "solo",
+        "friends"
+      ],
+      "physicalLoad": "high",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "山岳信仰の面影を感じる内陸の山",
+      "whyVisit": [
+        "山岳信仰を体験しやすい",
+        "ハイキングを体験しやすい",
+        "歴史を体験しやすい",
+        "自然を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "山岳信仰を楽しみたい人",
+        "ハイキングを楽しみたい人",
+        "歴史を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "荒金行者山 arakane gyojayama 行者山 山岳信仰の面影を感じる内陸の山 行者信仰ゆかりの山。自然と歴史が重なるスポットで、歩くこと自体を目的にした旅に向く。 荒金 鳥取県岩美郡岩美町荒金 山岳信仰 ハイキング 歴史 自然 activity"
+  },
+  {
+    "id": "udono-cemetery-uradome-daiba",
+    "slug": "udono-cemetery-uradome-daiba",
+    "nameJa": "鵜殿家墓地・浦富御台場",
+    "nameEn": "Udono Cemetery & Uradome Battery",
+    "shortName": "浦富御台場",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "史跡",
+      "幕末",
+      "歴史散策",
+      "浦富"
+    ],
+    "location": {
+      "lat": 35.5846,
+      "lng": 134.327,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 1200,
+        "walkMinutes": 16
+      }
+    ],
+    "descriptionShort": "浦富に残る歴史の痕跡をたどれる史跡",
+    "descriptionLong": "浦富周辺に残る歴史文化資源。海岸景観だけではない、地域の歴史を感じる散策先として加えやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "station_stopover"
+      ],
+      "moodTags": [
+        "落ち着き",
+        "学び"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "浦富に残る歴史の痕跡をたどれる史跡",
+      "whyVisit": [
+        "史跡を体験しやすい",
+        "幕末を体験しやすい",
+        "歴史散策を体験しやすい",
+        "浦富を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "史跡を楽しみたい人",
+        "幕末を楽しみたい人",
+        "歴史散策を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "鵜殿家墓地・浦富御台場 udono cemetery & uradome battery 浦富御台場 浦富に残る歴史の痕跡をたどれる史跡 浦富周辺に残る歴史文化資源。海岸景観だけではない、地域の歴史を感じる散策先として加えやすい。 浦富 鳥取県岩美郡岩美町浦富 史跡 幕末 歴史散策 activity"
+  },
+  {
+    "id": "futagami-castle-ruins",
+    "slug": "futagami-castle-ruins",
+    "nameJa": "二上城跡",
+    "nameEn": "Futagami Castle Ruins",
+    "shortName": "二上城跡",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "山城",
+      "歴史",
+      "散策"
+    ],
+    "location": {
+      "lat": 35.5705,
+      "lng": 134.3162,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町大谷",
+      "areaName": "大谷",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 1300,
+        "walkMinutes": 17
+      }
+    ],
+    "descriptionShort": "大谷側に残る山城跡のひとつ",
+    "descriptionLong": "岩美町に残る山城跡のひとつ。海岸ルートに歴史散策を織り交ぜたい時の候補。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "activity"
+      ],
+      "moodTags": [
+        "歴史感",
+        "静けさ"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "大谷側に残る山城跡のひとつ",
+      "whyVisit": [
+        "山城を体験しやすい",
+        "歴史を体験しやすい",
+        "散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "山城を楽しみたい人",
+        "歴史を楽しみたい人",
+        "散策を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "二上城跡 futagami castle ruins 大谷側に残る山城跡のひとつ 岩美町に残る山城跡のひとつ。海岸ルートに歴史散策を織り交ぜたい時の候補。 大谷 鳥取県岩美郡岩美町大谷 山城 歴史 散策 activity"
+  },
+  {
+    "id": "kiriyama-castle-ruins",
+    "slug": "kiriyama-castle-ruins",
+    "nameJa": "桐山城跡",
+    "nameEn": "Kiriyama Castle Ruins",
+    "shortName": "桐山城跡",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "山城",
+      "史跡",
+      "散策"
+    ],
+    "location": {
+      "lat": 35.565,
+      "lng": 134.3188,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町大谷",
+      "areaName": "大谷",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 1500,
+        "walkMinutes": 19
+      }
+    ],
+    "descriptionShort": "町内に残る山城跡のひとつ",
+    "descriptionLong": "町内の歴史散策資源のひとつ。海岸景観だけでなく、中世的な歴史文脈も感じたい時に向く。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "activity"
+      ],
+      "moodTags": [
+        "静けさ",
+        "歴史感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 5,
+      "priorityScore": 63
+    },
+    "aiContext": {
+      "plannerSummary": "町内に残る山城跡のひとつ",
+      "whyVisit": [
+        "山城を体験しやすい",
+        "史跡を体験しやすい",
+        "散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "山城を楽しみたい人",
+        "史跡を楽しみたい人",
+        "散策を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "桐山城跡 kiriyama castle ruins 町内に残る山城跡のひとつ 町内の歴史散策資源のひとつ。海岸景観だけでなく、中世的な歴史文脈も感じたい時に向く。 大谷 鳥取県岩美郡岩美町大谷 山城 史跡 散策 activity"
+  },
+  {
+    "id": "dochiku-castle-ruins",
+    "slug": "dochiku-castle-ruins",
+    "nameJa": "道竹城跡",
+    "nameEn": "Dochiku Castle Ruins",
+    "shortName": "道竹城跡",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "activity"
+    ],
+    "tags": [
+      "山城",
+      "史跡",
+      "散策"
+    ],
+    "location": {
+      "lat": 35.572,
+      "lng": 134.3225,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 1700,
+        "walkMinutes": 22
+      }
+    ],
+    "descriptionShort": "浦富側に近い山城跡の史跡",
+    "descriptionLong": "駅周辺からも比較的つなぎやすい歴史散策資源。海岸景観ルートに歴史の文脈を加えたい時に使える。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwami.gr.jp/2449.htm",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "history",
+        "station_stopover"
+      ],
+      "moodTags": [
+        "落ち着き",
+        "学び"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "浦富側に近い山城跡の史跡",
+      "whyVisit": [
+        "山城を体験しやすい",
+        "史跡を体験しやすい",
+        "散策を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "山城を楽しみたい人",
+        "史跡を楽しみたい人",
+        "散策を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "道竹城跡 dochiku castle ruins 浦富側に近い山城跡の史跡 駅周辺からも比較的つなぎやすい歴史散策資源。海岸景観ルートに歴史の文脈を加えたい時に使える。 浦富 鳥取県岩美郡岩美町浦富 山城 史跡 散策 activity"
+  },
+  {
+    "id": "minato-cafe",
+    "slug": "minato-cafe",
+    "nameJa": "港カフェ",
+    "nameEn": "Minato Cafe",
+    "shortName": "港カフェ",
+    "status": "published",
+    "primaryCategory": "eat",
+    "secondaryCategories": [
+      "cafe"
+    ],
+    "tags": [
+      "カフェ",
+      "港町",
+      "バーガー",
+      "遊覧船近く"
+    ],
+    "location": {
+      "lat": 35.5796,
+      "lng": 134.2979,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町大谷2182",
+      "areaName": "大谷",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 1600,
+        "walkMinutes": 20
+      }
+    ],
+    "descriptionShort": "遊覧船のりば近くで海を感じながら休憩できるカフェ",
+    "descriptionLong": "浦富海岸遊覧船のりば近くにあり、海辺の雰囲気のなかで軽食やカフェ利用がしやすい。景観ルートに食の立寄りを加えやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwamilunch",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "営業日は要確認",
+      "regularHolidaysText": "不定休あり",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 20,
+      "estimatedStayMinutesMax": 60
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "カフェ・軽食",
+      "priceMinYen": 500,
+      "priceMaxYen": 2000
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "train",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "seafood",
+        "photo",
+        "station_stopover"
+      ],
+      "moodTags": [
+        "港町",
+        "カジュアル",
+        "開放感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 2,
+      "foodScore": 5,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 67
+    },
+    "aiContext": {
+      "plannerSummary": "遊覧船のりば近くで海を感じながら休憩できるカフェ",
+      "whyVisit": [
+        "カフェを体験しやすい",
+        "港町を体験しやすい",
+        "バーガーを体験しやすい",
+        "遊覧船近くを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "カフェを楽しみたい人",
+        "港町を楽しみたい人",
+        "バーガーを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "港カフェ minato cafe 遊覧船のりば近くで海を感じながら休憩できるカフェ 浦富海岸遊覧船のりば近くにあり、海辺の雰囲気のなかで軽食やカフェ利用がしやすい。景観ルートに食の立寄りを加えやすい。 大谷 鳥取県岩美郡岩美町大谷2182 カフェ 港町 バーガー 遊覧船近く cafe"
+  },
+  {
+    "id": "seaside-uradome",
+    "slug": "seaside-uradome",
+    "nameJa": "シーサイドうらどめ 海鮮食堂",
+    "nameEn": "Seaside Uradome",
+    "shortName": "シーサイドうらどめ",
+    "status": "published",
+    "primaryCategory": "eat",
+    "secondaryCategories": [
+      "seafood",
+      "cafe"
+    ],
+    "tags": [
+      "海鮮",
+      "海辺",
+      "宿併設",
+      "浦富海水浴場近く"
+    ],
+    "location": {
+      "lat": 35.5907,
+      "lng": 134.3249,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町浦富2475-18",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 2000,
+        "walkMinutes": 25
+      }
+    ],
+    "descriptionShort": "浦富海水浴場近くで海鮮料理を楽しめる食事スポット",
+    "descriptionLong": "浦富海水浴場近くの海鮮料理の宿兼食事処。海辺の景観とあわせて食の立寄り先にしやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwamikanko.org/gourmet/2955/",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "営業日は要確認",
+      "regularHolidaysText": "不定休あり",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 40,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "海鮮料理",
+      "priceMinYen": 1200,
+      "priceMaxYen": 5000
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "seafood",
+        "sea_view",
+        "station_stopover"
+      ],
+      "moodTags": [
+        "海辺",
+        "ゆったり"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 5,
+      "foodScore": 5,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 67
+    },
+    "aiContext": {
+      "plannerSummary": "浦富海水浴場近くで海鮮料理を楽しめる食事スポット",
+      "whyVisit": [
+        "海鮮を体験しやすい",
+        "海辺を体験しやすい",
+        "宿併設を体験しやすい",
+        "浦富海水浴場近くを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "海鮮を楽しみたい人",
+        "海辺を楽しみたい人",
+        "宿併設を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "シーサイドうらどめ 海鮮食堂 seaside uradome シーサイドうらどめ 浦富海水浴場近くで海鮮料理を楽しめる食事スポット 浦富海水浴場近くの海鮮料理の宿兼食事処。海辺の景観とあわせて食の立寄り先にしやすい。 浦富 鳥取県岩美郡岩美町浦富2475-18 海鮮 海辺 宿併設 浦富海水浴場近く seafood cafe"
+  },
+  {
+    "id": "al-mare",
+    "slug": "al-mare",
+    "nameJa": "AL MARE",
+    "nameEn": "AL MARE",
+    "shortName": "AL MARE",
+    "status": "published",
+    "primaryCategory": "eat",
+    "secondaryCategories": [
+      "cafe"
+    ],
+    "tags": [
+      "イタリアン",
+      "海辺レストラン",
+      "東浜",
+      "ランチ"
+    ],
+    "location": {
+      "lat": 35.6022,
+      "lng": 134.3715,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町陸上34",
+      "areaName": "陸上",
+      "stationAreaType": "higashihama_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 1200,
+        "walkMinutes": 15
+      }
+    ],
+    "descriptionShort": "東浜エリアで海を感じながら食事できるレストラン",
+    "descriptionLong": "東浜エリアの海辺にあるレストラン。ランチやカフェ利用ができ、東浜海岸周辺の回遊に食の目的地を加えやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwamikanko.org/gourmet/1059/",
+    "instagramUrl": null,
+    "phoneNumber": "0857-73-5055",
+    "operatorName": "AL MARE",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "ランチ11:30-14:00 / カフェ14:00-17:00 / 夜は要予約",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 45,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "ランチ・カフェ",
+      "priceMinYen": 1500,
+      "priceMaxYen": 4000
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "train"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "seafood",
+        "photo"
+      ],
+      "moodTags": [
+        "非日常",
+        "ゆったり",
+        "上質"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 5,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 77
+    },
+    "aiContext": {
+      "plannerSummary": "東浜エリアで海を感じながら食事できるレストラン",
+      "whyVisit": [
+        "イタリアンを体験しやすい",
+        "海辺レストランを体験しやすい",
+        "東浜を体験しやすい",
+        "ランチを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "イタリアンを楽しみたい人",
+        "海辺レストランを楽しみたい人",
+        "東浜を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "al mare 東浜エリアで海を感じながら食事できるレストラン 東浜エリアの海辺にあるレストラン。ランチやカフェ利用ができ、東浜海岸周辺の回遊に食の目的地を加えやすい。 陸上 鳥取県岩美郡岩美町陸上34 イタリアン 海辺レストラン 東浜 ランチ cafe"
+  },
+  {
+    "id": "kaiyotei-kinanse-iwami",
+    "slug": "kaiyotei-kinanse-iwami",
+    "nameJa": "海陽亭 きなんせ岩美店",
+    "nameEn": "Kaiyotei Kinanse Iwami",
+    "shortName": "海陽亭",
+    "status": "published",
+    "primaryCategory": "eat",
+    "secondaryCategories": [
+      "seafood",
+      "station_area"
+    ],
+    "tags": [
+      "海鮮丼",
+      "道の駅",
+      "食事",
+      "買い物とセット"
+    ],
+    "location": {
+      "lat": 35.5677,
+      "lng": 134.3257,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町新井337-4",
+      "areaName": "新井",
+      "stationAreaType": "oiwa_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 1126,
+        "walkMinutes": 14
+      }
+    ],
+    "descriptionShort": "道の駅きなんせ岩美内で海鮮系の食事ができる店舗",
+    "descriptionLong": "道の駅きなんせ岩美内の飲食店。買い物と食事をまとめて済ませやすく、車旅・短時間旅でも組み込みやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/itineraries/detail_30.html",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "平日10:30-16:30L.O. / 土日祝は夜営業あり",
+      "regularHolidaysText": "水曜",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 60
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "海鮮丼・定食",
+      "priceMinYen": 1000,
+      "priceMaxYen": 3000
+    },
+    "access": {
+      "supportedTransports": [
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "seafood",
+        "shopping",
+        "station_stopover"
+      ],
+      "moodTags": [
+        "にぎやか",
+        "ローカル感"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 5,
+      "shoppingScore": 5,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 70
+    },
+    "aiContext": {
+      "plannerSummary": "道の駅きなんせ岩美内で海鮮系の食事ができる店舗",
+      "whyVisit": [
+        "海鮮丼を体験しやすい",
+        "道の駅を体験しやすい",
+        "食事を体験しやすい",
+        "買い物とセットを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "海鮮丼を楽しみたい人",
+        "道の駅を楽しみたい人",
+        "食事を楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "海陽亭 きなんせ岩美店 kaiyotei kinanse iwami 海陽亭 道の駅きなんせ岩美内で海鮮系の食事ができる店舗 道の駅きなんせ岩美内の飲食店。買い物と食事をまとめて済ませやすく、車旅・短時間旅でも組み込みやすい。 新井 鳥取県岩美郡岩美町新井337-4 海鮮丼 道の駅 食事 買い物とセット seafood station_area"
+  },
+  {
+    "id": "cafe-nijinoki",
+    "slug": "cafe-nijinoki",
+    "nameJa": "Cafeニジノキ",
+    "nameEn": "Cafe Nijinoki",
+    "shortName": "ニジノキ",
+    "status": "published",
+    "primaryCategory": "eat",
+    "secondaryCategories": [
+      "cafe"
+    ],
+    "tags": [
+      "カフェ",
+      "カレー",
+      "コーヒー",
+      "海辺"
+    ],
+    "location": {
+      "lat": 35.588,
+      "lng": 134.3295,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 1800,
+        "walkMinutes": 23
+      }
+    ],
+    "descriptionShort": "海辺の雰囲気を感じながら過ごせるカフェ",
+    "descriptionLong": "浦富エリアでコーヒーや軽食を楽しめるカフェ。海辺の散策途中に休憩を入れたい時に使いやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/umicafe",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "営業日は要確認",
+      "regularHolidaysText": "不定休あり",
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 20,
+      "estimatedStayMinutesMax": 50
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "カフェ利用",
+      "priceMinYen": 500,
+      "priceMaxYen": 1500
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "photo",
+        "relax",
+        "station_stopover"
+      ],
+      "moodTags": [
+        "ゆったり",
+        "海辺"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 5,
+      "scenicScore": 2,
+      "foodScore": 5,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 67
+    },
+    "aiContext": {
+      "plannerSummary": "海辺の雰囲気を感じながら過ごせるカフェ",
+      "whyVisit": [
+        "カフェを体験しやすい",
+        "カレーを体験しやすい",
+        "コーヒーを体験しやすい",
+        "海辺を体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [],
+      "sampleUseCases": [
+        "カフェを楽しみたい人",
+        "カレーを楽しみたい人",
+        "コーヒーを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "cafeニジノキ cafe nijinoki ニジノキ 海辺の雰囲気を感じながら過ごせるカフェ 浦富エリアでコーヒーや軽食を楽しめるカフェ。海辺の散策途中に休憩を入れたい時に使いやすい。 浦富 鳥取県岩美郡岩美町浦富 カフェ カレー コーヒー 海辺 cafe"
+  },
+  {
+    "id": "mukaijima",
+    "slug": "mukaijima",
+    "nameJa": "向島",
+    "nameEn": "Mukaijima",
+    "shortName": "向島",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": [
+      "scenery"
+    ],
+    "tags": [
+      "島影",
+      "海景観",
+      "ジオパーク",
+      "写真映え"
+    ],
+    "location": {
+      "lat": 35.5918,
+      "lng": 134.3048,
+      "geohash": null,
+      "addressJa": "鳥取県岩美郡岩美町田後",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 2300,
+        "walkMinutes": 30
+      }
+    ],
+    "descriptionShort": "浦富海岸の景観を彩る島影のひとつ",
+    "descriptionLong": "田後〜網代側から望める景観要素のひとつ。単独目的地というより、周辺の海岸景観ルートを豊かにする視点場。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.torican.jp/feature/iwami_spot",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": null,
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 15,
+      "estimatedStayMinutesMax": 45
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": null,
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": [
+        "walk",
+        "car",
+        "bus",
+        "rental_cycle"
+      ],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": [
+        "sea_view",
+        "photo"
+      ],
+      "moodTags": [
+        "開放感",
+        "絶景"
+      ],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": [
+        "daytime"
+      ],
+      "visitPace": [
+        "short_stop",
+        "normal_stop"
+      ],
+      "withWho": [
+        "solo",
+        "friends",
+        "couple",
+        "family"
+      ],
+      "physicalLoad": "low",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 1,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 2,
+      "priorityScore": 53
+    },
+    "aiContext": {
+      "plannerSummary": "浦富海岸の景観を彩る島影のひとつ",
+      "whyVisit": [
+        "島影を体験しやすい",
+        "海景観を体験しやすい",
+        "ジオパークを体験しやすい",
+        "写真映えを体験しやすい"
+      ],
+      "bestFor": [
+        "一人旅",
+        "友人旅",
+        "カップル旅",
+        "家族旅"
+      ],
+      "avoidIf": [
+        "雨天中心の行程"
+      ],
+      "sampleUseCases": [
+        "島影を楽しみたい人",
+        "海景観を楽しみたい人",
+        "ジオパークを楽しみたい人"
+      ]
+    },
+    "relatedSpotIds": [],
+    "campaignCompatible": false,
+    "couponCompatible": false,
+    "storyCompatible": false,
+    "source": "import_csv",
+    "lastReviewedAt": null,
+    "searchText": "向島 mukaijima 浦富海岸の景観を彩る島影のひとつ 田後〜網代側から望める景観要素のひとつ。単独目的地というより、周辺の海岸景観ルートを豊かにする視点場。 田後 鳥取県岩美郡岩美町田後 島影 海景観 ジオパーク 写真映え scenery"
+  }
+]

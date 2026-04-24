@@ -1,0 +1,41 @@
+[
+  {
+    "nodeId": "iwami_station",
+    "nodeType": "station",
+    "nameJa": "岩美駅",
+    "location": {
+      "lat": 35.5740168,
+      "lng": 134.3354495
+    },
+    "isOriginCandidate": true,
+    "isReturnCandidate": true,
+    "linkedSpotId": "iwami-station",
+    "status": "active"
+  },
+  {
+    "nodeId": "higashihama_station",
+    "nodeType": "station",
+    "nameJa": "東浜駅",
+    "location": {
+      "lat": 35.599669,
+      "lng": 134.3627158
+    },
+    "isOriginCandidate": true,
+    "isReturnCandidate": true,
+    "linkedSpotId": null,
+    "status": "active"
+  },
+  {
+    "nodeId": "oiwa_station",
+    "nodeType": "station",
+    "nameJa": "大岩駅",
+    "location": {
+      "lat": 35.5669715,
+      "lng": 134.30847778
+    },
+    "isOriginCandidate": true,
+    "isReturnCandidate": true,
+    "linkedSpotId": null,
+    "status": "active"
+  }
+]

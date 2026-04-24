@@ -1,0 +1,660 @@
+[
+  {
+    "slug": "iwami-station",
+    "nameJa": "岩美駅",
+    "nameEn": "Iwami Station",
+    "shortName": "岩美駅",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": ["station_area", "story_spot"],
+    "tags": ["駅周辺", "交通拠点", "立寄り"],
+    "location": {
+      "lat": 35.5758,
+      "lng": 134.3316,
+      "geohash": "xn4f1b8",
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "岩美駅周辺",
+      "stationAreaType": "iwami_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 0,
+        "walkMinutes": 0
+      }
+    ],
+    "descriptionShort": "岩美町観光の起点となるJR駅。",
+    "descriptionLong": "岩美町内の観光を始めるハブ。駅周辺には観光案内やレンタサイクル受け取り拠点があり、短時間の立寄りにも向いています。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": null,
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": "JR西日本",
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": "始発〜終電",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 10,
+      "estimatedStayMinutesMax": 30
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": "無料",
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": ["walk", "rental_cycle", "car", "bus", "train"],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": ["station_stopover", "history"],
+      "moodTags": ["ローカル感", "立寄りやすい"],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "ok",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": ["morning", "daytime", "night"],
+      "visitPace": ["short_stop"],
+      "withWho": ["solo", "friends", "family", "couple"],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 2,
+      "shoppingScore": 2,
+      "experienceScore": 2,
+      "stationStopoverScore": 5,
+      "priorityScore": 78
+    },
+    "aiContext": {
+      "plannerSummary": "岩美駅周辺立寄りを含める旅程の起点に向くスポット。",
+      "whyVisit": ["移動の結節点で時間調整しやすい", "駅周辺散策を組み込みやすい"],
+      "bestFor": ["駅発の日帰り旅", "短時間立寄り"],
+      "avoidIf": ["海景観を主目的にしたい場合"],
+      "sampleUseCases": ["岩美駅から2時間で軽く回る旅", "帰り列車前の立寄り調整"]
+    },
+    "relatedSpotIds": ["iwami-tourism-association", "higashihama-seaside-cafe"],
+    "campaignCompatible": true,
+    "couponCompatible": true,
+    "storyCompatible": true,
+    "source": "import_json",
+    "lastReviewedAt": "2026-04-01T00:00:00+09:00"
+  },
+  {
+    "slug": "iwami-tourism-association",
+    "nameJa": "岩美町観光協会",
+    "nameEn": "Iwami Tourism Association",
+    "shortName": "観光協会",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": ["station_area", "activity"],
+    "tags": ["レンタサイクル", "案内所", "駅周辺"],
+    "location": {
+      "lat": 35.5755,
+      "lng": 134.3322,
+      "geohash": "xn4f1b9",
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "岩美駅周辺",
+      "stationAreaType": "iwami_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 180,
+        "walkMinutes": 3
+      }
+    ],
+    "descriptionShort": "レンタサイクル受け取りや観光情報収集ができる拠点。",
+    "descriptionLong": "岩美町の観光案内とレンタサイクル貸出対応を行う拠点。レンタサイクル利用者は最初に立寄るスポットとして扱える。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwamikanko.org",
+    "instagramUrl": null,
+    "phoneNumber": "0857-72-3481",
+    "operatorName": "岩美町観光協会",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:00-17:00",
+      "regularHolidaysText": "年末年始",
+      "reservationRequired": false,
+      "lastEntryTime": "16:30",
+      "estimatedStayMinutesMin": 10,
+      "estimatedStayMinutesMax": 30
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "レンタサイクル利用時のみ料金",
+      "priceMinYen": 500,
+      "priceMaxYen": 2000
+    },
+    "access": {
+      "supportedTransports": ["walk", "rental_cycle", "bus", "train"],
+      "parkingAvailable": false,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": true,
+      "requiredFirstStopReason": "rental_cycle_pickup"
+    },
+    "plannerAttributes": {
+      "themes": ["activity", "station_stopover"],
+      "moodTags": ["ローカル感", "旅の起点"],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": ["morning", "daytime"],
+      "visitPace": ["short_stop"],
+      "withWho": ["solo", "friends", "family", "couple"],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 1,
+      "scenicScore": 1,
+      "foodScore": 1,
+      "shoppingScore": 2,
+      "experienceScore": 4,
+      "stationStopoverScore": 5,
+      "priorityScore": 82
+    },
+    "aiContext": {
+      "plannerSummary": "レンタサイクル旅の初手として重要なスポット。",
+      "whyVisit": ["現地観光情報を取得できる", "自転車旅の開始条件を満たせる"],
+      "bestFor": ["レンタサイクル利用者", "駅発の回遊"],
+      "avoidIf": ["車のみで移動し、案内所を不要とする場合"],
+      "sampleUseCases": ["午前にレンタサイクルを受け取り浦富方面へ移動", "雨天時の行き先相談"]
+    },
+    "relatedSpotIds": ["iwami-station", "uradome-coast"],
+    "campaignCompatible": true,
+    "couponCompatible": true,
+    "storyCompatible": true,
+    "source": "import_json",
+    "lastReviewedAt": "2026-04-01T00:00:00+09:00"
+  },
+  {
+    "slug": "uradome-coast",
+    "nameJa": "浦富海岸",
+    "nameEn": "Uradome Coast",
+    "shortName": "浦富海岸",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": ["scenery", "beach"],
+    "tags": ["海景観", "写真映え", "開放感"],
+    "location": {
+      "lat": 35.5868,
+      "lng": 134.3431,
+      "geohash": "xn4f4k2",
+      "addressJa": "鳥取県岩美郡岩美町浦富",
+      "areaName": "浦富",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 4600,
+        "walkMinutes": 58
+      }
+    ],
+    "descriptionShort": "透明度の高い海とリアス式海岸が魅力の景観スポット。",
+    "descriptionLong": "岩礁と入り江のコントラストが美しい岩美町の代表景観。短時間の立寄りでも海景観を十分に楽しめます。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwamikanko.org",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": "終日",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 120
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": "散策無料",
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": ["walk", "rental_cycle", "car", "bus"],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": ["sea_view", "photo", "relax"],
+      "moodTags": ["開放感", "非日常", "ゆったり"],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "ok",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": ["morning", "daytime", "sunset"],
+      "visitPace": ["short_stop", "normal_stop"],
+      "withWho": ["solo", "friends", "couple", "family"],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 5,
+      "scenicScore": 5,
+      "foodScore": 2,
+      "shoppingScore": 1,
+      "experienceScore": 3,
+      "stationStopoverScore": 2,
+      "priorityScore": 95
+    },
+    "aiContext": {
+      "plannerSummary": "海景観重視の旅で最優先候補にしやすいスポット。",
+      "whyVisit": ["岩美らしい海岸景観を体感できる", "写真映えする景色が多い"],
+      "bestFor": ["海景観を最優先したい人", "短時間でも満足したい人"],
+      "avoidIf": ["雨天時中心の旅", "完全屋内を希望する場合"],
+      "sampleUseCases": ["海景観＋海鮮の半日旅", "レンタサイクルで海岸線を回る旅"]
+    },
+    "relatedSpotIds": ["kinanse-iwami-roadside-station", "tago-area"],
+    "campaignCompatible": true,
+    "couponCompatible": false,
+    "storyCompatible": true,
+    "source": "import_json",
+    "lastReviewedAt": "2026-04-01T00:00:00+09:00"
+  },
+  {
+    "slug": "iwai-onsen",
+    "nameJa": "岩井温泉",
+    "nameEn": "Iwai Onsen",
+    "shortName": "岩井温泉",
+    "status": "published",
+    "primaryCategory": "experience",
+    "secondaryCategories": ["onsen", "story_spot"],
+    "tags": ["温泉", "癒し", "雨の日"],
+    "location": {
+      "lat": 35.5881,
+      "lng": 134.2739,
+      "geohash": "xn4dzy8",
+      "addressJa": "鳥取県岩美郡岩美町岩井",
+      "areaName": "岩井",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "oiwa-station",
+        "stationName": "大岩駅",
+        "distanceMeters": 1600,
+        "walkMinutes": 21
+      }
+    ],
+    "descriptionShort": "湯量豊富な歴史ある温泉地。",
+    "descriptionLong": "落ち着いた温泉街で、旅の後半にゆったり滞在する使い方に向いています。雨天時の代替候補としても有効です。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://www.iwai-onsen.com",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": "岩井温泉旅館組合",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "施設により異なる",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": "20:00",
+      "estimatedStayMinutesMin": 60,
+      "estimatedStayMinutesMax": 180
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "日帰り入浴あり",
+      "priceMinYen": 600,
+      "priceMaxYen": 1800
+    },
+    "access": {
+      "supportedTransports": ["car", "bus", "train"],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": false,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": ["relax", "history", "family"],
+      "moodTags": ["ゆったり", "非日常", "静か"],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": ["daytime", "night"],
+      "visitPace": ["normal_stop", "long_stay"],
+      "withWho": ["solo", "couple", "family", "friends"],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 3,
+      "scenicScore": 3,
+      "foodScore": 2,
+      "shoppingScore": 1,
+      "experienceScore": 5,
+      "stationStopoverScore": 1,
+      "priorityScore": 88
+    },
+    "aiContext": {
+      "plannerSummary": "温泉テーマや雨天時に組み込みやすい滞在型スポット。",
+      "whyVisit": ["歴史ある温泉文化を体験できる", "長め滞在で満足度を上げやすい"],
+      "bestFor": ["温泉を含めたい旅", "宿泊旅程"],
+      "avoidIf": ["短時間で多地点を回りたい場合"],
+      "sampleUseCases": ["宿泊チェックイン前に温泉街を散策", "雨天時に屋内中心で過ごす"]
+    },
+    "relatedSpotIds": ["tago-area", "kinanse-iwami-roadside-station"],
+    "campaignCompatible": true,
+    "couponCompatible": true,
+    "storyCompatible": true,
+    "source": "import_json",
+    "lastReviewedAt": "2026-04-01T00:00:00+09:00"
+  },
+  {
+    "slug": "tago-area",
+    "nameJa": "田後エリア",
+    "nameEn": "Tago Area",
+    "shortName": "田後",
+    "status": "published",
+    "primaryCategory": "see",
+    "secondaryCategories": ["scenery", "story_spot"],
+    "tags": ["漁村景観", "ローカル感", "海"],
+    "location": {
+      "lat": 35.5636,
+      "lng": 134.3572,
+      "geohash": "xn4f3fd",
+      "addressJa": "鳥取県岩美郡岩美町田後",
+      "areaName": "田後",
+      "stationAreaType": "none"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 5800,
+        "walkMinutes": 72
+      }
+    ],
+    "descriptionShort": "漁港と集落の風景が魅力のエリア。",
+    "descriptionLong": "海辺の暮らしを感じられるローカルな景観エリア。写真や散策向きで、海鮮スポットと組み合わせやすいです。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": null,
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": null,
+    "business": {
+      "isAlwaysOpen": true,
+      "openingHoursText": "終日",
+      "regularHolidaysText": null,
+      "reservationRequired": false,
+      "lastEntryTime": null,
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "free",
+      "priceLabel": "散策無料",
+      "priceMinYen": 0,
+      "priceMaxYen": 0
+    },
+    "access": {
+      "supportedTransports": ["walk", "rental_cycle", "car"],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": ["sea_view", "photo", "history"],
+      "moodTags": ["ローカル感", "ゆったり"],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "ok",
+        "rainy": "bad",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": ["morning", "daytime", "sunset"],
+      "visitPace": ["short_stop", "normal_stop"],
+      "withWho": ["solo", "friends", "couple"],
+      "physicalLoad": "medium",
+      "indoorOutdoor": "outdoor",
+      "rainFallbackCandidate": false,
+      "photoSpotScore": 4,
+      "scenicScore": 4,
+      "foodScore": 2,
+      "shoppingScore": 1,
+      "experienceScore": 3,
+      "stationStopoverScore": 1,
+      "priorityScore": 84
+    },
+    "aiContext": {
+      "plannerSummary": "海辺のローカル景観を楽しむ散策向けエリア。",
+      "whyVisit": ["漁村らしい風景が残る", "写真・散歩と相性が良い"],
+      "bestFor": ["景観散策", "写真重視"],
+      "avoidIf": ["雨の日中心", "屋内アクティビティ中心"],
+      "sampleUseCases": ["浦富海岸とセットで海沿いを楽しむ", "夕景狙いの短時間立寄り"]
+    },
+    "relatedSpotIds": ["uradome-coast", "kinanse-iwami-roadside-station"],
+    "campaignCompatible": true,
+    "couponCompatible": false,
+    "storyCompatible": true,
+    "source": "import_json",
+    "lastReviewedAt": "2026-04-01T00:00:00+09:00"
+  },
+  {
+    "slug": "kinanse-iwami-roadside-station",
+    "nameJa": "道の駅きなんせ岩美",
+    "nameEn": "Roadside Station Kinanse Iwami",
+    "shortName": "きなんせ岩美",
+    "status": "published",
+    "primaryCategory": "shop",
+    "secondaryCategories": ["souvenir", "seafood", "station_area"],
+    "tags": ["お土産", "海鮮", "買い物"],
+    "location": {
+      "lat": 35.5702,
+      "lng": 134.3262,
+      "geohash": "xn4f18j",
+      "addressJa": "鳥取県岩美郡岩美町新井337-4",
+      "areaName": "岩美駅周辺",
+      "stationAreaType": "iwami_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "iwami-station",
+        "stationName": "岩美駅",
+        "distanceMeters": 900,
+        "walkMinutes": 12
+      }
+    ],
+    "descriptionShort": "地元食材や土産が集まる道の駅。",
+    "descriptionLong": "海産物や特産品の買い物、軽食利用に向くスポット。駅周辺立寄りの候補にも使いやすい。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": "https://kinanseiwami.com",
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": "道の駅きなんせ岩美",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "9:00-19:00",
+      "regularHolidaysText": "年始",
+      "reservationRequired": false,
+      "lastEntryTime": "18:30",
+      "estimatedStayMinutesMin": 30,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "purchase_optional",
+      "priceLabel": "購入金額による",
+      "priceMinYen": 300,
+      "priceMaxYen": 5000
+    },
+    "access": {
+      "supportedTransports": ["walk", "rental_cycle", "car", "bus"],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": true,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": ["shopping", "seafood", "station_stopover"],
+      "moodTags": ["にぎやか", "ローカル感"],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "good"
+      },
+      "timeOfDaySuitability": ["morning", "daytime"],
+      "visitPace": ["short_stop", "normal_stop"],
+      "withWho": ["solo", "friends", "family", "couple"],
+      "physicalLoad": "low",
+      "indoorOutdoor": "mixed",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 4,
+      "shoppingScore": 5,
+      "experienceScore": 3,
+      "stationStopoverScore": 4,
+      "priorityScore": 90
+    },
+    "aiContext": {
+      "plannerSummary": "食と買い物を同時に満たせる駅周辺スポット。",
+      "whyVisit": ["海鮮・特産品をまとめて楽しめる", "天候に左右されにくい"],
+      "bestFor": ["食と買い物を入れたい旅", "雨天時の代替"],
+      "avoidIf": ["自然景観のみを重視する旅"],
+      "sampleUseCases": ["海景観の帰路に土産購入", "短時間で食事と買い物を済ませる"]
+    },
+    "relatedSpotIds": ["iwami-station", "higashihama-seaside-cafe"],
+    "campaignCompatible": true,
+    "couponCompatible": true,
+    "storyCompatible": true,
+    "source": "import_json",
+    "lastReviewedAt": "2026-04-01T00:00:00+09:00"
+  },
+  {
+    "slug": "higashihama-seaside-cafe",
+    "nameJa": "東浜シーサイドカフェ",
+    "nameEn": "Higashihama Seaside Cafe",
+    "shortName": "東浜カフェ",
+    "status": "published",
+    "primaryCategory": "eat",
+    "secondaryCategories": ["cafe", "seafood", "station_area"],
+    "tags": ["海鮮", "カフェ", "駅周辺"],
+    "location": {
+      "lat": 35.5944,
+      "lng": 134.3867,
+      "geohash": "xn4f6bh",
+      "addressJa": "鳥取県岩美郡岩美町陸上",
+      "areaName": "東浜",
+      "stationAreaType": "higashihama_station_area"
+    },
+    "nearestStations": [
+      {
+        "stationId": "higashihama-station",
+        "stationName": "東浜駅",
+        "distanceMeters": 550,
+        "walkMinutes": 8
+      }
+    ],
+    "descriptionShort": "東浜駅近くで海鮮ランチが楽しめるカフェ。",
+    "descriptionLong": "列車利用の帰路に組み込みやすい飲食スポット。軽食からしっかり食事まで対応できる想定。",
+    "heroImageUrl": null,
+    "galleryImageUrls": [],
+    "thumbnailUrl": null,
+    "websiteUrl": null,
+    "instagramUrl": null,
+    "phoneNumber": null,
+    "operatorName": "東浜シーサイドカフェ",
+    "business": {
+      "isAlwaysOpen": false,
+      "openingHoursText": "11:00-17:00",
+      "regularHolidaysText": "水曜",
+      "reservationRequired": false,
+      "lastEntryTime": "16:00",
+      "estimatedStayMinutesMin": 45,
+      "estimatedStayMinutesMax": 90
+    },
+    "pricing": {
+      "priceType": "paid",
+      "priceLabel": "ランチ 1,200円前後",
+      "priceMinYen": 800,
+      "priceMaxYen": 2500
+    },
+    "access": {
+      "supportedTransports": ["walk", "rental_cycle", "car", "train"],
+      "parkingAvailable": true,
+      "bikeParkingAvailable": true,
+      "busStopNearby": false,
+      "requiresFirstStop": false,
+      "requiredFirstStopReason": null
+    },
+    "plannerAttributes": {
+      "themes": ["seafood", "station_stopover", "family"],
+      "moodTags": ["にぎやか", "ローカル感"],
+      "weatherSuitability": {
+        "sunny": "good",
+        "cloudy": "good",
+        "rainy": "good",
+        "windy": "ok"
+      },
+      "timeOfDaySuitability": ["daytime"],
+      "visitPace": ["normal_stop"],
+      "withWho": ["solo", "friends", "family", "couple"],
+      "physicalLoad": "low",
+      "indoorOutdoor": "indoor",
+      "rainFallbackCandidate": true,
+      "photoSpotScore": 2,
+      "scenicScore": 2,
+      "foodScore": 5,
+      "shoppingScore": 1,
+      "experienceScore": 2,
+      "stationStopoverScore": 4,
+      "priorityScore": 86
+    },
+    "aiContext": {
+      "plannerSummary": "食重視・列車帰路の旅程で使いやすい駅近飲食スポット。",
+      "whyVisit": ["海鮮メニューを取り入れやすい", "東浜駅への導線を自然に作れる"],
+      "bestFor": ["食テーマ", "帰り列車前の食事"],
+      "avoidIf": ["朝の時間帯のみを使う旅程"],
+      "sampleUseCases": ["海岸景観の後に海鮮ランチ", "東浜駅からの帰路前に食事"]
+    },
+    "relatedSpotIds": ["uradome-coast", "iwami-station"],
+    "campaignCompatible": false,
+    "couponCompatible": true,
+    "storyCompatible": false,
+    "source": "import_json",
+    "lastReviewedAt": "2026-04-01T00:00:00+09:00"
+  }
+]

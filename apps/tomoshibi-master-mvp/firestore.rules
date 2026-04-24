@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSpotAdmin() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email == "tomoshibi.team@gmail.com";
+    }
+
+    function isPublishedSpot() {
+      return resource != null
+        && resource.data != null
+        && resource.data.keys().hasAll(["status"])
+        && resource.data.status == "published";
+    }
+
+    match /spots/{spotId} {
+      allow get, list: if isPublishedSpot() || isSpotAdmin();
+      allow write: if isSpotAdmin();
+    }
+
+    match /places/{placeId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if false;
+    }
+
+    match /themes/{themeId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if false;
+    }
+
+    match /inputOptions/{optionId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /planningRequests/{requestId} {
+      allow read, write: if false;
+    }
+
+    match /planningCandidates/{candidateId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

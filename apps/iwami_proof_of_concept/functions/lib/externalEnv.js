@@ -7,8 +7,8 @@ exports.readExternalEnvValue = readExternalEnvValue;
 const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
 const ENV_RELATIVE_PATHS = [
-    "apps/kyudai-dictionary-mvp-mobile/.env.local",
-    "apps/kyudai-dictionary-mvp-mobile/.env",
+    "apps/tomoshibi-master-mvp/.env.local",
+    "apps/tomoshibi-master-mvp/.env",
     "apps/admin-console/.env.local",
     "apps/admin-console/.env",
 ];

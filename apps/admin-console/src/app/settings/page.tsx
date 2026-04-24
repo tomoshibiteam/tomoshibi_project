@@ -2041,7 +2041,7 @@ export default function SettingsPage() {
         payload?: unknown;
       };
 
-      if (message.source !== "kyudai-dictionary-mvp-mobile") return;
+      if (message.source !== "tomoshibi-master-mvp") return;
       if (message.type === "tomoshibi-mobile:debug-log") {
         const payload = isRecord(message.payload) ? message.payload : null;
         const event = payload && typeof payload.event === "string" ? payload.event : "unknown";
