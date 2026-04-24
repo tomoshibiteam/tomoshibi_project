@@ -1,0 +1,32 @@
+{
+  "name": "kyudai-game-yu",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build:web": "expo export -p web && node ./scripts/patch-web-font-urls.cjs",
+    "deploy:hosting": "sh -c 'if [ -z \"$FIREBASE_PROJECT_ID\" ]; then echo \"FIREBASE_PROJECT_ID is not set\"; exit 1; fi' && npm run build:web && npx firebase-tools deploy --only hosting --project \"$FIREBASE_PROJECT_ID\"",
+    "deploy:hosting:envlocal": "FIREBASE_PROJECT_ID=$(awk -F= '/^EXPO_PUBLIC_FIREBASE_PROJECT_ID=/{print $2}' .env.local) npm run deploy:hosting"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "expo": "~54.0.33",
+    "expo-camera": "~17.0.10",
+    "expo-location": "~19.0.8",
+    "expo-status-bar": "~3.0.9",
+    "firebase": "^12.12.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-maps": "^1.20.1",
+    "react-native-web": "^0.21.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
