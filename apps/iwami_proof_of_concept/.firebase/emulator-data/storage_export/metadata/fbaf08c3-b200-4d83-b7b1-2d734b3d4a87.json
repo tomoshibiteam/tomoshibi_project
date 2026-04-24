@@ -1,0 +1,19 @@
+{
+  "name": "spots/ajiroya/thumbnail-1776865914458-red.png",
+  "bucket": "tomoshibi-950e2.firebasestorage.app",
+  "metageneration": 1,
+  "generation": 1776865914470,
+  "contentType": "image/png",
+  "storageClass": "STANDARD",
+  "cacheControl": "public,max-age=31536000",
+  "downloadTokens": [
+    "17efc362-0277-4a3b-b23a-1819f38c1cd5"
+  ],
+  "etag": "Otb59jqyd8+NHvVcdPh/CKUkpmQ",
+  "customMetadata": {},
+  "timeCreated": "2026-04-22T13:51:54.470Z",
+  "updated": "2026-04-22T13:51:54.470Z",
+  "size": 181,
+  "md5Hash": "yDCDKzNowknrHP7zQeFaUQ==",
+  "crc32c": "2455077742"
+}

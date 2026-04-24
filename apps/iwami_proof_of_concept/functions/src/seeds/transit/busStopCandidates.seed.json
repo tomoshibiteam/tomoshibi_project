@@ -1,0 +1,482 @@
+[
+  {
+    "candidateId": "bus_iwami_oda_line__001_iwami_station",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 1,
+    "nameJa": "岩美駅",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__002_yakubamae",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 2,
+    "nameJa": "役場前",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__003_iwami_kanbu_hashutso_mae",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 3,
+    "nameJa": "岩美幹部派出所前",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__004_sunmart_iwami",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 4,
+    "nameJa": "サンマート岩美店",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__005_sukoyaka_center",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 5,
+    "nameJa": "すこやかセンター",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__006_shimotsuboi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 6,
+    "nameJa": "下坪井",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__007_arai",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 7,
+    "nameJa": "新井",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__008_kinanse_iwami",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 8,
+    "nameJa": "道の駅きなんせ岩美",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__009_hinodecho",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 9,
+    "nameJa": "日ノ出町",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__010_kawasaki",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 10,
+    "nameJa": "河崎",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__011_kamikawasaki",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 11,
+    "nameJa": "上河崎",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__012_yokoza",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 12,
+    "nameJa": "横座",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__013_iwatsune",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 13,
+    "nameJa": "岩常",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__014_takazumi_bashi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 14,
+    "nameJa": "高住橋",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__015_takazumi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 15,
+    "nameJa": "高住",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__016_nagago",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 16,
+    "nameJa": "長郷",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__017_innai",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 17,
+    "nameJa": "院内",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__018_kamiinnai",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 18,
+    "nameJa": "上院内",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__019_arakane_guchi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 19,
+    "nameJa": "荒金口",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__020_arakane",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 20,
+    "nameJa": "荒金",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__021_innai_kyokumae",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 21,
+    "nameJa": "院内局前",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__022_kurodani_guchi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 22,
+    "nameJa": "黒谷口",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__023_iketani",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 23,
+    "nameJa": "池谷",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__024_sasakabashi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 24,
+    "nameJa": "ささか橋",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__025_kamadoguchi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 25,
+    "nameJa": "釜戸口",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__026_engoji",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 26,
+    "nameJa": "延興寺",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__027_kamiengoji",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 27,
+    "nameJa": "上延興寺",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__028_takisan_onsen",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 28,
+    "nameJa": "たきさん温泉",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__029_karakawaguchi",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 29,
+    "nameJa": "唐川口",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__030_hokamura",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 30,
+    "nameJa": "外邑",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_oda_line__031_oda",
+    "serviceId": "bus_iwami_oda_line",
+    "lineName": "小田線",
+    "stopOrder": 31,
+    "nameJa": "小田",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__001_iwami_station",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 1,
+    "nameJa": "岩美駅",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__002_sukoyaka_center_byoinmae",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 2,
+    "nameJa": "すこやかセンター（病院前）",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__003_yakubamae",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 3,
+    "nameJa": "役場前",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__004_sunmart_iwami",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 4,
+    "nameJa": "サンマート岩美店",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__005_iwami_kanbu_hashutso_kita",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 5,
+    "nameJa": "岩美幹部派出所北",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__006_uradome_kaiganguchi",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 6,
+    "nameJa": "浦富海岸口",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__007_choei_chushajo_mae",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 7,
+    "nameJa": "町営駐車場前",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__008_uradome_kaigan",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 8,
+    "nameJa": "浦富海岸",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__009_motomiyacho",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 9,
+    "nameJa": "元宮町",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__010_ogurihama",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 10,
+    "nameJa": "小栗浜",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__011_saidani",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 11,
+    "nameJa": "才谷",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__012_tago",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 12,
+    "nameJa": "田後",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__013_makitani_kaisuiyokujyo",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 13,
+    "nameJa": "牧谷海水浴場",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__014_umi_to_daichi_shizenkan_mae",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 14,
+    "nameJa": "海と大地の自然館前",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__015_nishi_kugami",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 15,
+    "nameJa": "西陸上",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__016_kominkan_mae",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 16,
+    "nameJa": "公民館前",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  },
+  {
+    "candidateId": "bus_iwami_tago_kugami_line__017_higashihama_station",
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "lineName": "田後・陸上線",
+    "stopOrder": 17,
+    "nameJa": "東浜駅",
+    "location": null,
+    "locationStatus": "pending",
+    "status": "active"
+  }
+]

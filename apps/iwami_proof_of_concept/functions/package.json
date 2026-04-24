@@ -1,0 +1,47 @@
+{
+  "name": "iwami-proof-of-concept-functions",
+  "version": "0.1.0",
+  "private": true,
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf lib",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed:spots": "npm run build && node lib/scripts/seedSpots.js",
+    "seed:spots:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run seed:spots",
+    "seed:spots:prod": "FIREBASE_PROJECT_ID=tomoshibi-950e2 GOOGLE_CLOUD_PROJECT=tomoshibi-950e2 npm run seed:spots",
+    "seed:spots:iwami-core": "npm run build && node lib/scripts/seedIwamiCoreSpots.js",
+    "seed:spots:iwami-core:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run seed:spots:iwami-core",
+    "seed:transit": "npm run build && node lib/scripts/seedTransit.js",
+    "seed:transit:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run seed:transit",
+    "seed:transit:prod": "FIREBASE_PROJECT_ID=tomoshibi-950e2 GOOGLE_CLOUD_PROJECT=tomoshibi-950e2 npm run seed:transit",
+    "import:transit:gtfs": "npm run build && node lib/scripts/importTransitGtfs.js",
+    "import:transit:gtfs:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run import:transit:gtfs",
+    "import:transit:gtfs:prod": "FIREBASE_PROJECT_ID=tomoshibi-950e2 GOOGLE_CLOUD_PROJECT=tomoshibi-950e2 npm run import:transit:gtfs",
+    "import:spots:openinfo-csv": "npm run build && node lib/scripts/importSpotsOpenInfoDefaultsCsv.js",
+    "import:spots:openinfo-csv:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run import:spots:openinfo-csv",
+    "import:spots:missing-fields-verified-csv": "npm run build && node lib/scripts/importSpotsMissingFieldsVerifiedCsv.js",
+    "import:spots:missing-fields-verified-csv:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run import:spots:missing-fields-verified-csv",
+    "backfill:spots:operational": "npm run build && node lib/scripts/backfillSpotOperationalData.js",
+    "backfill:spots:operational:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run backfill:spots:operational",
+    "report:spots:operational-gaps": "npm run build && node lib/scripts/reportSpotOperationalGaps.js",
+    "report:spots:operational-gaps:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run report:spots:operational-gaps",
+    "import:spots:xlsx": "npm run build && node lib/scripts/importSpotsFromXlsx.js"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.0.0",
+    "xlsx": "^0.18.5",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^2.1.0"
+  }
+}

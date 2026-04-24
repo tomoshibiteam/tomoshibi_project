@@ -1,0 +1,14 @@
+[
+  {
+    "calendarId": "weekday",
+    "nameJa": "平日",
+    "dayTypes": ["mon", "tue", "wed", "thu", "fri"],
+    "status": "active"
+  },
+  {
+    "calendarId": "weekend_holiday",
+    "nameJa": "土日祝",
+    "dayTypes": ["sat", "sun", "holiday"],
+    "status": "active"
+  }
+]

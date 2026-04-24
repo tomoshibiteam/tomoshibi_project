@@ -1,0 +1,11 @@
+{
+  "kind": "table",
+  "sheet": "sources",
+  "address": "A1:AZ120",
+  "values": [
+    [
+      "slug"
+    ]
+  ],
+  "valuesTruncated": true
+}

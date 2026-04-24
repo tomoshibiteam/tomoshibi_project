@@ -1,0 +1,19 @@
+{
+  "name": "spots/new-spot-1776869512808-xqylbg/thumbnail-1776869577553.jpg",
+  "bucket": "tomoshibi-950e2.firebasestorage.app",
+  "metageneration": 1,
+  "generation": 1776869577670,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "cacheControl": "public,max-age=31536000",
+  "downloadTokens": [
+    "4bfcdba3-1c79-410c-9444-72e87970fc27"
+  ],
+  "etag": "WbhmVTB0Mux36U4U9bS9h7hCJPk",
+  "customMetadata": {},
+  "timeCreated": "2026-04-22T14:52:57.670Z",
+  "updated": "2026-04-22T14:52:57.670Z",
+  "size": 2166523,
+  "md5Hash": "YDH/VN1ZvC6Dld0OZNQ+lw==",
+  "crc32c": "1559131002"
+}

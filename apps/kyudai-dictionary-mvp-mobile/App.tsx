@@ -20,7 +20,7 @@ import {
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
-import { signInAnonymously } from "firebase/auth";
+import { GoogleAuthProvider, onAuthStateChanged, signInAnonymously, signInWithPopup, signOut } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { getFirebaseClientAuth, getFirebaseClientDb, getFirebaseMissingEnvKeys } from "./src/lib/firebase";
 
@@ -301,6 +301,10 @@ const fetchWalkingDirectionsCoordinates = async (
 ): Promise<Coordinate[] | null> => {
   if (!GOOGLE_MAPS_WEB_API_KEY) return null;
 
+  if (Platform.OS === "web") {
+    return [origin, ...waypoints, destination];
+  }
+
   const params = new URLSearchParams({
     origin: `${origin.latitude},${origin.longitude}`,
     destination: `${destination.latitude},${destination.longitude}`,
@@ -328,6 +332,26 @@ const fetchWalkingDirectionsCoordinates = async (
 
   const decoded = decodeGooglePolyline(encoded);
   return decoded.length > 1 ? decoded : null;
+};
+
+const fetchRouteDirectionsForSpots = async (spots: Spot[]): Promise<Coordinate[] | null> => {
+  if (spots.length < 2) return null;
+  const origin = spots[0]?.coordinate;
+  const destination = spots[spots.length - 1]?.coordinate;
+  if (!origin || !destination) return null;
+  const waypoints = spots.slice(1, -1).map((spot) => spot.coordinate);
+  return fetchWalkingDirectionsCoordinates(origin, destination, waypoints);
+};
+
+const buildOsmEmbedUrl = (coordinate: Coordinate) => {
+  const span = 0.006;
+  const bbox = [
+    coordinate.longitude - span,
+    coordinate.latitude - span,
+    coordinate.longitude + span,
+    coordinate.latitude + span,
+  ].join(",");
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${coordinate.latitude}%2C${coordinate.longitude}`;
 };
 
 let googleMapsJsLoader: Promise<void> | null = null;
@@ -358,11 +382,11 @@ const loadGoogleMapsJs = async () => {
         return;
       }
 
-      const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_WEB_API_KEY}&language=ja&region=JP`;
-      script.async = true;
-      script.defer = true;
+  const script = document.createElement("script");
+  script.id = scriptId;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_WEB_API_KEY}&language=ja&region=JP&loading=async`;
+  script.async = true;
+  script.defer = true;
       script.addEventListener("load", () => resolve(), { once: true });
       script.addEventListener("error", () => reject(new Error("Google Maps script load failed")), { once: true });
       document.head.appendChild(script);
@@ -370,6 +394,36 @@ const loadGoogleMapsJs = async () => {
   }
 
   await googleMapsJsLoader;
+};
+
+const ensureGoogleMapsConstructors = async () => {
+  await loadGoogleMapsJs();
+
+  const maps = (globalThis as any)?.google?.maps;
+  if (!maps) {
+    throw new Error("google.maps is unavailable");
+  }
+
+  const hasCoreConstructors =
+    typeof maps.Map === "function" &&
+    typeof maps.Polyline === "function" &&
+    typeof maps.LatLngBounds === "function";
+
+  if (!hasCoreConstructors && typeof maps.importLibrary === "function") {
+    // New Maps JS loader may expose constructors only after explicit library import.
+    await maps.importLibrary("maps");
+  }
+
+  const hasConstructorsAfterImport =
+    typeof maps.Map === "function" &&
+    typeof maps.Polyline === "function" &&
+    typeof maps.LatLngBounds === "function";
+
+  if (!hasConstructorsAfterImport) {
+    throw new Error("Google Maps constructors are unavailable");
+  }
+
+  return maps;
 };
 
 type AppScreen =
@@ -477,6 +531,25 @@ const getFirebaseErrorCode = (error: unknown): string => {
     return raw.includes("/") ? raw.split("/").pop() ?? raw : raw;
   }
   return "";
+};
+
+const getFirebaseAuthErrorMessage = (error: unknown): string => {
+  const code = getFirebaseErrorCode(error);
+  if (code === "popup-closed-by-user") return "";
+  if (code === "popup-blocked") {
+    return "ポップアップがブロックされました。ブラウザのポップアップ許可後に再試行してください。";
+  }
+  if (code === "unauthorized-domain") {
+    return "Firebase Authentication の承認済みドメイン設定に現在のドメインが含まれていません。";
+  }
+  if (code === "operation-not-allowed") {
+    return "Firebase AuthenticationでGoogleログインが有効化されていません。";
+  }
+  if (code === "network-request-failed") {
+    return "ネットワーク接続に失敗しました。通信環境を確認して再試行してください。";
+  }
+  if (error instanceof Error && error.message.trim().length > 0) return error.message;
+  return "Googleログインに失敗しました。";
 };
 
 type PersistedFlowDraft = {
@@ -637,6 +710,42 @@ type GeneratedQuestSpot = {
   lng?: number;
 };
 
+const normalizeGeneratedRouteSpots = (generatedSpots?: GeneratedQuestSpot[]): Spot[] => {
+  const seen = new Set<string>();
+  const resolved: Spot[] = [];
+
+  for (const generatedSpot of generatedSpots ?? []) {
+    const id = normalizeText(generatedSpot?.id);
+    if (!id || seen.has(id)) continue;
+
+    const spotName = normalizeText(generatedSpot?.name);
+    if (!spotName) continue;
+
+    const latitude = normalizeFiniteNumber(generatedSpot?.lat);
+    const longitude = normalizeFiniteNumber(generatedSpot?.lng);
+    if (typeof latitude !== "number" || typeof longitude !== "number") continue;
+
+    const scenarioTexts = (generatedSpot?.scenarioTexts ?? [])
+      .map((text) => text.trim())
+      .filter((text) => text.length > 0)
+      .slice(0, 3);
+    if (scenarioTexts.length === 0) continue;
+
+    resolved.push({
+      id,
+      name: spotName,
+      coordinate: {
+        latitude,
+        longitude,
+      },
+      scenarioTexts,
+    });
+    seen.add(id);
+  }
+
+  return resolved;
+};
+
 type GeneratedQuestPayload = {
   generatedStoryName?: string;
   storyTone?: string;
@@ -675,6 +784,29 @@ type QuestGenerationApiResponse = {
   generatedAt?: string;
   executedUntilStep?: string;
   error?: string;
+};
+
+type QuestProgressStreamEvent = {
+  requestId?: string;
+  type?: string;
+  timestamp?: string;
+  stepId?: string;
+  stepLabel?: string;
+  stepOrdinal?: number;
+  totalSteps?: number;
+  status?: string;
+  durationMs?: number | null;
+  message?: string;
+  program?: string;
+  inputVars?: Record<string, unknown>;
+  outputVars?: Record<string, unknown>;
+  aiPrompt?: {
+    provider?: string;
+    model?: string;
+    temperature?: number;
+    systemPrompt?: string;
+    userPrompt?: string;
+  };
 };
 
 const createQuestRequestId = () =>
@@ -969,29 +1101,114 @@ const readPersistedFlowDraft = (): PersistedFlowDraft | null => {
 };
 
 const DEFAULT_QUEST_API_PATH = "/api/kyudai-mvp/quest/generate";
+const DEFAULT_QUEST_PROGRESS_PATH = "/api/kyudai-mvp/quest/progress";
+const KYUDAI_LOCAL_API_ORIGIN = "http://localhost:3001";
 
 const resolveQuestApiUrl = () => {
   const explicit = normalizeText(process.env.EXPO_PUBLIC_KYUDAI_QUEST_API_URL);
   if (explicit) return explicit;
 
   if (Platform.OS === "web" && typeof window !== "undefined") {
-    try {
-      const referrer = normalizeText(document.referrer);
-      if (referrer) {
-        const origin = new URL(referrer).origin;
-        return `${origin}${DEFAULT_QUEST_API_PATH}`;
-      }
-      const origin = window.location.origin;
-      if (origin.includes(":8082")) {
-        return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
-      }
-      return `${origin}${DEFAULT_QUEST_API_PATH}`;
-    } catch {
-      return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
+    const origin = window.location.origin;
+    // Kyudai app local dev: web (8082) + kyudai API server (3001) within the same app workspace.
+    if (origin.includes(":8082")) {
+      return `${KYUDAI_LOCAL_API_ORIGIN}${DEFAULT_QUEST_API_PATH}`;
     }
+    return `${origin}${DEFAULT_QUEST_API_PATH}`;
   }
 
-  return `http://localhost:3001${DEFAULT_QUEST_API_PATH}`;
+  return DEFAULT_QUEST_API_PATH;
+};
+
+const resolveQuestProgressUrl = (endpoint: string, requestId: string) => {
+  try {
+    const url = new URL(endpoint);
+    const replacedPath = url.pathname.replace(/\/generate$/, "/progress");
+    url.pathname = replacedPath === url.pathname ? DEFAULT_QUEST_PROGRESS_PATH : replacedPath;
+    url.searchParams.set("requestId", requestId);
+    return url.toString();
+  } catch {
+    if (Platform.OS === "web" && typeof window !== "undefined") {
+      const origin = window.location.origin;
+      if (origin.includes(":8082")) {
+        return `${KYUDAI_LOCAL_API_ORIGIN}${DEFAULT_QUEST_PROGRESS_PATH}?requestId=${encodeURIComponent(requestId)}`;
+      }
+      return `${origin}${DEFAULT_QUEST_PROGRESS_PATH}?requestId=${encodeURIComponent(requestId)}`;
+    }
+    return `${DEFAULT_QUEST_PROGRESS_PATH}?requestId=${encodeURIComponent(requestId)}`;
+  }
+};
+
+const logQuestProgressToDevTools = (requestId: string, event: QuestProgressStreamEvent) => {
+  const stepPart =
+    typeof event.stepOrdinal === "number" && typeof event.totalSteps === "number"
+      ? `STEP ${event.stepOrdinal}/${event.totalSteps}`
+      : event.stepId
+        ? `STEP ${event.stepId}`
+        : "STEP ?";
+  const labelPart = normalizeText(event.stepLabel) ?? "";
+  const messagePart = normalizeText(event.message) ?? "";
+  const hasVars = (value?: Record<string, unknown>) => Boolean(value && Object.keys(value).length > 0);
+
+  if (event.type === "step-start") {
+    console.groupCollapsed(`[kyudai-mvp][${requestId}] >>> ${stepPart} 開始: ${labelPart || messagePart}`);
+    if (hasVars(event.inputVars)) {
+      console.info("入力変数 (inputVars)", event.inputVars);
+    } else {
+      console.info("入力変数 (inputVars)", "(none)");
+    }
+    if (messagePart) {
+      console.info("message", messagePart);
+    }
+    console.groupEnd();
+    return;
+  }
+  if (event.type === "step-process") {
+    const program = normalizeText(event.program) ?? "";
+    console.groupCollapsed(
+      `[kyudai-mvp][${requestId}] ... ${stepPart} 処理: ${labelPart || (program || messagePart)}`,
+    );
+    console.info("処理プログラム (program)", program || messagePart || "(none)");
+    if (hasVars(event.inputVars)) {
+      console.info("入力変数 (inputVars)", event.inputVars);
+    }
+    if (hasVars(event.outputVars)) {
+      console.info("出力変数 (outputVars)", event.outputVars);
+    }
+    if (event.aiPrompt) {
+      console.info("AIプロンプト (aiPrompt)", event.aiPrompt);
+    }
+    console.groupEnd();
+    return;
+  }
+  if (event.type === "step-end") {
+    console.groupCollapsed(
+      `[kyudai-mvp][${requestId}] <<< ${stepPart} 終了: ${labelPart || ""}` +
+        ` (status=${event.status ?? "unknown"}, durationMs=${event.durationMs ?? "unknown"})`,
+    );
+    if (hasVars(event.outputVars)) {
+      console.info("出力変数 (outputVars)", event.outputVars);
+    } else {
+      console.info("出力変数 (outputVars)", "(none)");
+    }
+    if (messagePart) {
+      console.info("message", messagePart);
+    }
+    console.groupEnd();
+    return;
+  }
+  if (event.type === "plan") {
+    console.info(`[kyudai-mvp][${requestId}] --- ${messagePart || "実行計画を受信"}`);
+    return;
+  }
+  if (event.type === "request-error") {
+    console.error(`[kyudai-mvp][${requestId}] !!! generation.error: ${messagePart || "unknown error"}`);
+    return;
+  }
+  if (event.type === "request-finished") {
+    console.info(`[kyudai-mvp][${requestId}] === ${messagePart || "request finished"}`);
+    return;
+  }
 };
 
 const requestGeneratedQuest = async (input: {
@@ -1026,107 +1243,124 @@ const requestGeneratedQuest = async (input: {
     hasQuestGenerationConfig: Boolean(input.worldConfig?.questGenerationConfig),
   });
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-request-id": requestId,
-    },
-    body: JSON.stringify(requestBody),
+  let progressEventSource: EventSource | null = null;
+  let progressStreamOpened = false;
+  let resolveProgressReady: (() => void) | null = null;
+  const progressReadyPromise = new Promise<void>((resolve) => {
+    resolveProgressReady = () => resolve();
   });
+  if (Platform.OS === "web" && typeof window !== "undefined" && typeof EventSource !== "undefined") {
+    const progressUrl = resolveQuestProgressUrl(endpoint, requestId);
+    progressEventSource = new EventSource(progressUrl);
+    progressEventSource.onopen = () => {
+      progressStreamOpened = true;
+    };
+    progressEventSource.onmessage = (messageEvent) => {
+      try {
+        const event = JSON.parse(messageEvent.data) as QuestProgressStreamEvent;
+        if (normalizeText(event.requestId) && event.requestId !== requestId) return;
+        if (event.type === "stream-ready") {
+          resolveProgressReady?.();
+          resolveProgressReady = null;
+          return;
+        }
+        logQuestProgressToDevTools(requestId, event);
+        emitPreviewDebugLog("generation.progress", {
+          requestId,
+          event,
+        });
+      } catch {
+        // ignore malformed progress event
+      }
+    };
+    progressEventSource.onerror = () => {
+      if (!progressStreamOpened) {
+        console.warn(`[kyudai-mvp][${requestId}] progress.stream.error_before_open`);
+        resolveProgressReady?.();
+        resolveProgressReady = null;
+      }
+    };
+  }
 
-  const rawText = await response.text();
-  let payload: QuestGenerationApiResponse | null = null;
   try {
-    payload = JSON.parse(rawText) as QuestGenerationApiResponse;
-  } catch {
-    payload = null;
-  }
+    await Promise.race([
+      progressReadyPromise,
+      new Promise<void>((resolve) => setTimeout(resolve, 1200)),
+    ]);
 
-  if (!payload) {
-    console.error(`[kyudai-mvp][${requestId}] generation.response.parse_error`, {
-      status: response.status,
-      statusText: response.statusText,
-      elapsedMs: Date.now() - startedAt,
-      rawTextPreview: clipForBrowserLog(rawText, 3000),
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-request-id": requestId,
+      },
+      body: JSON.stringify(requestBody),
     });
-    emitPreviewDebugLog("generation.response.parse_error", {
+
+    const rawText = await response.text();
+    let payload: QuestGenerationApiResponse | null = null;
+    try {
+      payload = JSON.parse(rawText) as QuestGenerationApiResponse;
+    } catch {
+      payload = null;
+    }
+
+    if (!payload) {
+      console.error(`[kyudai-mvp][${requestId}] generation.response.parse_error`, {
+        status: response.status,
+        statusText: response.statusText,
+        elapsedMs: Date.now() - startedAt,
+        rawTextPreview: clipForBrowserLog(rawText, 3000),
+      });
+      emitPreviewDebugLog("generation.response.parse_error", {
+        requestId,
+        status: response.status,
+        statusText: response.statusText,
+        elapsedMs: Date.now() - startedAt,
+        rawTextPreview: clipForBrowserLog(rawText, 1200),
+      });
+      throw new Error("クエスト生成APIのレスポンスJSON解析に失敗しました。");
+    }
+
+    if (!response.ok || !payload.ok || !payload.quest) {
+      console.error(`[kyudai-mvp][${requestId}] generation.response.error`, {
+        status: response.status,
+        statusText: response.statusText,
+        elapsedMs: Date.now() - startedAt,
+        payload,
+      });
+      emitPreviewDebugLog("generation.response.error", {
+        requestId,
+        status: response.status,
+        statusText: response.statusText,
+        elapsedMs: Date.now() - startedAt,
+        payload,
+      });
+      throw new Error(payload.error || "クエスト生成APIの実行に失敗しました。");
+    }
+
+    const steps = Array.isArray(payload.steps) ? payload.steps : [];
+    emitPreviewDebugLog("generation.response.success", {
       requestId,
       status: response.status,
-      statusText: response.statusText,
       elapsedMs: Date.now() - startedAt,
-      rawTextPreview: clipForBrowserLog(rawText, 1200),
+      generatedAt: payload.generatedAt ?? null,
+      steps: steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail })),
+      ready: {
+        generatedStoryName: payload.quest.generatedStoryName,
+        readyHeroLead: payload.quest.readyHeroLead,
+        readySummaryTitle: payload.quest.readySummaryTitle,
+        readySummaryText: payload.quest.readySummaryText,
+        spotIds: Array.isArray(payload.quest.spots) ? payload.quest.spots.map((spot) => spot.id) : [],
+      },
     });
-    throw new Error("クエスト生成APIのレスポンスJSON解析に失敗しました。");
-  }
 
-  if (!response.ok || !payload.ok || !payload.quest) {
-    console.error(`[kyudai-mvp][${requestId}] generation.response.error`, {
-      status: response.status,
-      statusText: response.statusText,
-      elapsedMs: Date.now() - startedAt,
-      payload,
-    });
-    emitPreviewDebugLog("generation.response.error", {
-      requestId,
-      status: response.status,
-      statusText: response.statusText,
-      elapsedMs: Date.now() - startedAt,
-      payload,
-    });
-    throw new Error(payload.error || "クエスト生成APIの実行に失敗しました。");
+    return payload;
+  } finally {
+    if (progressEventSource) {
+      progressEventSource.close();
+    }
   }
-
-  const steps = Array.isArray(payload.steps) ? payload.steps : [];
-  const stepTraces = Array.isArray(payload.stepTraces) ? payload.stepTraces : [];
-  console.group(`[kyudai-mvp][${requestId}] generation.response.success`);
-  console.info("meta", {
-    status: response.status,
-    elapsedMs: Date.now() - startedAt,
-    generatedAt: payload.generatedAt ?? null,
-    executedUntilStep: payload.executedUntilStep ?? null,
-    stepsCount: steps.length,
-    stepTracesCount: stepTraces.length,
-  });
-  if (steps.length > 0) {
-    console.table(
-      steps.map((step) => ({
-        id: step.id,
-        label: step.label,
-        status: step.status,
-        detail: step.detail,
-      })),
-    );
-    console.info("steps.detail", steps);
-  }
-  if (stepTraces.length > 0) {
-    console.info("stepTraces.detail", stepTraces);
-  }
-  console.info("ready.output", {
-    generatedStoryName: payload.quest.generatedStoryName,
-    readyHeroLead: payload.quest.readyHeroLead,
-    readySummaryTitle: payload.quest.readySummaryTitle,
-    readySummaryText: payload.quest.readySummaryText,
-    spotsCount: Array.isArray(payload.quest.spots) ? payload.quest.spots.length : 0,
-    spotIds: Array.isArray(payload.quest.spots) ? payload.quest.spots.map((spot) => spot.id) : [],
-  });
-  console.groupEnd();
-  emitPreviewDebugLog("generation.response.success", {
-    requestId,
-    status: response.status,
-    elapsedMs: Date.now() - startedAt,
-    generatedAt: payload.generatedAt ?? null,
-    steps: steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail })),
-    ready: {
-      generatedStoryName: payload.quest.generatedStoryName,
-      readyHeroLead: payload.quest.readyHeroLead,
-      readySummaryTitle: payload.quest.readySummaryTitle,
-      readySummaryText: payload.quest.readySummaryText,
-      spotIds: Array.isArray(payload.quest.spots) ? payload.quest.spots.map((spot) => spot.id) : [],
-    },
-  });
-
-  return payload;
 };
 
 type FeatureCard = {
@@ -1296,6 +1530,7 @@ const spotTypingStep = 1;
 
 export default function App() {
   const useMockMapBackground =
+    Platform.OS !== "web" &&
     (process.env.EXPO_PUBLIC_USE_MOCK_MAP_BACKGROUND ?? "").trim().toLowerCase() === "true";
   const { width } = useWindowDimensions();
   const contentWidth = useMemo(() => Math.max(0, Math.min(width - 32, 520)), [width]);
@@ -1321,6 +1556,7 @@ export default function App() {
   }, [contentWidth]);
   const feedbackHeroTitleLineHeight = Math.round(feedbackHeroTitleFontSize * 1.22);
   const hasSyncedInitialWebPathRef = useRef(false);
+  const preparingScreenEnabledRef = useRef(false);
   const mapRef = useRef<MapView | null>(null);
   const mapWebHostRef = useRef<any>(null);
   const mapWebInstanceRef = useRef<any>(null);
@@ -1328,11 +1564,20 @@ export default function App() {
   const mapWebSpotMarkersRef = useRef<any[]>([]);
   const mapWebActiveRoutePolylineRef = useRef<any>(null);
   const mapWebWholeRoutePolylineRef = useRef<any>(null);
+  const readyMapRef = useRef<MapView | null>(null);
+  const readyWebMapHostRef = useRef<any>(null);
+  const readyWebMapInstanceRef = useRef<any>(null);
+  const readyWebSpotMarkersRef = useRef<any[]>([]);
+  const readyWebRoutePolylineRef = useRef<any>(null);
   const firebaseMissingConfigWarnedRef = useRef(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const persistedFlowDraft = useMemo(() => readPersistedFlowDraft(), []);
 
-  const [screen, setScreen] = useState<AppScreen>(() => getScreenFromCurrentPath());
+  const [screen, setScreen] = useState<AppScreen>(() => {
+    const initialScreen = getScreenFromCurrentPath();
+    return initialScreen === "preparing" ? "setup" : initialScreen;
+  });
+  const previousScreenRef = useRef<AppScreen>(screen);
   const [experienceSessionId, setExperienceSessionId] = useState<string | null>(() => {
     if (persistedFlowDraft?.experienceSessionId && typeof persistedFlowDraft.experienceSessionId === "string") {
       return persistedFlowDraft.experienceSessionId;
@@ -1348,74 +1593,63 @@ export default function App() {
     return window.sessionStorage.getItem(EXPERIENCE_STARTED_AT_STORAGE_KEY) ?? null;
   });
   const [firebaseUid, setFirebaseUid] = useState<string | null>(null);
+  const [isFirebaseSignedIn, setIsFirebaseSignedIn] = useState(false);
+  const [firebaseAvatarUrl, setFirebaseAvatarUrl] = useState<string | null>(null);
+  const [firebaseDisplayName, setFirebaseDisplayName] = useState<string | null>(null);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(() =>
     isUserType(persistedFlowDraft?.selectedUserType) ? persistedFlowDraft.selectedUserType : "新入生",
   );
+  const [isUserTypeAnswered, setIsUserTypeAnswered] = useState(false);
   const [isUserTypeMenuOpen, setIsUserTypeMenuOpen] = useState(false);
   const [selectedFamiliarity, setSelectedFamiliarity] = useState<Familiarity>(() =>
     isFamiliarity(persistedFlowDraft?.selectedFamiliarity)
       ? persistedFlowDraft.selectedFamiliarity
       : "まだあまり慣れていない",
   );
+  const [isFamiliarityAnswered, setIsFamiliarityAnswered] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState<Duration>(() =>
     isDuration(persistedFlowDraft?.selectedDuration) ? persistedFlowDraft.selectedDuration : "20〜30分",
   );
+  const [isDurationAnswered, setIsDurationAnswered] = useState(false);
   const [selectedExplorationStyle, setSelectedExplorationStyle] = useState<ExplorationStyle>(
     isExplorationStyle(persistedFlowDraft?.selectedExplorationStyle)
       ? persistedFlowDraft.selectedExplorationStyle
       : "地図で事前確認",
   );
+  const [isExplorationStyleAnswered, setIsExplorationStyleAnswered] = useState(false);
   const [selectedExperienceExpectation, setSelectedExperienceExpectation] = useState<ExperienceExpectation>(
     isExperienceExpectation(persistedFlowDraft?.selectedExperienceExpectation)
       ? persistedFlowDraft.selectedExperienceExpectation
       : "場所を覚えたい",
   );
+  const [isExperienceExpectationAnswered, setIsExperienceExpectationAnswered] = useState(false);
   const [adminWorldConfig, setAdminWorldConfig] = useState<AdminWorldConfigPayload | null>(null);
   const [generatedQuest, setGeneratedQuest] = useState<GeneratedQuestPayload | null>(null);
   const [generatedQuestSteps, setGeneratedQuestSteps] = useState<GeneratedQuestStep[]>([]);
   const [isGeneratingQuest, setIsGeneratingQuest] = useState(false);
   const [questGenerationError, setQuestGenerationError] = useState<string | null>(null);
+  const [isLandingGoogleSigningIn, setIsLandingGoogleSigningIn] = useState(false);
+  const [landingAuthError, setLandingAuthError] = useState<string | null>(null);
+  const [isHeaderAuthMenuOpen, setIsHeaderAuthMenuOpen] = useState(false);
+  const [headerAuthMenuError, setHeaderAuthMenuError] = useState<string | null>(null);
+  const [isHeaderAuthSigningOut, setIsHeaderAuthSigningOut] = useState(false);
+
+  const resolveScreenForNavigation = (candidateScreen: AppScreen): AppScreen => {
+    if (candidateScreen !== "preparing") return candidateScreen;
+    return preparingScreenEnabledRef.current ? "preparing" : "setup";
+  };
 
   const baseSpots = useMemo(
     () => buildExperienceSpots(selectedFamiliarity, selectedDuration),
     [selectedDuration, selectedFamiliarity],
   );
-  const generatedRouteSpots = useMemo(() => {
-    const seen = new Set<string>();
-    const resolved: Spot[] = [];
-    for (const generatedSpot of generatedQuest?.spots ?? []) {
-      const id = normalizeText(generatedSpot?.id);
-      if (!id || seen.has(id)) continue;
-
-      const catalogSpot = spotCatalogMap[id];
-      const latitude = normalizeFiniteNumber(generatedSpot?.lat) ?? catalogSpot?.coordinate.latitude;
-      const longitude = normalizeFiniteNumber(generatedSpot?.lng) ?? catalogSpot?.coordinate.longitude;
-      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) continue;
-
-      const generatedScenarioTexts = (generatedSpot?.scenarioTexts ?? [])
-        .map((text) => text.trim())
-        .filter((text) => text.length > 0)
-        .slice(0, 3);
-      const fallbackScenarioTexts =
-        catalogSpot?.scenarioTexts ??
-        [`${normalizeText(generatedSpot?.name) ?? id}に到着しました。周囲の導線と見どころを観測しましょう。`];
-
-      resolved.push({
-        id,
-        name: normalizeText(generatedSpot?.name) ?? catalogSpot?.name ?? id,
-        coordinate: {
-          latitude,
-          longitude,
-        },
-        scenarioTexts: generatedScenarioTexts.length > 0 ? generatedScenarioTexts : fallbackScenarioTexts,
-      });
-      seen.add(id);
-    }
-    return resolved;
-  }, [generatedQuest?.spots]);
+  const generatedRouteSpots = useMemo(
+    () => normalizeGeneratedRouteSpots(generatedQuest?.spots),
+    [generatedQuest?.spots],
+  );
   const generatedSpotOverviewMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const spot of generatedQuest?.spots ?? []) {
@@ -1428,7 +1662,7 @@ export default function App() {
   }, [generatedQuest?.spots]);
 
   const spots = useMemo(() => {
-    const routeSpots = generatedRouteSpots.length > 0 ? generatedRouteSpots : baseSpots;
+    const routeSpots = generatedQuest ? generatedRouteSpots : baseSpots;
     const adminSpotNarratives = adminWorldConfig?.spotNarratives ?? [];
     return routeSpots.map((spot, index) => {
       const overrideNarrative = adminSpotNarratives[index]?.trim();
@@ -1437,7 +1671,7 @@ export default function App() {
         scenarioTexts: overrideNarrative ? [overrideNarrative] : spot.scenarioTexts,
       };
     });
-  }, [adminWorldConfig?.spotNarratives, baseSpots, generatedRouteSpots]);
+  }, [adminWorldConfig?.spotNarratives, baseSpots, generatedQuest, generatedRouteSpots]);
   const [landingBottomBarHeight, setLandingBottomBarHeight] = useState(0);
   const [readyBottomBarHeight, setReadyBottomBarHeight] = useState(0);
   const [setupBottomBarHeight, setSetupBottomBarHeight] = useState(0);
@@ -1465,8 +1699,13 @@ export default function App() {
   const [liveCurrentLocation, setLiveCurrentLocation] = useState<Coordinate | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [webMapError, setWebMapError] = useState<string | null>(null);
+  const [readyWebMapError, setReadyWebMapError] = useState<string | null>(null);
   const [wholeRouteDirectionsCoordinates, setWholeRouteDirectionsCoordinates] = useState<Coordinate[] | null>(null);
   const [activeRouteDirectionsCoordinates, setActiveRouteDirectionsCoordinates] = useState<Coordinate[] | null>(null);
+  const [readyRouteDirectionsCoordinates, setReadyRouteDirectionsCoordinates] = useState<Coordinate[] | null>(null);
+  const [readySelectedSpotIndex, setReadySelectedSpotIndex] = useState(() =>
+    clampSpotIndex(persistedFlowDraft?.currentSpotIndex, spotCatalog.length),
+  );
   const [currentSpotIndex, setCurrentSpotIndex] = useState(() =>
     clampSpotIndex(persistedFlowDraft?.currentSpotIndex, spotCatalog.length),
   );
@@ -1533,6 +1772,17 @@ export default function App() {
   const activeCurrentLocation = routeOrigin;
   const activeTargetIndex = isExperienceCompleted ? -1 : safeCurrentSpotIndex;
   const allSpotCoordinates = useMemo(() => spots.map((spot) => spot.coordinate), [spots]);
+  const safeReadySelectedSpotIndex = clampSpotIndex(readySelectedSpotIndex, spots.length);
+  const readySelectedSpot = spots[safeReadySelectedSpotIndex] ?? spots[0] ?? spotCatalog[0];
+  const readyMapRegion = useMemo(() => createRegionFromCoordinates(allSpotCoordinates), [allSpotCoordinates]);
+  const readyRouteCoordinates =
+    readyRouteDirectionsCoordinates && readyRouteDirectionsCoordinates.length > 1
+      ? readyRouteDirectionsCoordinates
+      : allSpotCoordinates;
+  const readyFallbackEmbedUrl = useMemo(
+    () => buildOsmEmbedUrl(readySelectedSpot.coordinate),
+    [readySelectedSpot.coordinate.latitude, readySelectedSpot.coordinate.longitude],
+  );
   const mapFitCoordinates = useMemo(() => [routeOrigin, ...allSpotCoordinates], [routeOrigin, allSpotCoordinates]);
   const mapInitialRegion = useMemo(() => createRegionFromCoordinates(mapFitCoordinates), [mapFitCoordinates]);
   const webFallbackGoogleEmbedUrl = useMemo(() => {
@@ -1633,7 +1883,8 @@ export default function App() {
   const effectiveLandingJourneyCaption = adminWorldConfig?.landingJourneyCaption || "移動なしで進める、3ステップの物語体験";
   const effectiveLandingFeaturesTitle = adminWorldConfig?.landingFeaturesTitle || "この体験でできること";
   const effectiveLandingFeaturesCaption = adminWorldConfig?.landingFeaturesCaption || "歩くだけで終わらない、九大の楽しみ方";
-  const effectiveLandingStartButton = adminWorldConfig?.landingStartButton || "冒険をはじめる";
+  const effectiveLandingGoogleStartButton = "Googleログインして冒険を始める";
+  const effectiveLandingGuestStartButton = "ログインせずに冒険を始める";
 
   const effectiveSetupTitle = adminWorldConfig?.setupTitle || "体験の準備をしましょう";
   const effectiveSetupSubtitle =
@@ -1648,6 +1899,12 @@ export default function App() {
   const effectiveSetupDurationHintLong = adminWorldConfig?.setupDurationHintLong || "じっくり";
   const effectiveSetupResearchNote = adminWorldConfig?.setupResearchNote || "※ 研究データとして活用します";
   const effectiveSetupStartButton = adminWorldConfig?.setupStartButton || "体験をつくる";
+  const isSetupFormComplete =
+    isUserTypeAnswered &&
+    isFamiliarityAnswered &&
+    isExplorationStyleAnswered &&
+    isExperienceExpectationAnswered &&
+    isDurationAnswered;
 
   const effectivePreparingTitle = adminWorldConfig?.preparingTitle || "あなたにあった\n体験を整えています";
   const latestGenerationStepLabel =
@@ -1672,15 +1929,14 @@ export default function App() {
   const effectivePreparingSkipButton = adminWorldConfig?.preparingSkipButton || "次へ";
   const effectivePreparingFooter = adminWorldConfig?.preparingFooter || "まもなく始まります";
 
-  const readyStoryLead = "九大センターゾーン発 観測航路";
   const generatedStoryName = normalizeText(generatedQuest?.generatedStoryName);
-  const readyStoryTone = normalizeText(generatedQuest?.storyTone) || readyStoryToneMap[selectedFamiliarity];
-  const effectiveReadyChapterLabel = adminWorldConfig?.readyChapterLabel || "CHAPTER 01";
-  const effectiveReadyStoryLead =
-    normalizeText(generatedQuest?.readyHeroLead) || adminWorldConfig?.readyHeroLead || adminWorldConfig?.title || readyStoryLead;
-  const effectiveReadySummaryTitle =
-    normalizeText(generatedQuest?.readySummaryTitle) || adminWorldConfig?.readySummaryTitle || "体験の準備が整いました";
-  const effectiveReadyGeneratedStoryLabel = adminWorldConfig?.readyGeneratedStoryLabel || "生成された物語名";
+  const effectiveReadyStoryLead = normalizeText(generatedQuest?.readyHeroLead);
+  const effectiveReadyHeroTitle = generatedStoryName || "";
+  const effectiveReadyHeroSubline =
+    generatedStoryName && effectiveReadyStoryLead && effectiveReadyStoryLead !== generatedStoryName
+      ? effectiveReadyStoryLead
+      : "";
+  const effectiveReadySummaryTitle = "物語概要";
   const effectiveReadyStartButton = adminWorldConfig?.readyStartButton || "物語を始める";
   const effectiveReadyTransitionTitle = adminWorldConfig?.readyTransitionTitle || "プロローグへ移動中";
   const effectiveReadyTransitionBody = adminWorldConfig?.readyTransitionBody || "物語の扉をひらいています";
@@ -1739,7 +1995,7 @@ export default function App() {
 
   const prologueNarrationChars = useMemo(() => Array.from(currentPrologueNarrationText), [currentPrologueNarrationText]);
   const epilogueNarrationChars = useMemo(() => Array.from(currentEpilogueNarrationText), [currentEpilogueNarrationText]);
-  const readySectionWidth = useMemo(() => Math.max(0, Math.min(width - 32, 896)), [width]);
+  const readySectionWidth = useMemo(() => contentWidth, [contentWidth]);
   const readyHeroTitleFontSize = useMemo(() => (readySectionWidth >= 768 ? 56 : 36), [readySectionWidth]);
   const readyHeroTitleLineHeight = useMemo(() => (readySectionWidth >= 768 ? 64 : 44), [readySectionWidth]);
   const readyHintGap = 12;
@@ -1748,24 +2004,10 @@ export default function App() {
     readyHintColumns === 3
       ? (readySectionWidth - readyHintGap * (readyHintColumns - 1)) / readyHintColumns
       : readySectionWidth;
-  const readyStoryTagline = useMemo(
-    () => `${spots[0]?.name ?? "最初のスポット"}から${spots[spots.length - 1]?.name ?? "最後のスポット"}まで、${readyDurationLabelMap[selectedDuration]}の${selectedDuration}体験`,
-    [selectedDuration, spots],
-  );
   const readyStorySynopsis = useMemo(() => {
     const generatedSummaryText = normalizeText(generatedQuest?.readySummaryText);
-    if (generatedSummaryText) return generatedSummaryText;
-    if (adminWorldConfig?.readySummaryText) return adminWorldConfig.readySummaryText;
-    if (adminWorldConfig?.description) return adminWorldConfig.description;
-
-    const familiarityView: Record<Familiarity, string> = {
-      はじめて来た: "初来訪でも迷わないように",
-      まだあまり慣れていない: "日常導線をつかみ直せるように",
-      何度か来たことがある: "既知の景色を再解釈できるように",
-      よく来ている: "慣れた導線を知識として言語化できるように",
-    };
-    return `${familiarityView[selectedFamiliarity]}、Center Zone起点の6地点を起承転結で巡る構成です。各スポットで豆知識を物語へ変換し、最後にWest Gateで全体を接続します。`;
-  }, [adminWorldConfig?.description, adminWorldConfig?.readySummaryText, generatedQuest?.readySummaryText, selectedFamiliarity]);
+    return generatedSummaryText || "";
+  }, [generatedQuest?.readySummaryText]);
   const readyFamiliarityChipLabel = useMemo(() => {
     const familiarityLabelMap: Record<Familiarity, string> = {
       はじめて来た: "はじめて",
@@ -1782,10 +2024,10 @@ export default function App() {
     console.info("generatedQuest.raw", generatedQuest);
     console.info("effective.ready", {
       generatedStoryName,
-      effectiveReadyStoryLead,
+      effectiveReadyHeroTitle,
+      effectiveReadyHeroSubline,
       effectiveReadySummaryTitle,
       readyStorySynopsis,
-      readyStoryTone,
       selectedUserType,
       selectedFamiliarity,
       selectedDuration,
@@ -1795,10 +2037,10 @@ export default function App() {
     screen,
     generatedQuest,
     generatedStoryName,
-    effectiveReadyStoryLead,
+    effectiveReadyHeroTitle,
+    effectiveReadyHeroSubline,
     effectiveReadySummaryTitle,
     readyStorySynopsis,
-    readyStoryTone,
     selectedUserType,
     selectedFamiliarity,
     selectedDuration,
@@ -2393,23 +2635,27 @@ export default function App() {
         worldConfig: adminWorldConfig,
       });
 
+      const generatedStoryTitle = normalizeText(result.quest?.generatedStoryName);
+      if (!generatedStoryTitle) {
+        throw new Error("生成タイトルが取得できなかったため体験を作成できませんでした。再生成してください。");
+      }
+      const generatedSummaryBody = normalizeText(result.quest?.readySummaryText);
+      if (!generatedSummaryBody) {
+        throw new Error("物語概要本文が生成されなかったため体験を作成できませんでした。再生成してください。");
+      }
+      const normalizedGeneratedRouteSpots = normalizeGeneratedRouteSpots(result.quest?.spots);
+      if (normalizedGeneratedRouteSpots.length < 2) {
+        throw new Error("生成スポットが不正なため体験を作成できませんでした。再生成してください。");
+      }
+
       setGeneratedQuest(result.quest ?? null);
       setGeneratedQuestSteps(Array.isArray(result.steps) ? result.steps : []);
       setCurrentSpotIndex(0);
+      setReadySelectedSpotIndex(0);
       setIsExperienceCompleted(false);
       setSpotScenarioSegmentIndex(0);
       setSpotTypedCharCount(0);
       setIsSpotTypingDone(true);
-
-      console.info("[kyudai-mvp] runQuestGeneration.success.apply", {
-        generatedStoryName: result.quest?.generatedStoryName,
-        readyHeroLead: result.quest?.readyHeroLead,
-        readySummaryTitle: result.quest?.readySummaryTitle,
-        readySummaryText: result.quest?.readySummaryText,
-        steps: Array.isArray(result.steps)
-          ? result.steps.map((step) => ({ id: step.id, status: step.status, detail: step.detail }))
-          : [],
-      });
       emitPreviewDebugLog("runQuestGeneration.success.apply", {
         generatedStoryName: result.quest?.generatedStoryName,
         readyHeroLead: result.quest?.readyHeroLead,
@@ -2440,8 +2686,9 @@ export default function App() {
         "generation",
       );
 
-      if (moveToReady) {
+      if (moveToReady && preparingScreenEnabledRef.current) {
         setScreen("ready");
+        preparingScreenEnabledRef.current = false;
       }
       return true;
     } catch (error) {
@@ -2465,6 +2712,7 @@ export default function App() {
 
   const handleSetupCreateExperiencePress = async () => {
     if (isGeneratingQuest) return;
+    if (!isSetupFormComplete) return;
     ensureExperienceSession();
     setFeedbackOverallRating(null);
     setFeedbackGuidanceScore(null);
@@ -2473,17 +2721,105 @@ export default function App() {
     setFeedbackExpectationScore(null);
     setFeedbackReuseIntent(null);
     setFeedbackComment("");
+    preparingScreenEnabledRef.current = true;
     setScreen("preparing");
     await runQuestGeneration({ moveToReady: true });
+  };
+
+  const handleLandingStartWithoutLoginPress = () => {
+    if (isLandingGoogleSigningIn) return;
+    setLandingAuthError(null);
+    setScreen("setup");
+  };
+
+  const runGoogleSignInFlow = async (): Promise<{ ok: boolean; errorMessage?: string }> => {
+    const auth = getFirebaseClientAuth();
+    if (!auth) {
+      const missingKeys = getFirebaseMissingEnvKeys();
+      const missing = missingKeys.length > 0 ? ` (${missingKeys.join(", ")})` : "";
+      return { ok: false, errorMessage: `Firebase設定が不足しています${missing}` };
+    }
+
+    if (auth.currentUser?.uid && !auth.currentUser.isAnonymous) {
+      setFirebaseUid(auth.currentUser.uid);
+      return { ok: true };
+    }
+
+    if (Platform.OS !== "web") {
+      return { ok: false, errorMessage: "GoogleログインはWeb版でのみ利用できます。" };
+    }
+
+    setIsLandingGoogleSigningIn(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      const result = await signInWithPopup(auth, provider);
+      setFirebaseUid(result.user.uid);
+      return { ok: true };
+    } catch (error) {
+      const message = getFirebaseAuthErrorMessage(error);
+      return message ? { ok: false, errorMessage: message } : { ok: false };
+    } finally {
+      setIsLandingGoogleSigningIn(false);
+    }
+  };
+
+  const handleLandingGoogleSignInPress = async () => {
+    if (isLandingGoogleSigningIn) return;
+    setLandingAuthError(null);
+    const result = await runGoogleSignInFlow();
+    if (!result.ok) {
+      if (result.errorMessage) setLandingAuthError(result.errorMessage);
+      return;
+    }
+    setHeaderAuthMenuError(null);
+    setIsHeaderAuthMenuOpen(false);
+    setScreen("setup");
+  };
+
+  const handleHeaderGoogleSignInPress = async () => {
+    if (isLandingGoogleSigningIn || isFirebaseSignedIn) return;
+    setHeaderAuthMenuError(null);
+    const result = await runGoogleSignInFlow();
+    if (!result.ok) {
+      if (result.errorMessage) setHeaderAuthMenuError(result.errorMessage);
+      return;
+    }
+    setLandingAuthError(null);
+    setIsHeaderAuthMenuOpen(false);
+  };
+
+  const handleHeaderSignOutPress = async () => {
+    if (isHeaderAuthSigningOut || isLandingGoogleSigningIn || !isFirebaseSignedIn) return;
+    setHeaderAuthMenuError(null);
+    const auth = getFirebaseClientAuth();
+    if (!auth) {
+      const missingKeys = getFirebaseMissingEnvKeys();
+      const missing = missingKeys.length > 0 ? ` (${missingKeys.join(", ")})` : "";
+      setHeaderAuthMenuError(`Firebase設定が不足しています${missing}`);
+      return;
+    }
+
+    setIsHeaderAuthSigningOut(true);
+    try {
+      await signOut(auth);
+      setLandingAuthError(null);
+      setIsHeaderAuthMenuOpen(false);
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.trim().length > 0 ? error.message : "ログアウトに失敗しました。";
+      setHeaderAuthMenuError(message);
+    } finally {
+      setIsHeaderAuthSigningOut(false);
+    }
   };
 
   const handleReadyStartPress = async () => {
     if (isReadyTransitioning) return;
     if (isGeneratingQuest) return;
     if (!generatedQuest) {
-      setScreen("preparing");
-      const generated = await runQuestGeneration({ moveToReady: true });
-      if (!generated) return;
+      setScreen("setup");
+      return;
     }
     if (!experienceSessionId) {
       ensureExperienceSession();
@@ -2557,15 +2893,6 @@ export default function App() {
       });
       });
   };
-
-  useEffect(() => {
-    if (screen !== "ready") return;
-    if (generatedQuest) return;
-    if (isGeneratingQuest) return;
-    if (questGenerationError) return;
-
-    void runQuestGeneration({ moveToReady: false });
-  }, [generatedQuest, isGeneratingQuest, questGenerationError, runQuestGeneration, screen]);
 
   const handlePrologueNarrationPress = () => {
     if (screen !== "prologue") return;
@@ -2708,6 +3035,7 @@ export default function App() {
       onNavigate: () => {
         if (isExperienceCompleted) {
           setCurrentSpotIndex(0);
+          setReadySelectedSpotIndex(0);
           setIsExperienceCompleted(false);
         }
       },
@@ -2799,6 +3127,7 @@ export default function App() {
       console.error("[kyudai-mvp] Failed to persist feedback", error);
     } finally {
       setCurrentSpotIndex(0);
+      setReadySelectedSpotIndex(0);
       setIsExperienceCompleted(false);
       setLiveCurrentLocation(null);
       setExperienceSessionId(null);
@@ -2890,7 +3219,14 @@ export default function App() {
     if (Platform.OS !== "web") return;
 
     const handlePopState = () => {
-      const nextScreen = getScreenFromCurrentPath();
+      const rawScreen = getScreenFromCurrentPath();
+      const nextScreen = resolveScreenForNavigation(rawScreen);
+      if (rawScreen === "preparing" && nextScreen !== "preparing") {
+        const fallbackPath = screenPathMap[nextScreen];
+        if (normalizePath(window.location.pathname) !== fallbackPath) {
+          window.history.replaceState(null, "", fallbackPath);
+        }
+      }
       setScreen(nextScreen);
     };
 
@@ -2933,7 +3269,8 @@ export default function App() {
             payload.direction === "forward"
               ? Math.min(previewNavigationScreenOrder.length - 1, currentIndex + 1)
               : Math.max(0, currentIndex - 1);
-          return previewNavigationScreenOrder[nextIndex] ?? current;
+          const rawNextScreen = previewNavigationScreenOrder[nextIndex] ?? current;
+          return resolveScreenForNavigation(rawNextScreen);
         });
         return;
       }
@@ -2943,7 +3280,7 @@ export default function App() {
         const payload = message.payload as { screen?: unknown };
         if (typeof payload.screen !== "string") return;
         if (!previewNavigationScreenOrder.includes(payload.screen as AppScreen)) return;
-        setScreen(payload.screen as AppScreen);
+        setScreen(resolveScreenForNavigation(payload.screen as AppScreen));
       }
     };
 
@@ -3053,24 +3390,75 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (screen === "preparing") return;
+    preparingScreenEnabledRef.current = false;
+  }, [screen]);
+
+  useEffect(() => {
+    if (screen === "landing") return;
+    setLandingAuthError(null);
+  }, [screen]);
+
+  useEffect(() => {
+    setIsHeaderAuthMenuOpen(false);
+    setHeaderAuthMenuError(null);
+  }, [screen]);
+
+  useEffect(() => {
+    const auth = getFirebaseClientAuth();
+    if (!auth) {
+      setFirebaseUid(null);
+      setIsFirebaseSignedIn(false);
+      setFirebaseAvatarUrl(null);
+      setFirebaseDisplayName(null);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      if (!nextUser) {
+        setFirebaseUid(null);
+        setIsFirebaseSignedIn(false);
+        setFirebaseAvatarUrl(null);
+        setFirebaseDisplayName(null);
+        return;
+      }
+
+      setFirebaseUid(nextUser.uid);
+      setIsFirebaseSignedIn(!nextUser.isAnonymous);
+      setFirebaseAvatarUrl(nextUser.photoURL ?? null);
+      setFirebaseDisplayName(nextUser.displayName ?? null);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
     if (Platform.OS !== "web") return;
 
+    const previousScreen = previousScreenRef.current;
     const targetPath = screenPathMap[screen];
     const currentPath = normalizePath(window.location.pathname);
     if (currentPath === targetPath) {
       if (!hasSyncedInitialWebPathRef.current) {
         hasSyncedInitialWebPathRef.current = true;
       }
+      previousScreenRef.current = screen;
       return;
     }
 
     if (!hasSyncedInitialWebPathRef.current) {
       window.history.replaceState(null, "", targetPath);
       hasSyncedInitialWebPathRef.current = true;
+      previousScreenRef.current = screen;
       return;
     }
 
-    window.history.pushState(null, "", targetPath);
+    if (previousScreen === "preparing" && screen === "ready") {
+      window.history.replaceState(null, "", targetPath);
+    } else {
+      window.history.pushState(null, "", targetPath);
+    }
+    previousScreenRef.current = screen;
   }, [screen]);
 
   useEffect(() => {
@@ -3111,6 +3499,16 @@ export default function App() {
 
   useEffect(() => {
     if (screen === "setup") return;
+    setIsUserTypeMenuOpen(false);
+  }, [screen]);
+
+  useEffect(() => {
+    if (screen !== "setup") return;
+    setIsUserTypeAnswered(false);
+    setIsFamiliarityAnswered(false);
+    setIsExplorationStyleAnswered(false);
+    setIsExperienceExpectationAnswered(false);
+    setIsDurationAnswered(false);
     setIsUserTypeMenuOpen(false);
   }, [screen]);
 
@@ -3390,6 +3788,212 @@ export default function App() {
   ]);
 
   useEffect(() => {
+    setReadySelectedSpotIndex((prev) => clampSpotIndex(prev, spots.length));
+  }, [spots.length]);
+
+  useEffect(() => {
+    if (!GOOGLE_MAPS_WEB_API_KEY || spots.length < 2) {
+      setReadyRouteDirectionsCoordinates(null);
+      return;
+    }
+
+    let cancelled = false;
+    const loadRoutePreview = async () => {
+      try {
+        const route = await fetchRouteDirectionsForSpots(spots);
+        if (cancelled) return;
+        setReadyRouteDirectionsCoordinates(route);
+      } catch {
+        if (!cancelled) {
+          setReadyRouteDirectionsCoordinates(null);
+        }
+      }
+    };
+
+    void loadRoutePreview();
+    return () => {
+      cancelled = true;
+    };
+  }, [spots]);
+
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    if (screen !== "ready") return;
+    if (useMockMapBackground) return;
+
+    const target = spots[safeReadySelectedSpotIndex]?.coordinate;
+    if (!target) return;
+
+    const timer = setTimeout(() => {
+      readyMapRef.current?.animateToRegion(
+        {
+          latitude: target.latitude,
+          longitude: target.longitude,
+          latitudeDelta: Math.max(0.006, readyMapRegion.latitudeDelta * 0.52),
+          longitudeDelta: Math.max(0.006, readyMapRegion.longitudeDelta * 0.52),
+        },
+        520,
+      );
+    }, 70);
+
+    return () => clearTimeout(timer);
+  }, [
+    readyMapRegion.latitudeDelta,
+    readyMapRegion.longitudeDelta,
+    safeReadySelectedSpotIndex,
+    screen,
+    spots,
+    useMockMapBackground,
+  ]);
+
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    if (screen !== "ready") return;
+    if (useMockMapBackground) return;
+
+    let cancelled = false;
+    const previousAuthFailureHandler = (globalThis as any).gm_authFailure;
+    (globalThis as any).gm_authFailure = () => {
+      if (cancelled) return;
+      setReadyWebMapError("Google Maps課金設定エラーのため、代替マップで表示します。");
+    };
+
+    const renderReadyWebMap = async () => {
+      setReadyWebMapError(null);
+      if (!GOOGLE_MAPS_WEB_API_KEY) {
+        setReadyWebMapError("Google Maps APIキーが設定されていないため、代替マップで表示します。");
+        return;
+      }
+
+      try {
+        const googleMaps = await ensureGoogleMapsConstructors();
+        if (cancelled) return;
+
+        if (!readyWebMapHostRef.current) return;
+
+        if (!readyWebMapInstanceRef.current) {
+          readyWebMapInstanceRef.current = new googleMaps.Map(readyWebMapHostRef.current, {
+            center: {
+              lat: readyMapRegion.latitude,
+              lng: readyMapRegion.longitude,
+            },
+            zoom: 16,
+            disableDefaultUI: true,
+            clickableIcons: false,
+            gestureHandling: "none",
+            styles: [
+              { featureType: "poi", stylers: [{ saturation: -100 }, { lightness: 16 }] },
+              { featureType: "transit", stylers: [{ saturation: -100 }] },
+              { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+            ],
+          });
+        }
+
+        const map = readyWebMapInstanceRef.current;
+
+        readyWebSpotMarkersRef.current.forEach((marker) => marker.setMap(null));
+        readyWebSpotMarkersRef.current = [];
+
+        if (readyWebRoutePolylineRef.current) {
+          readyWebRoutePolylineRef.current.setMap(null);
+          readyWebRoutePolylineRef.current = null;
+        }
+
+        if (readyRouteCoordinates.length > 1) {
+          readyWebRoutePolylineRef.current = new googleMaps.Polyline({
+            map,
+            path: readyRouteCoordinates.map((coordinate) => ({
+              lat: coordinate.latitude,
+              lng: coordinate.longitude,
+            })),
+            geodesic: true,
+            strokeColor: "#f5ce53",
+            strokeOpacity: 0.95,
+            strokeWeight: 4,
+          });
+        }
+
+        readyWebSpotMarkersRef.current = spots.map((spot, index) => {
+          const isSelected = index === safeReadySelectedSpotIndex;
+          const isStart = index === 0;
+          const isGoal = index === spots.length - 1;
+          const markerLabel = isStart ? "S" : isGoal ? "G" : `${index + 1}`;
+
+          const marker = new googleMaps.Marker({
+            map,
+            position: { lat: spot.coordinate.latitude, lng: spot.coordinate.longitude },
+            title: spot.name,
+            zIndex: isSelected ? 50 : 20,
+            label: {
+              text: markerLabel,
+              color: "#f9f9f7",
+              fontSize: "11px",
+              fontWeight: "700",
+            },
+            icon: {
+              path: googleMaps.SymbolPath.CIRCLE,
+              scale: isSelected ? 11 : 9,
+              fillColor: isStart ? "#475464" : isGoal ? "#745c00" : "#8f979d",
+              fillOpacity: isSelected ? 1 : 0.88,
+              strokeColor: isSelected ? "#f5ce53" : isStart ? "#33414f" : isGoal ? "#4e3c00" : "#6f777d",
+              strokeWeight: isSelected ? 3 : 1.6,
+            },
+          });
+          marker.addListener("click", () => {
+            if (cancelled) return;
+            setReadySelectedSpotIndex(index);
+          });
+          return marker;
+        });
+
+        const target = spots[safeReadySelectedSpotIndex]?.coordinate;
+        if (allSpotCoordinates.length > 1) {
+          const bounds = new googleMaps.LatLngBounds();
+          allSpotCoordinates.forEach((coordinate) => {
+            bounds.extend({ lat: coordinate.latitude, lng: coordinate.longitude });
+          });
+          map.fitBounds(bounds, 52);
+          if (target) {
+            googleMaps.event.addListenerOnce(map, "idle", () => {
+              if (cancelled) return;
+              map.panTo({ lat: target.latitude, lng: target.longitude });
+            });
+          }
+        } else if (target) {
+          map.setCenter({ lat: target.latitude, lng: target.longitude });
+          map.setZoom(16);
+        }
+
+        setReadyWebMapError(null);
+      } catch (error) {
+        console.error("Ready map web render error:", error);
+        const errorMessage = error instanceof Error ? error.message : "";
+        if (errorMessage.includes("BillingNotEnabled")) {
+          setReadyWebMapError("Google Maps課金設定エラーのため、代替マップで表示します。");
+        } else {
+          setReadyWebMapError("Googleマップを表示できませんでした。");
+        }
+      }
+    };
+
+    void renderReadyWebMap();
+
+    return () => {
+      cancelled = true;
+      (globalThis as any).gm_authFailure = previousAuthFailureHandler;
+    };
+  }, [
+    allSpotCoordinates,
+    readyMapRegion.latitude,
+    readyMapRegion.longitude,
+    readyRouteCoordinates,
+    safeReadySelectedSpotIndex,
+    screen,
+    spots,
+    useMockMapBackground,
+  ]);
+
+  useEffect(() => {
     if (Platform.OS === "web") return;
     if (screen !== "map") return;
     if (useMockMapBackground) return;
@@ -3474,14 +4078,8 @@ export default function App() {
       }
 
       try {
-        await loadGoogleMapsJs();
+        const googleMaps = await ensureGoogleMapsConstructors();
         if (cancelled) return;
-
-        const googleMaps = (globalThis as any)?.google?.maps;
-        if (!googleMaps) {
-          setWebMapError("Google Mapsの読み込みに失敗しました。");
-          return;
-        }
 
         if (!mapWebHostRef.current) return;
 
@@ -3524,29 +4122,12 @@ export default function App() {
         }
 
         const toLatLngLiteral = (coordinate: Coordinate) => ({ lat: coordinate.latitude, lng: coordinate.longitude });
-        const directionsService = new googleMaps.DirectionsService();
 
-        const resolveWalkingPath = async (
+        const resolveWalkingPath = (
           origin: Coordinate,
           destination: Coordinate,
           waypoints: Coordinate[] = [],
-        ): Promise<Array<{ lat: number; lng: number }>> => {
-          try {
-            const result = await directionsService.route({
-              origin: toLatLngLiteral(origin),
-              destination: toLatLngLiteral(destination),
-              waypoints: waypoints.map((point) => ({ location: toLatLngLiteral(point) })),
-              travelMode: googleMaps.TravelMode.WALKING,
-              provideRouteAlternatives: false,
-            });
-            const overviewPath = result?.routes?.[0]?.overview_path;
-            if (Array.isArray(overviewPath) && overviewPath.length > 1) {
-              return overviewPath.map((point: any) => ({ lat: point.lat(), lng: point.lng() }));
-            }
-          } catch {
-            // Fallback to straight line when Directions request fails.
-          }
-
+        ): Array<{ lat: number; lng: number }> => {
           return [toLatLngLiteral(origin), ...waypoints.map(toLatLngLiteral), toLatLngLiteral(destination)];
         };
 
@@ -3554,8 +4135,8 @@ export default function App() {
         const wholePath =
           safeCurrentSpotIndex >= spots.length - 1
             ? [toLatLngLiteral(currentSpot.coordinate)]
-            : await resolveWalkingPath(currentSpot.coordinate, goalSpot.coordinate, futureWaypoints);
-        const activePath = await resolveWalkingPath(routeOrigin, currentSpot.coordinate);
+            : resolveWalkingPath(currentSpot.coordinate, goalSpot.coordinate, futureWaypoints);
+        const activePath = resolveWalkingPath(routeOrigin, currentSpot.coordinate);
 
         if (wholePath.length > 1) {
           mapWebWholeRoutePolylineRef.current = new googleMaps.Polyline({
@@ -3677,6 +4258,88 @@ export default function App() {
     useMockMapBackground,
   ]);
 
+  const renderHeaderAuthBadge = () => {
+    const accessibleLabel = isFirebaseSignedIn
+      ? `ログイン中: ${firebaseDisplayName ?? "Googleユーザー"}`
+      : "ゲストで利用中";
+    const isHeaderAuthActionBusy = isLandingGoogleSigningIn || isHeaderAuthSigningOut;
+    const headerAuthButtonLabel = isHeaderAuthActionBusy
+      ? isFirebaseSignedIn
+        ? "ログアウト中..."
+        : "Googleログイン中..."
+      : isFirebaseSignedIn
+        ? "ログアウト"
+        : "Googleでログイン";
+
+    return (
+      <View style={styles.headerAuthMenuAnchor}>
+        <Pressable
+          accessibilityLabel={accessibleLabel}
+          accessibilityRole="button"
+          onPress={() => {
+            setHeaderAuthMenuError(null);
+            setIsHeaderAuthMenuOpen((prev) => !prev);
+          }}
+          style={({ pressed }) => [styles.headerAuthBadge, pressed && styles.pressed]}
+        >
+          {isFirebaseSignedIn && firebaseAvatarUrl ? (
+            <Image source={{ uri: firebaseAvatarUrl }} style={styles.headerAuthBadgeAvatar} />
+          ) : (
+            <Ionicons name="person-circle-outline" size={26} color={palette.onBackground} />
+          )}
+          <View
+            style={[
+              styles.headerAuthBadgeStatusDot,
+              isFirebaseSignedIn ? styles.headerAuthBadgeStatusDotSignedIn : styles.headerAuthBadgeStatusDotGuest,
+            ]}
+          />
+        </Pressable>
+
+        {isHeaderAuthMenuOpen ? (
+          <View style={styles.headerAuthMenuPanel}>
+            <Text style={styles.headerAuthMenuStatusText}>{accessibleLabel}</Text>
+            <Pressable
+              onPress={isFirebaseSignedIn ? handleHeaderSignOutPress : handleHeaderGoogleSignInPress}
+              disabled={isHeaderAuthActionBusy}
+              style={({ pressed }) => [
+                styles.headerAuthMenuButton,
+                isHeaderAuthActionBusy ? styles.headerAuthMenuButtonDisabled : null,
+                pressed && !isHeaderAuthActionBusy ? styles.pressed : null,
+              ]}
+            >
+              {isHeaderAuthActionBusy ? (
+                <ActivityIndicator size="small" color={palette.onDarkButton} />
+              ) : isFirebaseSignedIn ? (
+                <Ionicons
+                  name="log-out-outline"
+                  size={16}
+                  color={palette.onDarkButton}
+                />
+              ) : (
+                <Ionicons
+                  name="logo-google"
+                  size={16}
+                  color={palette.onDarkButton}
+                />
+              )}
+              <Text
+                style={[
+                  styles.headerAuthMenuButtonText,
+                  isHeaderAuthActionBusy ? styles.headerAuthMenuButtonTextDisabled : null,
+                ]}
+              >
+                {headerAuthButtonLabel}
+              </Text>
+            </Pressable>
+            {headerAuthMenuError ? (
+              <Text style={styles.headerAuthMenuErrorText}>{headerAuthMenuError}</Text>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+    );
+  };
+
   if (screen === "preparing") {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -3784,13 +4447,8 @@ export default function App() {
               {isGeneratingQuest ? "生成中..." : questGenerationError ? "再試行する" : generatedQuest ? effectivePreparingSkipButton : "生成を開始"}
             </Text>
           </Pressable>
-          {questGenerationError && !isGeneratingQuest ? (
-            <Pressable style={({ pressed }) => [styles.preparingFallbackLink, pressed && styles.pressed]} onPress={() => setScreen("ready")}>
-              <Text style={styles.preparingFallbackLinkText}>デフォルト体験で続行</Text>
-            </Pressable>
-          ) : null}
           <Text style={styles.preparingFooterText}>
-            {questGenerationError ? "生成に失敗しました。再試行またはデフォルト体験で進めます。" : effectivePreparingFooter}
+            {questGenerationError ? "生成に失敗しました。再試行してください。" : effectivePreparingFooter}
           </Text>
         </View>
       </SafeAreaView>
@@ -3800,11 +4458,15 @@ export default function App() {
   if (screen === "ready") {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar style="light" />
+        <StatusBar style="dark" />
 
         <View style={styles.readyTopBar}>
-          <View style={styles.readyTopInner}>
-            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+          <View style={[styles.topBarInner, { width: contentWidth }]}>
+            <View style={styles.headerSideSpacer} />
+            <View style={styles.brandRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+            {renderHeaderAuthBadge()}
           </View>
         </View>
 
@@ -3826,13 +4488,10 @@ export default function App() {
             <Image source={{ uri: readyImage }} style={styles.readyHeroImage} resizeMode="cover" />
             <View style={styles.readyHeroUniformShade} />
             <View style={styles.readyHeroTextWrap}>
-              <Text style={styles.readyChapterLabel}>{effectiveReadyChapterLabel}</Text>
               <Text style={[styles.readyHeroLead, { fontSize: readyHeroTitleFontSize, lineHeight: readyHeroTitleLineHeight }]}>
-                {effectiveReadyStoryLead}
+                {effectiveReadyHeroTitle}
               </Text>
-              <Text style={[styles.readyHeroTone, { fontSize: readyHeroTitleFontSize, lineHeight: readyHeroTitleLineHeight }]}>
-                {readyStoryTone}
-              </Text>
+              {effectiveReadyHeroSubline ? <Text style={styles.readyHeroSubline}>{effectiveReadyHeroSubline}</Text> : null}
             </View>
           </Animated.View>
 
@@ -3842,13 +4501,6 @@ export default function App() {
               <Text style={styles.readySummaryTitle}>{effectiveReadySummaryTitle}</Text>
             </View>
             <Text style={styles.readySummaryText}>{readyStorySynopsis}</Text>
-            <View style={styles.readyGeneratedStoryCard}>
-              <Text style={styles.readyGeneratedStoryLabel}>{effectiveReadyGeneratedStoryLabel}</Text>
-              <Text style={styles.readyGeneratedStoryText}>
-                {generatedStoryName || `${effectiveReadyStoryLead} ${readyStoryTone}`}
-              </Text>
-              <Text style={styles.readyGeneratedStorySubtext}>{readyStoryTagline}</Text>
-            </View>
             <View style={styles.readyChipRow}>
               {readyInputItems.map((item) => (
                 <View key={item.id} style={styles.readyChip}>
@@ -3863,49 +4515,161 @@ export default function App() {
             <View style={styles.readySectionHeadingBlock}>
               <Text style={styles.readySectionHeading}>EXPLORATION PATH</Text>
             </View>
+
+            <View style={styles.readyMapPreviewCard}>
+              <View style={styles.readyMapPreviewHeader}>
+                <Text style={styles.readyMapPreviewTitle}>ROUTE MAP (API)</Text>
+                <Text style={styles.readyMapPreviewMeta}>
+                  {`${String(safeReadySelectedSpotIndex + 1).padStart(2, "0")} ${readySelectedSpot.name}`}
+                </Text>
+              </View>
+              <View style={styles.readyMapPreviewCanvas}>
+                {useMockMapBackground ? (
+                  <View style={styles.readyMapPreviewMock}>
+                    <Text style={styles.readyMapPreviewMockText}>マッププレビューは省略表示中です</Text>
+                  </View>
+                ) : Platform.OS === "web" ? (
+                  <>
+                    {createElement("div", {
+                      ref: readyWebMapHostRef,
+                      style: {
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        width: "100%",
+                        height: "100%",
+                      },
+                    })}
+                    {readyWebMapError ? (
+                      <>
+                        {createElement("iframe", {
+                          src: readyFallbackEmbedUrl,
+                          loading: "eager",
+                          allowFullScreen: true,
+                          referrerPolicy: "no-referrer-when-downgrade",
+                          style: {
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: "100%",
+                            height: "100%",
+                            border: "none",
+                          },
+                        })}
+                        <View style={styles.readyMapPreviewFallbackBadge}>
+                          <Text style={styles.readyMapPreviewFallbackBadgeText}>{readyWebMapError}</Text>
+                        </View>
+                      </>
+                    ) : null}
+                  </>
+                ) : (
+                  <MapView
+                    ref={readyMapRef}
+                    key={`ready-map-${spots.map((spot) => spot.id).join("-")}`}
+                    style={styles.readyMapPreviewMap}
+                    provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
+                    initialRegion={readyMapRegion}
+                    scrollEnabled={false}
+                    zoomEnabled={false}
+                    rotateEnabled={false}
+                    pitchEnabled={false}
+                    showsCompass={false}
+                    showsScale={false}
+                  >
+                    {readyRouteCoordinates.length > 1 ? (
+                      <Polyline
+                        coordinates={readyRouteCoordinates}
+                        strokeColor="#f5ce53"
+                        strokeWidth={4}
+                      />
+                    ) : null}
+                    {spots.map((spot, index) => {
+                      const isSelected = index === safeReadySelectedSpotIndex;
+                      const isStart = index === 0;
+                      const isGoal = index === spots.length - 1;
+                      const markerLabel = isStart ? "S" : isGoal ? "G" : `${index + 1}`;
+                      return (
+                        <Marker
+                          key={`ready-spot-${spot.id}`}
+                          coordinate={spot.coordinate}
+                          title={spot.name}
+                          onPress={() => setReadySelectedSpotIndex(index)}
+                        >
+                          <View style={styles.mapSpotMarkerWrap}>
+                            <View
+                              style={[
+                                styles.mapSpotPin,
+                                isStart ? styles.mapSpotPinStart : isGoal ? styles.mapSpotPinGoal : styles.mapSpotPinMuted,
+                                isSelected ? styles.mapSpotPinActiveTargetRing : null,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.mapSpotPinText,
+                                  isStart || isGoal
+                                    ? styles.mapSpotPinTextRole
+                                    : isSelected
+                                      ? styles.mapSpotPinTextActive
+                                      : styles.mapSpotPinTextMuted,
+                                ]}
+                              >
+                                {markerLabel}
+                              </Text>
+                            </View>
+                          </View>
+                        </Marker>
+                      );
+                    })}
+                  </MapView>
+                )}
+
+                <View pointerEvents="none" style={styles.readyMapCenterPinWrap}>
+                  <View style={styles.readyMapCenterPinHalo} />
+                  <Ionicons name="location" size={30} color="#f5ce53" />
+                  <View style={styles.readyMapCenterPinCore} />
+                </View>
+              </View>
+              <Text style={styles.readyMapPreviewHint}>下のスポットカードを選ぶと、地図中心ピンへフォーカスします。</Text>
+            </View>
+
             <View style={styles.readyTimelineWrap}>
               <View style={styles.readyTimelineLine} />
               {spots.map((spot, index) => (
-                <View
+                <Pressable
                   key={spot.id}
-                  style={[
+                  onPress={() => setReadySelectedSpotIndex(index)}
+                  style={({ pressed }) => [
                     styles.readyTimelineItem,
                     index === spots.length - 1 ? styles.readyTimelineItemLast : null,
+                    pressed ? styles.pressed : null,
                   ]}
                 >
-                  <View style={[styles.readyTimelineDot, index === 0 ? styles.readyTimelineDotActive : null]} />
-                  <View style={styles.readyTimelineCard}>
+                  <View
+                    style={[
+                      styles.readyTimelineDot,
+                      index === safeReadySelectedSpotIndex ? styles.readyTimelineDotActive : null,
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.readyTimelineCard,
+                      index === safeReadySelectedSpotIndex ? styles.readyTimelineCardActive : null,
+                    ]}
+                  >
                     <View style={styles.readyTimelineMetaRow}>
                       <Text style={styles.readyTimelineIndex}>{String(index + 1).padStart(2, "0")}</Text>
-                      <View style={styles.readyTimelineBeatTag}>
-                        <Text style={styles.readyTimelineBeatTagText}>
-                          {(storyArcMetaMap[spot.id] ?? fallbackStoryArcMeta).phase}
-                        </Text>
-                      </View>
                     </View>
                     <Text style={styles.readyTimelineName}>{spot.name}</Text>
-                    <Text style={styles.readyTimelineBeat}>
-                      {(storyArcMetaMap[spot.id] ?? fallbackStoryArcMeta).beat}
-                    </Text>
-                    <Text style={styles.readyTimelineDesc}>{generatedSpotOverviewMap[spot.id] || readySpotOverviewMap[spot.id]}</Text>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </View>
           </Animated.View>
 
-          <Animated.View style={[styles.readyHintsSection, { width: readySectionWidth }, readyCardsAnimatedStyle]}>
-            <Text style={styles.readySectionHeading}>HINTS FOR THE JOURNEY</Text>
-            <View style={styles.readyHintGrid}>
-              {readyTips.map((tip) => (
-                <View key={tip.id} style={[styles.readyHintCard, { width: readyHintCardWidth }]}>
-                  <Ionicons name={tip.icon} size={30} color={palette.tertiary} />
-                  <Text style={styles.readyHintTitle}>{tip.title}</Text>
-                  <Text style={styles.readyHintBody}>{tip.body}</Text>
-                </View>
-              ))}
-            </View>
-          </Animated.View>
         </ScrollView>
 
         <View
@@ -4504,7 +5268,13 @@ export default function App() {
         <StatusBar style="dark" />
 
         <View style={styles.feedbackTopBar}>
-          <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+          <View style={[styles.topBarInner, { width: contentWidth }]}>
+            <View style={styles.headerSideSpacer} />
+            <View style={styles.brandRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+            {renderHeaderAuthBadge()}
+          </View>
         </View>
 
         <ScrollView
@@ -4785,11 +5555,15 @@ export default function App() {
         <StatusBar style="dark" />
 
         <View style={styles.setupTopBar}>
-          <Pressable onPress={() => setScreen("landing")} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-            <Ionicons name="arrow-back" size={22} color={palette.onBackground} />
-          </Pressable>
-          <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
-          <View style={styles.setupTopSpacer} />
+          <View style={[styles.topBarInner, { width: contentWidth }]}>
+            <Pressable onPress={() => setScreen("landing")} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+              <Ionicons name="arrow-back" size={20} color={palette.onBackground} />
+            </Pressable>
+            <View style={styles.brandRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+            {renderHeaderAuthBadge()}
+          </View>
         </View>
 
         <ScrollView
@@ -4820,7 +5594,9 @@ export default function App() {
                   onPress={() => setIsUserTypeMenuOpen((prev) => !prev)}
                   style={({ pressed }) => [styles.userTypeSelectField, pressed && styles.pressed]}
                 >
-                  <Text style={styles.userTypeSelectValue}>{selectedUserType}</Text>
+                  <Text style={isUserTypeAnswered ? styles.userTypeSelectValue : styles.userTypeSelectPlaceholder}>
+                    {isUserTypeAnswered ? selectedUserType : "選択してください"}
+                  </Text>
                   <Ionicons
                     name={isUserTypeMenuOpen ? "chevron-up" : "chevron-down"}
                     size={18}
@@ -4831,12 +5607,13 @@ export default function App() {
                 {isUserTypeMenuOpen ? (
                   <View style={styles.userTypeSelectMenu}>
                     {userTypeOptions.map((option) => {
-                      const selected = selectedUserType === option;
+                      const selected = isUserTypeAnswered && selectedUserType === option;
                       return (
                         <Pressable
                           key={option}
                           onPress={() => {
                             setSelectedUserType(option);
+                            setIsUserTypeAnswered(true);
                             setIsUserTypeMenuOpen(false);
                           }}
                           style={({ pressed }) => [
@@ -4861,11 +5638,14 @@ export default function App() {
               <Text style={styles.setupLabel}>{effectiveSetupFamiliarityLabel}</Text>
               <View style={styles.stackButtons}>
                 {familiarityOptions.map((option) => {
-                  const selected = selectedFamiliarity === option;
+                  const selected = isFamiliarityAnswered && selectedFamiliarity === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedFamiliarity(option)}
+                      onPress={() => {
+                        setSelectedFamiliarity(option);
+                        setIsFamiliarityAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.familiarityButton,
                         selected ? styles.familiaritySelected : styles.familiarityIdle,
@@ -4890,11 +5670,14 @@ export default function App() {
               <Text style={styles.setupResearchNote}>{effectiveSetupResearchNote}</Text>
               <View style={styles.stackButtons}>
                 {explorationStyleOptions.map((option) => {
-                  const selected = selectedExplorationStyle === option;
+                  const selected = isExplorationStyleAnswered && selectedExplorationStyle === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedExplorationStyle(option)}
+                      onPress={() => {
+                        setSelectedExplorationStyle(option);
+                        setIsExplorationStyleAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.familiarityButton,
                         selected ? styles.familiaritySelected : styles.familiarityIdle,
@@ -4919,11 +5702,15 @@ export default function App() {
               <Text style={styles.setupResearchNote}>{effectiveSetupResearchNote}</Text>
               <View style={styles.stackButtons}>
                 {experienceExpectationOptions.map((option) => {
-                  const selected = selectedExperienceExpectation === option;
+                  const selected =
+                    isExperienceExpectationAnswered && selectedExperienceExpectation === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedExperienceExpectation(option)}
+                      onPress={() => {
+                        setSelectedExperienceExpectation(option);
+                        setIsExperienceExpectationAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.familiarityButton,
                         selected ? styles.familiaritySelected : styles.familiarityIdle,
@@ -4951,11 +5738,14 @@ export default function App() {
               </View>
               <View style={styles.durationRow}>
                 {durationOptions.map((option) => {
-                  const selected = selectedDuration === option;
+                  const selected = isDurationAnswered && selectedDuration === option;
                   return (
                     <Pressable
                       key={option}
-                      onPress={() => setSelectedDuration(option)}
+                      onPress={() => {
+                        setSelectedDuration(option);
+                        setIsDurationAnswered(true);
+                      }}
                       style={({ pressed }) => [
                         styles.durationButton,
                         selected ? styles.durationSelected : styles.durationIdle,
@@ -4985,9 +5775,11 @@ export default function App() {
             style={({ pressed }) => [
               styles.startButton,
               { width: contentWidth },
-              pressed && styles.pressed,
+              !isSetupFormComplete || isGeneratingQuest ? styles.startButtonDisabled : null,
+              pressed && isSetupFormComplete && !isGeneratingQuest ? styles.pressed : null,
             ]}
             onPress={handleSetupCreateExperiencePress}
+            disabled={!isSetupFormComplete || isGeneratingQuest}
           >
             <Text style={styles.startButtonText}>{effectiveSetupStartButton}</Text>
             <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
@@ -5097,9 +5889,13 @@ export default function App() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, { width: contentWidth }]}>
-          <View style={styles.brandRow}>
-            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+        <View style={styles.header}>
+          <View style={[styles.headerInner, { width: contentWidth }]}>
+            <View style={styles.headerSideSpacer} />
+            <View style={styles.brandRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+            {renderHeaderAuthBadge()}
           </View>
         </View>
 
@@ -5218,19 +6014,180 @@ export default function App() {
           setLandingBottomBarHeight((prev) => (prev === measuredHeight ? prev : measuredHeight));
         }}
       >
-        <Pressable
-          style={({ pressed }) => [styles.startButton, { width: contentWidth }, pressed && styles.pressed]}
-          onPress={() => setScreen("setup")}
-        >
-          <Text style={styles.startButtonText}>{effectiveLandingStartButton}</Text>
-          <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
-        </Pressable>
+        <View style={[styles.landingAuthActions, { width: contentWidth }]}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.landingAuthPrimaryButton,
+              pressed && !isLandingGoogleSigningIn ? styles.pressed : null,
+              isLandingGoogleSigningIn ? styles.startButtonDisabled : null,
+            ]}
+            onPress={handleLandingGoogleSignInPress}
+            disabled={isLandingGoogleSigningIn}
+          >
+            <View style={styles.startButtonLabelGroup}>
+              <Text style={styles.landingAuthPrimaryButtonText}>
+                {isLandingGoogleSigningIn ? "Googleログイン中..." : effectiveLandingGoogleStartButton}
+              </Text>
+            </View>
+            {isLandingGoogleSigningIn ? (
+              <ActivityIndicator color={palette.onDarkButton} />
+            ) : (
+              <Ionicons name="logo-google" size={20} color={palette.onDarkButton} />
+            )}
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [styles.landingAuthSecondaryButton, pressed && styles.pressed]}
+            onPress={handleLandingStartWithoutLoginPress}
+            disabled={isLandingGoogleSigningIn}
+          >
+            <Text style={styles.landingAuthSecondaryButtonText}>{effectiveLandingGuestStartButton}</Text>
+            <Ionicons name="arrow-forward" size={20} color={palette.onBackground} />
+          </Pressable>
+        </View>
+        {landingAuthError ? <Text style={styles.landingAuthErrorText}>{landingAuthError}</Text> : null}
       </View>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+
+const parseHexColor = (input: string): { r: number; g: number; b: number; a: number } | null => {
+  const hex = input.trim().replace(/^#/, "");
+  if (hex.length === 3) {
+    const r = Number.parseInt(hex[0] + hex[0], 16);
+    const g = Number.parseInt(hex[1] + hex[1], 16);
+    const b = Number.parseInt(hex[2] + hex[2], 16);
+    if ([r, g, b].some((value) => Number.isNaN(value))) return null;
+    return { r, g, b, a: 1 };
+  }
+  if (hex.length === 4) {
+    const r = Number.parseInt(hex[0] + hex[0], 16);
+    const g = Number.parseInt(hex[1] + hex[1], 16);
+    const b = Number.parseInt(hex[2] + hex[2], 16);
+    const a = Number.parseInt(hex[3] + hex[3], 16) / 255;
+    if ([r, g, b].some((value) => Number.isNaN(value)) || Number.isNaN(a)) return null;
+    return { r, g, b, a };
+  }
+  if (hex.length === 6) {
+    const r = Number.parseInt(hex.slice(0, 2), 16);
+    const g = Number.parseInt(hex.slice(2, 4), 16);
+    const b = Number.parseInt(hex.slice(4, 6), 16);
+    if ([r, g, b].some((value) => Number.isNaN(value))) return null;
+    return { r, g, b, a: 1 };
+  }
+  if (hex.length === 8) {
+    const r = Number.parseInt(hex.slice(0, 2), 16);
+    const g = Number.parseInt(hex.slice(2, 4), 16);
+    const b = Number.parseInt(hex.slice(4, 6), 16);
+    const a = Number.parseInt(hex.slice(6, 8), 16) / 255;
+    if ([r, g, b].some((value) => Number.isNaN(value)) || Number.isNaN(a)) return null;
+    return { r, g, b, a };
+  }
+  return null;
+};
+
+const parseRgbLikeColor = (input: string): { r: number; g: number; b: number; a: number } | null => {
+  const normalized = input.trim().replace(/\s+/g, "");
+  const rgbaMatch = normalized.match(/^rgba\((\d{1,3}),(\d{1,3}),(\d{1,3}),([01]?(?:\.\d+)?)\)$/i);
+  if (rgbaMatch) {
+    const r = Number.parseInt(rgbaMatch[1], 10);
+    const g = Number.parseInt(rgbaMatch[2], 10);
+    const b = Number.parseInt(rgbaMatch[3], 10);
+    const a = Number.parseFloat(rgbaMatch[4]);
+    if ([r, g, b, a].some((value) => Number.isNaN(value))) return null;
+    return { r, g, b, a: clamp01(a) };
+  }
+  const rgbMatch = normalized.match(/^rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)$/i);
+  if (rgbMatch) {
+    const r = Number.parseInt(rgbMatch[1], 10);
+    const g = Number.parseInt(rgbMatch[2], 10);
+    const b = Number.parseInt(rgbMatch[3], 10);
+    if ([r, g, b].some((value) => Number.isNaN(value))) return null;
+    return { r, g, b, a: 1 };
+  }
+  return null;
+};
+
+const withOpacity = (color: unknown, opacity: number): string => {
+  if (typeof color !== "string" || color.trim().length === 0) {
+    return `rgba(0,0,0,${clamp01(opacity)})`;
+  }
+  const parsed = parseHexColor(color) ?? parseRgbLikeColor(color);
+  if (!parsed) return color;
+  const a = clamp01(parsed.a * clamp01(opacity));
+  return `rgba(${parsed.r},${parsed.g},${parsed.b},${a})`;
+};
+
+const toFiniteNumber = (value: unknown, fallback: number): number => {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+};
+
+const buildWebBoxShadow = (style: Record<string, unknown>): string | null => {
+  const hasShadowProps =
+    style.shadowColor !== undefined ||
+    style.shadowOffset !== undefined ||
+    style.shadowOpacity !== undefined ||
+    style.shadowRadius !== undefined;
+  if (!hasShadowProps) return null;
+
+  const shadowOffset = (style.shadowOffset as { width?: number; height?: number } | undefined) ?? {};
+  const offsetX = toFiniteNumber(shadowOffset.width, 0);
+  const offsetY = toFiniteNumber(shadowOffset.height, 0);
+  const blurRadius = Math.max(0, toFiniteNumber(style.shadowRadius, 0));
+  const opacity = clamp01(toFiniteNumber(style.shadowOpacity, 1));
+  const color = withOpacity(style.shadowColor ?? "#000", opacity);
+  return `${offsetX}px ${offsetY}px ${blurRadius}px 0px ${color}`;
+};
+
+const buildWebTextShadow = (style: Record<string, unknown>): string | null => {
+  const hasTextShadowProps =
+    style.textShadowColor !== undefined ||
+    style.textShadowOffset !== undefined ||
+    style.textShadowRadius !== undefined;
+  if (!hasTextShadowProps) return null;
+
+  const textShadowOffset = (style.textShadowOffset as { width?: number; height?: number } | undefined) ?? {};
+  const offsetX = toFiniteNumber(textShadowOffset.width, 0);
+  const offsetY = toFiniteNumber(textShadowOffset.height, 0);
+  const blurRadius = Math.max(0, toFiniteNumber(style.textShadowRadius, 0));
+  const color = typeof style.textShadowColor === "string" ? style.textShadowColor : "rgba(0,0,0,0.25)";
+  return `${offsetX}px ${offsetY}px ${blurRadius}px ${color}`;
+};
+
+const withWebShadowCompat = <T extends Record<string, any>>(styleMap: T): T => {
+  if (Platform.OS !== "web") return styleMap;
+
+  const output: Record<string, any> = {};
+  for (const [key, rawStyle] of Object.entries(styleMap)) {
+    if (!rawStyle || typeof rawStyle !== "object" || Array.isArray(rawStyle)) {
+      output[key] = rawStyle;
+      continue;
+    }
+
+    const style = rawStyle as Record<string, unknown>;
+    const nextStyle: Record<string, unknown> = { ...style };
+    const boxShadow = buildWebBoxShadow(style);
+    const textShadow = buildWebTextShadow(style);
+
+    delete nextStyle.shadowColor;
+    delete nextStyle.shadowOffset;
+    delete nextStyle.shadowOpacity;
+    delete nextStyle.shadowRadius;
+    delete nextStyle.textShadowColor;
+    delete nextStyle.textShadowOffset;
+    delete nextStyle.textShadowRadius;
+
+    if (boxShadow) nextStyle.boxShadow = boxShadow;
+    if (textShadow) nextStyle.textShadow = textShadow;
+    output[key] = nextStyle;
+  }
+
+  return output as T;
+};
+
+const styles = StyleSheet.create(withWebShadowCompat({
   safeArea: {
     flex: 1,
     backgroundColor: palette.background,
@@ -5269,9 +6226,36 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(245,206,83,0.12)",
   },
   header: {
-    paddingTop: 14,
-    paddingBottom: 20,
+    paddingTop: 6,
+    paddingBottom: 10,
+    width: "100%",
     alignItems: "center",
+    backgroundColor: "#f8f1e6",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(120,102,78,0.18)",
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 18,
+    zIndex: 220,
+    position: "relative",
+  },
+  headerInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 46,
+  },
+  topBarInner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "100%",
+  },
+  headerSideSpacer: {
+    width: 42,
+    height: 42,
   },
   brandRow: {
     flexDirection: "row",
@@ -5285,11 +6269,12 @@ const styles = StyleSheet.create({
     color: palette.onBackground,
   },
   brandLogo: {
-    height: 26,
-    width: 130,
+    height: 30,
+    width: 148,
   },
   main: {
     paddingHorizontal: 0,
+    marginTop: 24,
     marginBottom: 18,
   },
   heroWrap: {
@@ -5407,12 +6392,157 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 22,
+    paddingTop: 10,
+    paddingBottom: 16,
     backgroundColor: "rgba(249,249,247,0.96)",
     borderTopWidth: 1,
     borderTopColor: "rgba(173,179,176,0.25)",
     alignItems: "center",
+  },
+  landingAuthActions: {
+    gap: 10,
+  },
+  landingAuthPrimaryButton: {
+    borderRadius: 22,
+    backgroundColor: palette.darkButton,
+    minHeight: 60,
+    paddingHorizontal: 18,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    shadowColor: "#1a1c20",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  landingAuthPrimaryButtonText: {
+    color: palette.onDarkButton,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 22,
+    flexShrink: 1,
+  },
+  landingAuthSecondaryButton: {
+    borderRadius: 16,
+    minHeight: 50,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "rgba(255,255,255,0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.5)",
+  },
+  landingAuthSecondaryButtonText: {
+    color: palette.onBackground,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 20,
+    flexShrink: 1,
+  },
+  landingAuthErrorText: {
+    marginTop: 8,
+    maxWidth: 900,
+    color: palette.error,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+  headerAuthBadge: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,250,242,0.96)",
+    borderWidth: 1,
+    borderColor: "rgba(140,122,96,0.32)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#4a3b28",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  headerAuthBadgeAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  headerAuthBadgeStatusDot: {
+    position: "absolute",
+    right: 2,
+    bottom: 2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#fffaf2",
+  },
+  headerAuthBadgeStatusDotSignedIn: {
+    backgroundColor: "#2eb67d",
+  },
+  headerAuthBadgeStatusDotGuest: {
+    backgroundColor: "#8d949a",
+  },
+  headerAuthMenuAnchor: {
+    position: "relative",
+    alignItems: "flex-end",
+    zIndex: 260,
+  },
+  headerAuthMenuPanel: {
+    position: "absolute",
+    top: 50,
+    right: 0,
+    width: 236,
+    borderRadius: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    backgroundColor: "rgba(255,250,242,0.98)",
+    borderWidth: 1,
+    borderColor: "rgba(140,122,96,0.34)",
+    gap: 8,
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+    elevation: 30,
+    zIndex: 1200,
+  },
+  headerAuthMenuStatusText: {
+    color: palette.onSurfaceVariant,
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "600",
+  },
+  headerAuthMenuButton: {
+    minHeight: 38,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    backgroundColor: palette.darkButton,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  headerAuthMenuButtonDisabled: {
+    backgroundColor: "rgba(158,166,171,0.52)",
+  },
+  headerAuthMenuButtonText: {
+    color: palette.onDarkButton,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  headerAuthMenuButtonTextDisabled: {
+    color: "#5f666c",
+  },
+  headerAuthMenuErrorText: {
+    color: palette.error,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
   },
   startButton: {
     borderRadius: 22,
@@ -5428,6 +6558,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.16,
     shadowRadius: 16,
     elevation: 8,
+  },
+  startButtonDisabled: {
+    backgroundColor: "#9ea6ab",
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
   },
   startButtonLabelGroup: {
     gap: 4,
@@ -5674,24 +6810,33 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    height: 68,
-    zIndex: 40,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "rgba(249,249,247,0.8)",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.78)",
-    borderWidth: 1,
-    borderColor: "rgba(173,179,176,0.28)",
+    height: 66,
+    zIndex: 220,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#f8f1e6",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(120,102,78,0.18)",
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 18,
+  },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255,250,242,0.96)",
+    borderWidth: 1,
+    borderColor: "rgba(140,122,96,0.32)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#4a3b28",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   setupBrandStack: {
     alignItems: "center",
@@ -5721,10 +6866,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 0.3,
-  },
-  setupTopSpacer: {
-    width: 40,
-    height: 40,
   },
   setupScrollContent: {
     alignItems: "center",
@@ -5839,6 +6980,11 @@ const styles = StyleSheet.create({
     color: palette.onBackground,
     fontSize: 15,
     fontWeight: "600",
+  },
+  userTypeSelectPlaceholder: {
+    color: palette.onSurfaceVariant,
+    fontSize: 15,
+    fontWeight: "500",
   },
   userTypeSelectMenu: {
     gap: 8,
@@ -6235,16 +7381,18 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
-    zIndex: 90,
-    height: 80,
-    paddingHorizontal: 32,
-    justifyContent: "center",
-    backgroundColor: "transparent",
-  },
-  readyTopInner: {
-    width: "100%",
+    zIndex: 220,
+    height: 66,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#f8f1e6",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(120,102,78,0.18)",
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 18,
   },
   readyBrand: {
     fontSize: 20,
@@ -6302,6 +7450,13 @@ const styles = StyleSheet.create({
     lineHeight: 44,
     fontWeight: "800",
     letterSpacing: -0.8,
+  },
+  readyHeroSubline: {
+    color: "rgba(255,255,255,0.92)",
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: "600",
+    letterSpacing: -0.1,
   },
   readyHeroTone: {
     color: palette.tertiaryContainer,
@@ -6406,6 +7561,115 @@ const styles = StyleSheet.create({
     letterSpacing: 3.3,
     textTransform: "uppercase",
   },
+  readyMapPreviewCard: {
+    marginBottom: 24,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.18)",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 5,
+  },
+  readyMapPreviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 12,
+  },
+  readyMapPreviewTitle: {
+    color: "#7f8a87",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 2.2,
+    textTransform: "uppercase",
+  },
+  readyMapPreviewMeta: {
+    color: palette.onBackground,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  readyMapPreviewCanvas: {
+    height: 228,
+    borderRadius: 18,
+    overflow: "hidden",
+    backgroundColor: "#e7ece9",
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.24)",
+  },
+  readyMapPreviewMap: {
+    width: "100%",
+    height: "100%",
+  },
+  readyMapPreviewMock: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#e7ece9",
+  },
+  readyMapPreviewMockText: {
+    color: palette.onSurfaceVariant,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "600",
+  },
+  readyMapPreviewFallbackBadge: {
+    position: "absolute",
+    left: 12,
+    right: 12,
+    bottom: 12,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(173,179,176,0.34)",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  readyMapPreviewFallbackBadgeText: {
+    color: palette.onSurfaceVariant,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  readyMapCenterPinWrap: {
+    position: "absolute",
+    left: "50%",
+    top: "50%",
+    alignItems: "center",
+    justifyContent: "center",
+    transform: [{ translateX: -15 }, { translateY: -34 }],
+  },
+  readyMapCenterPinHalo: {
+    position: "absolute",
+    top: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(245,206,83,0.26)",
+  },
+  readyMapCenterPinCore: {
+    position: "absolute",
+    top: 20,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#ffffff",
+  },
+  readyMapPreviewHint: {
+    marginTop: 10,
+    color: palette.onSurfaceVariant,
+    fontSize: 12,
+    lineHeight: 18,
+    fontWeight: "500",
+  },
   readyTimelineWrap: {
     position: "relative",
     paddingLeft: 64,
@@ -6451,6 +7715,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 20,
     elevation: 4,
+  },
+  readyTimelineCardActive: {
+    borderColor: "rgba(245,206,83,0.72)",
+    backgroundColor: "#fffdf6",
   },
   readyTimelineMetaRow: {
     flexDirection: "row",
@@ -6638,11 +7906,18 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 78,
-    zIndex: 40,
+    height: 66,
+    zIndex: 220,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(249,249,247,0.85)",
+    backgroundColor: "#f8f1e6",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(120,102,78,0.18)",
+    shadowColor: "#2f271a",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 14,
+    elevation: 18,
   },
   feedbackTopBrand: {
     fontSize: 24,
@@ -7805,4 +9080,4 @@ const styles = StyleSheet.create({
     marginTop: 32,
     opacity: 0.6,
   },
-});
+}));
