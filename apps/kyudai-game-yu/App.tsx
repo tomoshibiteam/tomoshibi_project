@@ -599,6 +599,7 @@ type PersistedFlowDraft = {
   feedbackExpectationScore?: number | null;
   feedbackReuseIntent?: string | null;
   feedbackComment?: string;
+  savedScreen?: AppScreen;
 };
 
 type ProgramFlowConfig = {
@@ -1279,6 +1280,7 @@ export default function App() {
   const [showFeedbackThankyou, setShowFeedbackThankyou] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showHomeConfirmModal, setShowHomeConfirmModal] = useState(false);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(() =>
     isUserType(persistedFlowDraft?.selectedUserType) ? persistedFlowDraft.selectedUserType : "新入生",
   );
@@ -2878,6 +2880,7 @@ export default function App() {
       feedbackExpectationScore,
       feedbackReuseIntent,
       feedbackComment,
+      savedScreen: screen,
     };
 
     window.localStorage.setItem(FLOW_DRAFT_STORAGE_KEY, JSON.stringify(draft));
@@ -4100,6 +4103,39 @@ export default function App() {
     useMockMapBackground,
   ]);
 
+  const resumableScreens: AppScreen[] = ["prologue", "map", "spotArrival", "epilogue"];
+
+  const handleHomeButtonPress = () => {
+    setShowHomeConfirmModal(true);
+  };
+
+  const handleHomeConfirm = () => {
+    setShowHomeConfirmModal(false);
+    setScreen("landing");
+  };
+
+  const handleHomeCancel = () => {
+    setShowHomeConfirmModal(false);
+  };
+
+  const resumeDraft = useMemo((): PersistedFlowDraft | null => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return null;
+    const raw = window.localStorage.getItem(FLOW_DRAFT_STORAGE_KEY);
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      const draft = parsed as PersistedFlowDraft;
+      const hasProgress =
+        (typeof draft.currentSpotIndex === "number" && draft.currentSpotIndex > 0) ||
+        (draft.savedScreen != null && resumableScreens.includes(draft.savedScreen));
+      return hasProgress ? draft : null;
+    } catch {
+      return null;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
+
   const renderHeaderAuthBadge = () => {
     const accessibleLabel = isFirebaseSignedIn
       ? `ログイン中: ${firebaseDisplayName ?? "Googleユーザー"}`
@@ -4562,6 +4598,17 @@ export default function App() {
       <SafeAreaView style={styles.prologueSafeArea}>
         <StatusBar style="light" />
 
+        <View style={styles.gameHomeButtonWrap}>
+          <Pressable
+            style={({ pressed }) => [styles.gameHomeButton, pressed && styles.pressed]}
+            onPress={handleHomeButtonPress}
+            accessibilityLabel="ホームに戻る"
+            accessibilityRole="button"
+          >
+            <Text style={styles.gameHomeButtonText}>🏠 ホーム</Text>
+          </Pressable>
+        </View>
+
         <View style={styles.prologueBackgroundWrap}>
           <Image source={{ uri: heroImage }} style={styles.prologueBackgroundImage} resizeMode="cover" />
           <View style={styles.prologueDarkOverlay} />
@@ -4705,6 +4752,17 @@ export default function App() {
         <StatusBar style="dark" />
 
         <View style={styles.mapScreen}>
+          <View style={styles.gameHomeButtonWrapDark}>
+            <Pressable
+              style={({ pressed }) => [styles.gameHomeButtonDark, pressed && styles.pressed]}
+              onPress={handleHomeButtonPress}
+              accessibilityLabel="ホームに戻る"
+              accessibilityRole="button"
+            >
+              <Text style={styles.gameHomeButtonDarkText}>🏠 ホーム</Text>
+            </Pressable>
+          </View>
+
           {useMockMapBackground ? (
             <View style={styles.mapMockCanvas}>
               <View style={styles.mapMockToneA} />
@@ -4985,6 +5043,16 @@ export default function App() {
               <Text style={styles.spotProgressChipText}>{`${spotNumber} / ${totalSpots}`}</Text>
             </View>
           </View>
+          <View style={styles.gameHomeButtonWrap}>
+            <Pressable
+              style={({ pressed }) => [styles.gameHomeButton, pressed && styles.pressed]}
+              onPress={handleHomeButtonPress}
+              accessibilityLabel="ホームに戻る"
+              accessibilityRole="button"
+            >
+              <Text style={styles.gameHomeButtonText}>🏠 ホーム</Text>
+            </Pressable>
+          </View>
 
           <View style={styles.spotMain}>
             <View style={[styles.spotBottomSheet, isSpotQuizPhase ? styles.spotBottomSheetQuiz : null]}>
@@ -5244,6 +5312,17 @@ export default function App() {
     return (
       <SafeAreaView style={styles.prologueSafeArea}>
         <StatusBar style="light" />
+
+        <View style={styles.gameHomeButtonWrap}>
+          <Pressable
+            style={({ pressed }) => [styles.gameHomeButton, pressed && styles.pressed]}
+            onPress={handleHomeButtonPress}
+            accessibilityLabel="ホームに戻る"
+            accessibilityRole="button"
+          >
+            <Text style={styles.gameHomeButtonText}>🏠 ホーム</Text>
+          </Pressable>
+        </View>
 
         <View style={styles.prologueBackgroundWrap}>
           <Image source={{ uri: epilogueBgImage }} style={styles.prologueBackgroundImage} resizeMode="cover" />
@@ -5876,6 +5955,37 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* ホーム確認モーダル */}
+      <Modal
+        visible={showHomeConfirmModal}
+        animationType="fade"
+        transparent
+        onRequestClose={handleHomeCancel}
+      >
+        <View style={styles.homeConfirmOverlay}>
+          <View style={styles.homeConfirmDialog}>
+            <Text style={styles.homeConfirmTitle}>ホームに戻りますか？</Text>
+            <Text style={styles.homeConfirmBody}>
+              進捗は自動保存されています。{"\n"}ホームに戻っても続きから再開できます。
+            </Text>
+            <View style={styles.homeConfirmActions}>
+              <Pressable
+                style={({ pressed }) => [styles.homeConfirmCancelButton, pressed && styles.pressed]}
+                onPress={handleHomeCancel}
+              >
+                <Text style={styles.homeConfirmCancelText}>キャンセル</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [styles.homeConfirmOkButton, pressed && styles.pressed]}
+                onPress={handleHomeConfirm}
+              >
+                <Text style={styles.homeConfirmOkText}>ホームへ</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* プライバシーポリシー モーダル */}
       <Modal
         visible={showPrivacyModal}
@@ -6100,6 +6210,21 @@ export default function App() {
         }}
       >
         <View style={[styles.landingAuthActions, { width: contentWidth }]}>
+          {resumeDraft != null ? (
+            <Pressable
+              style={({ pressed }) => [styles.landingResumeButton, pressed && styles.pressed]}
+              onPress={() => {
+                const targetScreen = resumeDraft.savedScreen ?? "map";
+                setScreen(resumableScreens.includes(targetScreen) ? targetScreen : "map");
+              }}
+            >
+              <Text style={styles.landingResumeButtonText}>
+                {`📖 続きから始める（スポット ${(resumeDraft.currentSpotIndex ?? 0) + 1}/6）`}
+              </Text>
+              <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
+            </Pressable>
+          ) : null}
+
           <Pressable
             style={({ pressed }) => [
               styles.landingAuthPrimaryButton,
@@ -9395,5 +9520,140 @@ const styles = StyleSheet.create({
   },
   quizResultNextButtonWrap: {
     paddingTop: 8,
+  },
+
+  // ── ゲーム進行中ホームボタン（暗背景用） ──
+  gameHomeButtonWrap: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 100,
+  },
+  gameHomeButton: {
+    backgroundColor: "rgba(0,0,0,0.45)",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  gameHomeButtonText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.92)",
+    letterSpacing: 0.2,
+  },
+
+  // ── ゲーム進行中ホームボタン（明背景用：Map画面） ──
+  gameHomeButtonWrapDark: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 100,
+  },
+  gameHomeButtonDark: {
+    backgroundColor: "rgba(255,255,255,0.88)",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.10)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.10,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  gameHomeButtonDarkText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: palette.onBackground,
+    letterSpacing: 0.2,
+  },
+
+  // ── ホーム確認モーダル ──
+  homeConfirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.52)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  homeConfirmDialog: {
+    backgroundColor: palette.surfaceLowest,
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
+    width: "100%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 16,
+  },
+  homeConfirmTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: palette.onBackground,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  homeConfirmBody: {
+    fontSize: 14,
+    color: palette.onSurfaceVariant,
+    lineHeight: 22,
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  homeConfirmActions: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  homeConfirmCancelButton: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: palette.outlineVariant,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  homeConfirmCancelText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: palette.onSurfaceVariant,
+  },
+  homeConfirmOkButton: {
+    flex: 1,
+    borderRadius: 12,
+    backgroundColor: palette.darkButton,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  homeConfirmOkText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: palette.onDarkButton,
+  },
+
+  // ── Landing: 続きから始めるボタン ──
+  landingResumeButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: palette.tertiary,
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  landingResumeButtonText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: palette.onDarkButton,
+    letterSpacing: -0.1,
   },
 });
