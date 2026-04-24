@@ -1,0 +1,3 @@
+export declare const onPlanRequestCreated: import("firebase-functions").CloudFunction<import("firebase-functions/v2/firestore").FirestoreEvent<import("firebase-functions/v2/firestore").QueryDocumentSnapshot | undefined, {
+    planRequestId: string;
+}>>;

@@ -1,0 +1,13 @@
+{
+  "projects": {},
+  "targets": {
+    "tomoshibi-950e2": {
+      "hosting": {
+        "iwami-poc": [
+          "iwami-poc"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

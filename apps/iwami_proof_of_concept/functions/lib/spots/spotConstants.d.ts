@@ -1,0 +1,18 @@
+export declare const SPOT_STATUS_VALUES: readonly ["draft", "published", "archived"];
+export declare const SPOT_PRIMARY_CATEGORY_VALUES: readonly ["see", "eat", "shop", "stay", "experience"];
+export declare const SPOT_STATION_AREA_TYPE_VALUES: readonly ["iwami_station_area", "higashihama_station_area", "oiwa_station_area", "none"];
+export declare const SPOT_TRANSPORT_VALUES: readonly ["walk", "rental_cycle", "car", "bus", "train"];
+export declare const SPOT_PRICE_TYPE_VALUES: readonly ["free", "paid", "purchase_optional", "unknown"];
+export declare const SPOT_WEATHER_RATING_VALUES: readonly ["good", "ok", "bad"];
+export declare const SPOT_TIME_OF_DAY_VALUES: readonly ["morning", "daytime", "sunset", "night"];
+export declare const SPOT_VISIT_PACE_VALUES: readonly ["short_stop", "normal_stop", "long_stay"];
+export declare const SPOT_WITH_WHO_VALUES: readonly ["solo", "friends", "couple", "family"];
+export declare const SPOT_PHYSICAL_LOAD_VALUES: readonly ["low", "medium", "high"];
+export declare const SPOT_INDOOR_OUTDOOR_VALUES: readonly ["indoor", "outdoor", "mixed"];
+export declare const SPOT_SOURCE_VALUES: readonly ["manual", "import_csv", "import_json"];
+export declare const SPOT_REQUIRED_FIRST_STOP_REASON_VALUES: readonly ["rental_cycle_pickup", "ticket_exchange", "checkin_required", "other"];
+export declare const SPOT_BUSINESS_DAY_VALUES: readonly ["mon", "tue", "wed", "thu", "fri", "sat", "sun", "holiday"];
+export declare const SPOT_LAST_ADMISSION_RULE_TYPE_VALUES: readonly ["none", "fixed_time", "before_close"];
+export declare const SPOT_THEME_VALUES: readonly ["sea_view", "seafood", "relax", "history", "family", "photo", "station_stopover", "shopping", "activity"];
+export declare const SPOT_SECONDARY_CATEGORY_VALUES: readonly ["scenery", "beach", "seafood", "cafe", "souvenir", "onsen", "activity", "story_spot", "station_area"];
+export declare const IWAMI_STATION_IDS: readonly ["iwami-station", "higashihama-station", "oiwa-station"];

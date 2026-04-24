@@ -1,0 +1,95 @@
+[
+  {
+    "serviceId": "jr_sanin_higashihama_to_iwami",
+    "mode": "train",
+    "operator": "JR西日本",
+    "lineName": "山陰本線",
+    "routeName": null,
+    "fromNodeId": "higashihama_station",
+    "toNodeId": "iwami_station",
+    "isMajor": true,
+    "status": "active"
+  },
+  {
+    "serviceId": "jr_sanin_iwami_to_oiwa",
+    "mode": "train",
+    "operator": "JR西日本",
+    "lineName": "山陰本線",
+    "routeName": null,
+    "fromNodeId": "iwami_station",
+    "toNodeId": "oiwa_station",
+    "isMajor": true,
+    "status": "active"
+  },
+  {
+    "serviceId": "jr_sanin_oiwa_to_iwami",
+    "mode": "train",
+    "operator": "JR西日本",
+    "lineName": "山陰本線",
+    "routeName": null,
+    "fromNodeId": "oiwa_station",
+    "toNodeId": "iwami_station",
+    "isMajor": true,
+    "status": "active"
+  },
+  {
+    "serviceId": "jr_sanin_iwami_to_higashihama",
+    "mode": "train",
+    "operator": "JR西日本",
+    "lineName": "山陰本線",
+    "routeName": null,
+    "fromNodeId": "iwami_station",
+    "toNodeId": "higashihama_station",
+    "isMajor": true,
+    "status": "active"
+  },
+  {
+    "serviceId": "bus_iwami_oda_line",
+    "mode": "bus",
+    "operator": "岩美町（運行委託: 日本交通）",
+    "lineName": "小田線",
+    "routeName": "岩美駅 - 小田",
+    "fromNodeId": null,
+    "toNodeId": null,
+    "isMajor": true,
+    "status": "active",
+    "metadata": {
+      "effectiveFromDate": "2026-04-01",
+      "bookingRules": [
+        "平日は小田または岩美駅の出発時刻が9:30までの便は予約不要",
+        "平日は小田または岩美駅の出発時刻が15:00以降の便は予約不要"
+      ],
+      "routeShape": null,
+      "shoppingStops": [],
+      "remarks": [
+        "令和8年4月1日改正の路線メタ",
+        "exact trips と bus_stop 座標は次フェーズで補完"
+      ]
+    }
+  },
+  {
+    "serviceId": "bus_iwami_tago_kugami_line",
+    "mode": "bus",
+    "operator": "岩美町（運行委託: 日本交通）",
+    "lineName": "田後・陸上線",
+    "routeName": "岩美駅 - 田後・陸上",
+    "fromNodeId": null,
+    "toNodeId": null,
+    "isMajor": true,
+    "status": "active",
+    "metadata": {
+      "effectiveFromDate": "2026-04-01",
+      "bookingRules": [],
+      "routeShape": "Y字型（田後止め便と陸上直通便）",
+      "shoppingStops": [
+        "サンマート岩美店",
+        "道の駅きなんせ岩美"
+      ],
+      "remarks": [
+        "買い物便あり",
+        "令和8年4月1日改正の路線メタ",
+        "exact trips と bus_stop 座標は次フェーズで補完"
+      ]
+    }
+  }
+]

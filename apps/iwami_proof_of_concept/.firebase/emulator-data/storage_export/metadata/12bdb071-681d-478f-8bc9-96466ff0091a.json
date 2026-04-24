@@ -1,0 +1,19 @@
+{
+  "name": "spots/kinanse-iwami-roadside-station/thumbnail-1776868945119.jpg",
+  "bucket": "tomoshibi-950e2.firebasestorage.app",
+  "metageneration": 1,
+  "generation": 1776868945209,
+  "contentType": "image/jpeg",
+  "storageClass": "STANDARD",
+  "cacheControl": "public,max-age=31536000",
+  "downloadTokens": [
+    "67a94de5-fee5-40ec-87df-e5ce811844b7"
+  ],
+  "etag": "HIRYtniVa3XnsmsP343uWO1vErE",
+  "customMetadata": {},
+  "timeCreated": "2026-04-22T14:42:25.209Z",
+  "updated": "2026-04-22T14:42:25.209Z",
+  "size": 5283130,
+  "md5Hash": "Um6+Sv1JPxDOLtgsmJx2UA==",
+  "crc32c": "3799384130"
+}
