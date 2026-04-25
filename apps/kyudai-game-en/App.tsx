@@ -7,6 +7,7 @@ import {
   Animated,
   Easing,
   Image,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -456,6 +457,7 @@ const waitForHostToHaveSize = async (host: HTMLElement, timeoutMs = 2600) => {
 
 type AppScreen =
   | "landing"
+  | "worldSelect"
   | "setup"
   | "preparing"
   | "ready"
@@ -463,7 +465,8 @@ type AppScreen =
   | "map"
   | "spotArrival"
   | "epilogue"
-  | "feedback";
+  | "feedback"
+  | "thanks";
 
 const previewNavigationScreenOrder: AppScreen[] = [
   "landing",
@@ -968,6 +971,7 @@ const parseAdminWorldConfigPayload = (value: unknown): AdminWorldConfigPayload |
 
 const screenPathMap: Record<AppScreen, string> = {
   landing: "/",
+  worldSelect: "/explore",
   setup: "/setup",
   preparing: "/preparing",
   ready: "/ready",
@@ -976,6 +980,7 @@ const screenPathMap: Record<AppScreen, string> = {
   spotArrival: "/spot-arrival",
   epilogue: "/epilogue",
   feedback: "/feedback",
+  thanks: "/thanks",
 };
 
 const normalizePath = (path: string): string => {
@@ -1439,6 +1444,9 @@ export default function App() {
   const [spotScenarioSegmentIndex, setSpotScenarioSegmentIndex] = useState(0);
   const [spotTypedCharCount, setSpotTypedCharCount] = useState(0);
   const [isSpotTypingDone, setIsSpotTypingDone] = useState(true);
+  const [wsVisitType, setWsVisitType] = useState<"day" | "overnight" | null>(null);
+  const [wsTransport, setWsTransport] = useState<Set<string>>(new Set());
+  const [wsDuration, setWsDuration] = useState<string | null>(null);
   const [spotPhase, setSpotPhase] = useState<'note' | 'story' | 'noteAfter' | 'quiz' | 'quizResult' | 'nextHintStory'>('note');
   const [quizSelectedLabel, setQuizSelectedLabel] = useState<'A' | 'B' | 'C' | 'D' | null>(null);
   const [quizCorrectCount, setQuizCorrectCount] = useState(0);
@@ -2378,7 +2386,7 @@ export default function App() {
   const handleLandingStartWithoutLoginPress = () => {
     if (isLandingGoogleSigningIn) return;
     setLandingAuthError(null);
-    setScreen("setup");
+    setScreen("worldSelect");
   };
 
   const runGoogleSignInFlow = async (): Promise<{ ok: boolean; errorMessage?: string }> => {
@@ -2423,7 +2431,7 @@ export default function App() {
     }
     setHeaderAuthMenuError(null);
     setIsHeaderAuthMenuOpen(false);
-    setScreen("setup");
+    setScreen("worldSelect");
   };
 
   const handleHeaderGoogleSignInPress = async () => {
@@ -5711,6 +5719,262 @@ export default function App() {
             </View>
           </View>
         </Modal>
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "worldSelect") {
+    const transportOptions: { id: string; icon: "walk-outline" | "bicycle-outline" | "car-outline" | "bus-outline"; label: string }[] = [
+      { id: "walk", icon: "walk-outline", label: "Walk" },
+      { id: "bike", icon: "bicycle-outline", label: "Rental Bike" },
+      { id: "car", icon: "car-outline", label: "Car" },
+      { id: "bus", icon: "bus-outline", label: "Bus" },
+    ];
+    const durationOptions_ws = ["1–2 hrs", "Half day", "Full day", "Multi-day"];
+    const toggleTransport = (id: string) => {
+      setWsTransport((prev) => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
+    };
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <View style={styles.wsTopBar}>
+          <View style={[styles.topBarInner, { width: contentWidth }]}>
+            <Pressable
+              onPress={() => setScreen("landing")}
+              style={({ pressed }) => [styles.wsBackButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="arrow-back" size={20} color={palette.onBackground} />
+            </Pressable>
+            <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            <View style={styles.headerSideSpacer} />
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.wsScrollContent, { paddingBottom: 120 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.wsMain, { width: contentWidth }]}>
+
+            {/* World selection */}
+            <View style={styles.wsCard}>
+              <Text style={styles.wsCardTitle}>Choose Your Story World</Text>
+              <Text style={styles.wsCardSubtitle}>
+                Select a location to explore through an AI-generated story experience.
+              </Text>
+
+              {/* Available world */}
+              <Pressable style={styles.wsWorldCardActive}>
+                <View style={styles.wsWorldCardBadge}>
+                  <Text style={styles.wsWorldCardBadgeText}>● Available</Text>
+                </View>
+                <Text style={styles.wsWorldCardName}>Kyushu University</Text>
+                <Text style={styles.wsWorldCardSub}>Ito Campus · Fukuoka</Text>
+              </Pressable>
+
+              {/* Coming soon worlds */}
+              <View style={styles.wsComingSoonRow}>
+                {["Coastal Town", "Urban District"].map((name) => (
+                  <View key={name} style={styles.wsWorldCardDisabled}>
+                    <Text style={styles.wsWorldCardDisabledLabel}>Coming Soon</Text>
+                    <Text style={styles.wsWorldCardDisabledName}>{name}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.wsNoticeBanner}>
+                <Ionicons name="information-circle-outline" size={16} color={palette.onSurfaceVariant} />
+                <Text style={styles.wsNoticeText}>
+                  This preview features 1 story world. More locations are on the way.
+                </Text>
+              </View>
+            </View>
+
+            {/* Section 1: Visit conditions */}
+            <View style={styles.wsCard}>
+              <View style={styles.wsSectionHeader}>
+                <View style={styles.wsSectionNumber}>
+                  <Text style={styles.wsSectionNumberText}>1</Text>
+                </View>
+                <Text style={styles.wsSectionTitle}>Your Visit</Text>
+              </View>
+              <Text style={styles.wsSectionDesc}>
+                Plan your campus visit based on how long you'd like to explore.
+              </Text>
+
+              <Text style={styles.wsFieldLabel}>Day visit or overnight stay?</Text>
+              <View style={styles.wsToggleRow}>
+                <Pressable
+                  style={[styles.wsToggleButton, wsVisitType === "day" && styles.wsToggleButtonActive]}
+                  onPress={() => { setWsVisitType("day"); setWsDuration(null); }}
+                >
+                  <Text style={[styles.wsToggleText, wsVisitType === "day" && styles.wsToggleTextActive]}>
+                    Day Visit
+                  </Text>
+                </Pressable>
+                <View style={styles.wsToggleDivider} />
+                <Pressable
+                  style={[styles.wsToggleButton, wsVisitType === "overnight" && styles.wsToggleButtonActive]}
+                  onPress={() => { setWsVisitType("overnight"); setWsDuration(null); }}
+                >
+                  <Text style={[styles.wsToggleText, wsVisitType === "overnight" && styles.wsToggleTextActive]}>
+                    Overnight Stay
+                  </Text>
+                </Pressable>
+              </View>
+
+              {wsVisitType !== null ? (
+                <View style={styles.wsDurationSection}>
+                  <Text style={styles.wsFieldLabel}>How long will you explore?</Text>
+                  <Text style={styles.wsFieldHint}>Choose the time you have for the experience.</Text>
+                  <View style={styles.wsChipRow}>
+                    {(wsVisitType === "day" ? ["1–2 hrs", "Half day", "Full day"] : ["Full day", "Multi-day"]).map((d) => (
+                      <Pressable
+                        key={d}
+                        style={[styles.wsChip, wsDuration === d && styles.wsChipActive]}
+                        onPress={() => setWsDuration(d)}
+                      >
+                        <Text style={[styles.wsChipText, wsDuration === d && styles.wsChipTextActive]}>{d}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.wsHintBanner}>
+                  <Text style={styles.wsHintBannerText}>
+                    Choose Day Visit or Overnight Stay to see more options.
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Section 2: Transport */}
+            <View style={styles.wsCard}>
+              <View style={styles.wsSectionHeader}>
+                <View style={styles.wsSectionNumber}>
+                  <Text style={styles.wsSectionNumberText}>2</Text>
+                </View>
+                <Text style={styles.wsSectionTitle}>Getting Around</Text>
+              </View>
+              <Text style={styles.wsSectionDesc}>
+                We'll suggest a route and stops that match how you move around the campus.
+              </Text>
+
+              <Text style={styles.wsFieldLabel}>How will you get around? (multiple OK)</Text>
+              <View style={styles.wsTransportGrid}>
+                {transportOptions.map((opt) => {
+                  const selected = wsTransport.has(opt.id);
+                  return (
+                    <Pressable
+                      key={opt.id}
+                      style={[styles.wsTransportCard, selected && styles.wsTransportCardActive]}
+                      onPress={() => toggleTransport(opt.id)}
+                    >
+                      <Ionicons
+                        name={opt.icon}
+                        size={32}
+                        color={selected ? palette.primary : palette.onSurfaceVariant}
+                      />
+                      <Text style={[styles.wsTransportLabel, selected && styles.wsTransportLabelActive]}>
+                        {opt.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+          </View>
+        </ScrollView>
+
+        {/* Fixed bottom CTA */}
+        <View style={[styles.wsBottomBar, { width: "100%" }]}>
+          <View style={[{ width: contentWidth, alignSelf: "center" }]}>
+            <Pressable
+              style={({ pressed }) => [styles.wsCtaButton, pressed && styles.pressed]}
+              onPress={() => setScreen("setup")}
+            >
+              <Text style={styles.wsCtaText}>Begin My Journey</Text>
+              <Ionicons name="arrow-forward" size={20} color={palette.onDarkButton} />
+            </Pressable>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (screen === "thanks") {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="dark" />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.thanksScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.thanksContainer, { width: contentWidth }]}>
+            <View style={styles.thanksLogoRow}>
+              <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
+            </View>
+
+            <View style={styles.thanksBadge}>
+              <Text style={styles.thanksBadgeText}>TOMOSHIBI — 灯火</Text>
+            </View>
+
+            <Text style={styles.thanksTitleLarge}>
+              {"Stories that\nlight the way."}
+            </Text>
+
+            <Text style={styles.thanksDescription}>
+              TOMOSHIBI is an AI-powered narrative experience platform that generates serialized story worlds — sparking curiosity about real places through immersive, character-driven episodes.
+            </Text>
+
+            <View style={styles.thanksDivider} />
+
+            <View style={styles.thanksHighlights}>
+              <View style={styles.thanksHighlightItem}>
+                <Ionicons name="sparkles-outline" size={20} color={palette.tertiary} />
+                <Text style={styles.thanksHighlightText}>AI-generated serialized storytelling</Text>
+              </View>
+              <View style={styles.thanksHighlightItem}>
+                <Ionicons name="map-outline" size={20} color={palette.tertiary} />
+                <Text style={styles.thanksHighlightText}>Real-world location × narrative experience</Text>
+              </View>
+              <View style={styles.thanksHighlightItem}>
+                <Ionicons name="heart-outline" size={20} color={palette.tertiary} />
+                <Text style={styles.thanksHighlightText}>Characters that grow with you across episodes</Text>
+              </View>
+            </View>
+
+            <View style={styles.thanksDivider} />
+
+            <Text style={styles.thanksCtaLabel}>Try it yourself</Text>
+            <Pressable
+              style={({ pressed }) => [styles.thanksPlayButton, pressed && styles.pressed]}
+              onPress={() => setScreen("landing")}
+            >
+              <Ionicons name="play-circle-outline" size={22} color={palette.onDarkButton} />
+              <Text style={styles.thanksPlayButtonText}>Play the Kyudai Story Game</Text>
+              <Ionicons name="arrow-forward" size={18} color={palette.onDarkButton} />
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.thanksLinkButton, pressed && styles.pressed]}
+              onPress={() => Linking.openURL("https://lit.link/en/yutakenouchi")}
+            >
+              <Ionicons name="person-outline" size={20} color={palette.onBackground} />
+              <Text style={styles.thanksLinkButtonText}>About the Creator</Text>
+              <Ionicons name="open-outline" size={16} color={palette.onSurfaceVariant} />
+            </Pressable>
+
+            <Text style={styles.thanksCopyright}>© 2026 Yu Takenouchi · TOMOSHIBI Project</Text>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -9636,6 +9900,421 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
     color: palette.onDarkButton,
+  },
+
+  // ── WorldSelect screen ──
+  wsTopBar: {
+    backgroundColor: palette.surfaceLowest,
+    borderBottomWidth: 1,
+    borderBottomColor: palette.surfaceHigh,
+    paddingTop: 8,
+    paddingBottom: 8,
+    alignItems: "center",
+  },
+  wsBackButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: palette.surfaceLow,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  wsScrollContent: {
+    alignItems: "center",
+    paddingTop: 24,
+    paddingHorizontal: 16,
+  },
+  wsMain: {
+    gap: 16,
+  },
+  wsCard: {
+    backgroundColor: palette.surfaceLowest,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: palette.surfaceHigh,
+    gap: 0,
+  },
+  wsCardTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: palette.onBackground,
+    marginBottom: 8,
+  },
+  wsCardSubtitle: {
+    fontSize: 14,
+    color: palette.onSurfaceVariant,
+    lineHeight: 21,
+    marginBottom: 16,
+  },
+  wsWorldCardActive: {
+    backgroundColor: palette.primaryContainer,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: palette.primary,
+  },
+  wsWorldCardBadge: {
+    marginBottom: 6,
+  },
+  wsWorldCardBadgeText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: palette.primary,
+  },
+  wsWorldCardName: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: palette.primary,
+  },
+  wsWorldCardSub: {
+    fontSize: 13,
+    color: palette.onPrimaryContainer,
+    marginTop: 2,
+  },
+  wsComingSoonRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 12,
+  },
+  wsWorldCardDisabled: {
+    flex: 1,
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: palette.surfaceHigh,
+    opacity: 0.6,
+  },
+  wsWorldCardDisabledLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: palette.onSurfaceVariant,
+    marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  wsWorldCardDisabledName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: palette.onSurfaceVariant,
+  },
+  wsNoticeBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 10,
+    padding: 12,
+  },
+  wsNoticeText: {
+    flex: 1,
+    fontSize: 13,
+    color: palette.onSurfaceVariant,
+    lineHeight: 19,
+  },
+  wsSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 8,
+  },
+  wsSectionNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: palette.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  wsSectionNumberText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: palette.onDarkButton,
+  },
+  wsSectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: palette.onBackground,
+  },
+  wsSectionDesc: {
+    fontSize: 14,
+    color: palette.onSurfaceVariant,
+    lineHeight: 21,
+    marginBottom: 20,
+  },
+  wsFieldLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: palette.onBackground,
+    marginBottom: 12,
+  },
+  wsFieldHint: {
+    fontSize: 13,
+    color: palette.onSurfaceVariant,
+    marginBottom: 12,
+    marginTop: -8,
+  },
+  wsToggleRow: {
+    flexDirection: "row",
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: palette.surfaceHigh,
+    padding: 4,
+    marginBottom: 0,
+    position: "relative",
+    shadowColor: "#111827",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  wsToggleDivider: {
+    width: 1,
+    backgroundColor: palette.surfaceHigh,
+    alignSelf: "stretch",
+    marginVertical: 6,
+  },
+  wsToggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  wsToggleButtonActive: {
+    backgroundColor: palette.primary,
+    shadowColor: "#111827",
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+  },
+  wsToggleText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: palette.onSurfaceVariant,
+  },
+  wsToggleTextActive: {
+    color: palette.onDarkButton,
+    fontWeight: "600",
+  },
+  wsDurationSection: {
+    marginTop: 20,
+  },
+  wsChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  wsChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: palette.surfaceHigh,
+    backgroundColor: palette.surfaceLow,
+  },
+  wsChipActive: {
+    backgroundColor: palette.secondaryContainer,
+    borderColor: palette.onSecondaryContainer,
+  },
+  wsChipText: {
+    fontSize: 14,
+    color: palette.onSurfaceVariant,
+    fontWeight: "500",
+  },
+  wsChipTextActive: {
+    color: palette.onSecondaryContainer,
+    fontWeight: "700",
+  },
+  wsHintBanner: {
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 0,
+  },
+  wsHintBannerText: {
+    fontSize: 14,
+    color: palette.onSurfaceVariant,
+    lineHeight: 21,
+  },
+  wsTransportGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  wsTransportCard: {
+    width: "47%",
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: palette.surfaceHigh,
+  },
+  wsTransportCardActive: {
+    backgroundColor: palette.primaryContainer,
+    borderColor: palette.primary,
+    borderWidth: 2,
+  },
+  wsTransportLabel: {
+    fontSize: 14,
+    color: palette.onSurfaceVariant,
+    fontWeight: "500",
+    textAlign: "center",
+  },
+  wsTransportLabelActive: {
+    color: palette.primary,
+    fontWeight: "700",
+  },
+  wsBottomBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 28,
+    backgroundColor: palette.surfaceLowest,
+    borderTopWidth: 1,
+    borderTopColor: palette.surfaceHigh,
+  },
+  wsCtaButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.darkButton,
+    borderRadius: 14,
+    paddingVertical: 16,
+    gap: 10,
+  },
+  wsCtaText: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: palette.onDarkButton,
+    letterSpacing: -0.1,
+  },
+
+  // ── Thanks screen ──
+  thanksScrollContent: {
+    flexGrow: 1,
+    alignItems: "center",
+    paddingTop: 48,
+    paddingBottom: 64,
+    paddingHorizontal: 16,
+  },
+  thanksContainer: {
+    alignItems: "center",
+  },
+  thanksLogoRow: {
+    marginBottom: 32,
+  },
+  thanksBadge: {
+    backgroundColor: palette.tertiaryContainer,
+    borderRadius: 100,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    marginBottom: 24,
+  },
+  thanksBadgeText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: palette.onTertiaryContainer,
+    letterSpacing: 0.5,
+  },
+  thanksTitleLarge: {
+    fontSize: 38,
+    fontWeight: "800",
+    color: palette.onBackground,
+    textAlign: "center",
+    lineHeight: 46,
+    marginBottom: 20,
+    letterSpacing: -0.5,
+  },
+  thanksDescription: {
+    fontSize: 15,
+    color: palette.onSurfaceVariant,
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 4,
+  },
+  thanksDivider: {
+    width: "100%",
+    height: 1,
+    backgroundColor: palette.surfaceHigh,
+    marginVertical: 24,
+  },
+  thanksHighlights: {
+    width: "100%",
+    gap: 16,
+  },
+  thanksHighlightItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  thanksHighlightText: {
+    flex: 1,
+    fontSize: 15,
+    color: palette.onBackground,
+    lineHeight: 22,
+  },
+  thanksCtaLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: palette.onSurfaceVariant,
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 14,
+    alignSelf: "flex-start",
+  },
+  thanksPlayButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: palette.darkButton,
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 10,
+    width: "100%",
+    marginBottom: 12,
+  },
+  thanksPlayButtonText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "700",
+    color: palette.onDarkButton,
+    letterSpacing: -0.1,
+  },
+  thanksLinkButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: palette.surfaceLow,
+    borderRadius: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 10,
+    width: "100%",
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: palette.surfaceHigh,
+  },
+  thanksLinkButtonText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "600",
+    color: palette.onBackground,
+    letterSpacing: -0.1,
+  },
+  thanksCopyright: {
+    fontSize: 12,
+    color: palette.outlineVariant,
+    textAlign: "center",
   },
 
   // ── Landing: Resume button ──
