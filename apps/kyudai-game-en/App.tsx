@@ -556,7 +556,7 @@ const EXPERIENCE_STARTED_AT_STORAGE_KEY = "kyudaiMvpExperienceStartedAt";
 const FLOW_DRAFT_STORAGE_KEY = "kyudaiMvpFlowDraft";
 
 const generateExperienceSessionId = () =>
-  `exp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  `en_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
 const getFirebaseErrorCode = (error: unknown): string => {
   if (typeof error === "object" && error && "code" in error) {
@@ -970,7 +970,7 @@ const parseAdminWorldConfigPayload = (value: unknown): AdminWorldConfigPayload |
 };
 
 const screenPathMap: Record<AppScreen, string> = {
-  landing: "/",
+  landing: "/start",
   worldSelect: "/explore",
   setup: "/setup",
   preparing: "/preparing",
@@ -980,7 +980,7 @@ const screenPathMap: Record<AppScreen, string> = {
   spotArrival: "/spot-arrival",
   epilogue: "/epilogue",
   feedback: "/feedback",
-  thanks: "/thanks",
+  thanks: "/",
 };
 
 const normalizePath = (path: string): string => {

@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "target": "kyudai-game-en",
     "public": "dist",
     "ignore": [
       "firebase.json",

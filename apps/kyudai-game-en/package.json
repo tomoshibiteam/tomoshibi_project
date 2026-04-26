@@ -1,5 +1,5 @@
 {
-  "name": "kyudai-game-yu",
+  "name": "kyudai-game-en",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:web": "expo export -p web && node ./scripts/patch-web-font-urls.cjs",
-    "deploy:hosting": "sh -c 'if [ -z \"$FIREBASE_PROJECT_ID\" ]; then echo \"FIREBASE_PROJECT_ID is not set\"; exit 1; fi' && npm run build:web && npx firebase-tools deploy --only hosting --project \"$FIREBASE_PROJECT_ID\"",
+    "deploy:hosting": "sh -c 'if [ -z \"$FIREBASE_PROJECT_ID\" ]; then echo \"FIREBASE_PROJECT_ID is not set\"; exit 1; fi' && npm run build:web && npx firebase-tools deploy --only hosting:kyudai-game-en --project \"$FIREBASE_PROJECT_ID\"",
     "deploy:hosting:envlocal": "FIREBASE_PROJECT_ID=$(awk -F= '/^EXPO_PUBLIC_FIREBASE_PROJECT_ID=/{print $2}' .env.local) npm run deploy:hosting"
   },
   "dependencies": {

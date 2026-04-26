@@ -553,7 +553,7 @@ const EXPERIENCE_STARTED_AT_STORAGE_KEY = "kyudaiMvpExperienceStartedAt";
 const FLOW_DRAFT_STORAGE_KEY = "kyudaiMvpFlowDraft";
 
 const generateExperienceSessionId = () =>
-  `exp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  `yu_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
 
 const getFirebaseErrorCode = (error: unknown): string => {
   if (typeof error === "object" && error && "code" in error) {

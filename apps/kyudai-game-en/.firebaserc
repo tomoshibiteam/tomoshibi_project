@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "tomoshibi-950e2"
+  },
+  "targets": {
+    "tomoshibi-950e2": {
+      "hosting": {
+        "kyudai-game-en": ["kyudai-game-en"]
+      }
+    }
+  }
+}
