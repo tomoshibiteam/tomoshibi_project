@@ -422,3 +422,7 @@ Apr 27, 2026 5:42:28 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channe
 INFO: Detected non-HTTP/2 connection.
 Apr 27, 2026 5:42:28 AM com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1 exportData
 INFO: Exporting emulator data to firebase-export-1777236148415CLjhng/firestore_export
+Apr 27, 2026 5:42:49 AM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+Apr 27, 2026 5:42:49 AM com.google.cloud.datastore.emulator.impl.firestore.CloudFirestoreV1 exportData
+INFO: Exporting emulator data to firebase-export-1777236169816BK4QPG/firestore_export

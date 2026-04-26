@@ -2021,18 +2021,19 @@ export default function Home() {
       {isPlanResultSheetOpen && activePlanResult ? (
         <>
           <div
-            className={`pointer-events-none fixed inset-x-0 bottom-0 z-[56] h-[82vh] bg-[radial-gradient(120%_120%_at_50%_100%,rgba(15,23,42,0.22)_0%,rgba(15,23,42,0.09)_42%,rgba(15,23,42,0)_76%)] transition-opacity duration-600 ${
+            className={`pointer-events-none fixed inset-x-0 bottom-0 z-[56] h-[86vh] bg-[radial-gradient(120%_120%_at_50%_100%,rgba(15,23,42,0.24)_0%,rgba(15,23,42,0.1)_42%,rgba(15,23,42,0)_76%)] transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               isPlanResultSheetOpen ? "opacity-100" : "opacity-0"
             }`}
           />
           <section
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-[58] px-0"
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-[58] px-0 transition-[padding,transform] duration-[720ms] ease-[cubic-bezier(0.19,1,0.22,1)]"
             style={{
               transform: `translateY(${planResultSheetDragOffset}px)`,
               transitionDuration: isDraggingPlanResultSheet ? "0ms" : undefined,
             }}
           >
-            <div className="explore-sheet-surface pointer-events-auto relative mx-auto flex h-[50vh] min-h-[320px] max-h-[620px] w-full max-w-[2000px] flex-col overflow-hidden rounded-t-[2.1rem] rounded-b-none border border-[#e5e7eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(249,250,251,0.92)_100%)] px-3 pt-2 pb-3 shadow-[0_22px_42px_rgba(17,24,39,0.16),inset_0_1px_0_rgba(255,255,255,0.94)] backdrop-blur-2xl">
+            <div className="explore-sheet-surface is-open pointer-events-auto relative mx-auto flex w-full flex-col overflow-hidden border border-[#e5e7eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(249,250,251,0.9)_100%)] shadow-[0_22px_42px_rgba(17,24,39,0.14),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-2xl transition-[max-width,height,margin,border-radius,padding,transform,box-shadow] duration-[780ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[max-width,height,margin,border-radius,padding,transform,box-shadow] mb-0 h-[78vh] min-h-[420px] max-h-[900px] max-w-[2000px] rounded-t-[2.1rem] rounded-b-none px-3 pt-2 pb-4 translate-y-0">
+              <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
               <div className="mx-auto mb-2 flex w-full items-center justify-center">
                 <button
                   type="button"
@@ -2047,107 +2048,105 @@ export default function Home() {
                   />
                 </button>
               </div>
-              <div className="relative z-30 flex items-center justify-between px-2 py-1">
+              <div className="relative z-30 flex items-center justify-center px-2 py-1.5">
                 <h3 className="font-headline text-[15px] font-bold tracking-[0.02em] text-[#111827]">AI旅ルート候補</h3>
-                <button
-                  type="button"
-                  onClick={() => setIsPlanResultSheetOpen(false)}
-                  className="rounded-full border border-[#d1d5db] bg-white px-3 py-1 text-[12px] font-semibold text-[#374151]"
-                >
-                  閉じる
-                </button>
               </div>
-              <div className="mt-2 flex gap-2 overflow-x-auto px-1 pb-2">
-                {(planResult?.plans ?? []).map((plan, index) => {
-                  const selected = plan.id === activePlanResult.id;
-                  return (
-                    <button
-                      key={plan.id}
-                      type="button"
-                      onClick={() => {
-                        setActivePlanResultId(plan.id);
-                        setSelectedPlanResultSpotId(null);
-                      }}
-                      className={`min-w-[160px] rounded-2xl border px-3 py-2 text-left transition-all ${
-                        selected
-                          ? "border-[#111827] bg-[#111827] text-white shadow-[0_10px_18px_rgba(17,24,39,0.22)]"
-                          : "border-[#d1d5db] bg-white text-[#1f2937] hover:bg-[#f8fafc]"
-                      }`}
-                    >
-                      <p className="text-[12px] font-bold tracking-[0.04em]">候補{index + 1}</p>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-1 rounded-2xl bg-white/70 p-3">
-                <p className="text-[11px] font-semibold tracking-[0.08em] text-[#64748b]">コース一覧</p>
-                <div className="mt-2 space-y-1.5">
-                  {(planResult?.plans ?? []).map((plan, index) => {
-                    const selected = plan.id === activePlanResult.id;
-                    return (
-                      <p key={`course-name-${plan.id}`} className={`text-[12px] ${selected ? "font-semibold text-[#0f172a]" : "text-[#475569]"}`}>
-                        候補{index + 1}: {plan.title}コース
-                      </p>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="mt-2 rounded-2xl bg-white/70 p-3">
-                <p className="text-[13px] font-semibold text-[#0f172a]">{activePlanResult.reasonWhyRecommended}</p>
-                <p className="mt-1 text-[12px] leading-6 text-[#475569]">{activePlanResult.matchSummary}</p>
-                <p className="mt-2 text-[11px] font-medium text-[#64748b]">
-                  想定所要時間: {activePlanResult.estimatedDurationMinutes}分
-                </p>
-              </div>
-              <div className="mt-2 min-h-0 flex-1 overflow-y-auto rounded-2xl bg-white/60 p-3">
-                <ol className="space-y-2">
-                  {activePlanTimelineWithLocations.map((item, index) => {
-                    const isLinked = Boolean(item.location);
-                    const isSelected = selectedPlanResultSpotId != null && item.mapSpotId === selectedPlanResultSpotId;
-                    return (
-                      <li key={item.key}>
+              <div className="mt-3 h-px w-full bg-[#e5e7eb]" />
+              <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-2xl bg-white/55">
+                <div className="h-full overflow-y-auto p-3">
+                  <div className="flex gap-2 overflow-x-auto px-1 pb-2">
+                    {(planResult?.plans ?? []).map((plan, index) => {
+                      const selected = plan.id === activePlanResult.id;
+                      return (
                         <button
+                          key={plan.id}
                           type="button"
-                          disabled={!isLinked}
                           onClick={() => {
-                            if (!item.location) return;
-                            setMapFocusCenter(item.location);
-                            setSelectedPlanResultSpotId(item.mapSpotId);
+                            setActivePlanResultId(plan.id);
+                            setSelectedPlanResultSpotId(null);
                           }}
-                          className={`w-full rounded-2xl border px-3 py-2.5 text-left transition-all ${
-                            isSelected
-                              ? "border-[#111827] bg-[#111827] text-white shadow-[0_8px_16px_rgba(17,24,39,0.22)]"
-                              : isLinked
-                                ? "border-[#d1d5db] bg-white text-[#111827] hover:bg-[#f8fafc]"
-                                : "border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280]"
+                          className={`min-w-[160px] rounded-2xl border px-3 py-2 text-left transition-all ${
+                            selected
+                              ? "border-[#111827] bg-[#111827] text-white shadow-[0_10px_18px_rgba(17,24,39,0.22)]"
+                              : "border-[#d1d5db] bg-white text-[#1f2937] hover:bg-[#f8fafc]"
                           }`}
                         >
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-[13px] font-semibold">
-                              {index + 1}. {item.spotName}
-                            </p>
-                            <p className={`text-[11px] font-medium ${isSelected ? "text-white/85" : "text-[#64748b]"}`}>
-                              {item.arrivalAt} - {item.departureAt}
-                            </p>
-                          </div>
-                          <p className={`mt-1 text-[11px] ${isSelected ? "text-white/80" : "text-[#64748b]"}`}>
-                            移動: {item.transportFromPrev} / {item.travelMinutesFromPrev}分 / 滞在: {item.stayMinutes}分
-                          </p>
-                          <p className={`mt-1 text-[11px] leading-5 ${isSelected ? "text-white/90" : "text-[#475569]"}`}>
-                            {item.note}
-                          </p>
+                          <p className="text-[12px] font-bold tracking-[0.04em]">候補{index + 1}</p>
                         </button>
-                      </li>
-                    );
-                  })}
-                </ol>
-                {planResult?.warnings?.length ? (
-                  <div className="mt-3 rounded-xl border border-[#f1d6a8] bg-[#fff7eb] p-3 text-[11px] leading-5 text-[#8a5a06]">
-                    {planResult.warnings.slice(0, 2).map((warning) => (
-                      <p key={warning}>・{warning}</p>
-                    ))}
+                      );
+                    })}
                   </div>
-                ) : null}
+                  <div className="mt-1 rounded-2xl bg-white/70 p-3">
+                    <p className="text-[11px] font-semibold tracking-[0.08em] text-[#64748b]">コース一覧</p>
+                    <div className="mt-2 space-y-1.5">
+                      {(planResult?.plans ?? []).map((plan, index) => {
+                        const selected = plan.id === activePlanResult.id;
+                        return (
+                          <p key={`course-name-${plan.id}`} className={`text-[12px] ${selected ? "font-semibold text-[#0f172a]" : "text-[#475569]"}`}>
+                            候補{index + 1}: {plan.title}コース
+                          </p>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-2xl bg-white/70 p-3">
+                    <p className="text-[13px] font-semibold text-[#0f172a]">{activePlanResult.reasonWhyRecommended}</p>
+                    <p className="mt-1 text-[12px] leading-6 text-[#475569]">{activePlanResult.matchSummary}</p>
+                    <p className="mt-2 text-[11px] font-medium text-[#64748b]">
+                      想定所要時間: {activePlanResult.estimatedDurationMinutes}分
+                    </p>
+                  </div>
+                  <div className="mt-2 rounded-2xl bg-white/60 p-3">
+                    <ol className="space-y-2">
+                      {activePlanTimelineWithLocations.map((item, index) => {
+                        const isLinked = Boolean(item.location);
+                        const isSelected = selectedPlanResultSpotId != null && item.mapSpotId === selectedPlanResultSpotId;
+                        return (
+                          <li key={item.key}>
+                            <button
+                              type="button"
+                              disabled={!isLinked}
+                              onClick={() => {
+                                if (!item.location) return;
+                                setMapFocusCenter(item.location);
+                                setSelectedPlanResultSpotId(item.mapSpotId);
+                              }}
+                              className={`w-full rounded-2xl border px-3 py-2.5 text-left transition-all ${
+                                isSelected
+                                  ? "border-[#111827] bg-[#111827] text-white shadow-[0_8px_16px_rgba(17,24,39,0.22)]"
+                                  : isLinked
+                                    ? "border-[#d1d5db] bg-white text-[#111827] hover:bg-[#f8fafc]"
+                                    : "border-[#e5e7eb] bg-[#f8fafc] text-[#6b7280]"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[13px] font-semibold">
+                                  {index + 1}. {item.spotName}
+                                </p>
+                                <p className={`text-[11px] font-medium ${isSelected ? "text-white/85" : "text-[#64748b]"}`}>
+                                  {item.arrivalAt} - {item.departureAt}
+                                </p>
+                              </div>
+                              <p className={`mt-1 text-[11px] ${isSelected ? "text-white/80" : "text-[#64748b]"}`}>
+                                移動: {item.transportFromPrev} / {item.travelMinutesFromPrev}分 / 滞在: {item.stayMinutes}分
+                              </p>
+                              <p className={`mt-1 text-[11px] leading-5 ${isSelected ? "text-white/90" : "text-[#475569]"}`}>
+                                {item.note}
+                              </p>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                    {planResult?.warnings?.length ? (
+                      <div className="mt-3 rounded-xl border border-[#f1d6a8] bg-[#fff7eb] p-3 text-[11px] leading-5 text-[#8a5a06]">
+                        {planResult.warnings.slice(0, 2).map((warning) => (
+                          <p key={warning}>・{warning}</p>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
           </section>
