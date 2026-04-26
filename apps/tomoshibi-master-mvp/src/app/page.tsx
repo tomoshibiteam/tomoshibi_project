@@ -10,6 +10,7 @@ import {
   getPlanRequestStatus,
   type CreatePlanRequestPayload,
   type PlanGenerationResult,
+  type PlanTimelineItem,
   type PlanTraceItem,
 } from "@/lib/plan-request-api";
 import { createSpotRecord, type SpotAdminRecord } from "@/lib/spots-admin-api";
@@ -33,6 +34,9 @@ type IconName =
   | "pedal_bike"
   | "directions_car"
   | "directions_bus"
+  | "schedule"
+  | "landscape"
+  | "history_edu"
   | "person_circle"
   | "logout";
 
@@ -49,7 +53,9 @@ type Duration = "2h" | "4h" | "custom";
 type MainTransport = "walk" | "rental_cycle" | "car" | "bus";
 type ReturnTransportOption = "train" | "car";
 type ReturnStationId = "iwami_station" | "higashihama_station" | "oiwa_station";
+type IslandId = "iki" | "tsushima" | "goto" | "shodoshima" | "other";
 type LatLngLiteral = { lat: number; lng: number };
+type MapCameraTarget = { center: LatLngLiteral; zoom?: number };
 
 type NavItem = {
   id: SpotMapPin["primaryCategory"];
@@ -66,6 +72,14 @@ type ExploreFeatureBanner = {
   href?: string;
   detailView?: "iwami_story";
   placeholderLabel?: string;
+};
+
+type IslandOption = {
+  id: IslandId;
+  label: string;
+  center: LatLngLiteral;
+  zoom: number;
+  spotSlugPrefixes: string[];
 };
 
 const navItems: NavItem[] = [
@@ -97,13 +111,51 @@ const exploreFeatureBanners: ExploreFeatureBanner[] = [
   },
 ];
 
+const islandOptions: ReadonlyArray<IslandOption> = [
+  {
+    id: "iki",
+    label: "壱岐島",
+    center: { lat: 33.7506, lng: 129.718 },
+    zoom: 11.7,
+    spotSlugPrefixes: ["iki-"],
+  },
+  {
+    id: "tsushima",
+    label: "対馬",
+    center: { lat: 34.3824, lng: 129.3302 },
+    zoom: 9.8,
+    spotSlugPrefixes: ["tsushima-", "tsu-"],
+  },
+  {
+    id: "goto",
+    label: "五島列島",
+    center: { lat: 32.7128, lng: 128.7422 },
+    zoom: 9.7,
+    spotSlugPrefixes: ["goto-"],
+  },
+  {
+    id: "shodoshima",
+    label: "小豆島",
+    center: { lat: 34.4802, lng: 134.2772 },
+    zoom: 10.9,
+    spotSlugPrefixes: ["shodoshima-"],
+  },
+  {
+    id: "other",
+    label: "その他",
+    center: { lat: 35.0, lng: 134.0 },
+    zoom: 8.4,
+    spotSlugPrefixes: ["other-"],
+  },
+];
+
 const generationMessages = [
   "条件を整理しています",
   "出発地と滞在時間をもとに候補を絞っています",
   "移動手段に合わせて回りやすい順番を調整しています",
   "やりたいことに合わせて景色・食・体験を組み合わせています",
   "帰り方に合わせて無理のないルートを整えています",
-  "3つのプランを作成しています",
+  "3つのルート候補を作成しています",
 ] as const;
 
 const generationStageToProgressIndex: Record<string, number> = {
@@ -136,11 +188,11 @@ const returnStationOptions: ReadonlyArray<{ value: ReturnStationId; label: strin
 ];
 
 const SPOT_ADMIN_EMAIL = "tomoshibi.team@gmail.com";
-const IWAMI_DEFAULT_CENTER: LatLngLiteral = { lat: 35.5748, lng: 134.3324 };
+const IWAMI_DEFAULT_CENTER: LatLngLiteral = { lat: 33.7506, lng: 129.718 };
 const STATION_NODE_COORDINATES: Record<ReturnStationId, LatLngLiteral> = {
-  iwami_station: { lat: 35.574278, lng: 134.335478 },
-  higashihama_station: { lat: 35.599471, lng: 134.362225 },
-  oiwa_station: { lat: 35.56683, lng: 134.3084892 },
+  iwami_station: { lat: 33.7506, lng: 129.718 },
+  higashihama_station: { lat: 33.7506, lng: 129.718 },
+  oiwa_station: { lat: 33.7506, lng: 129.718 },
 };
 
 function normalizeSpotLookupKey(value: string): string {
@@ -345,6 +397,10 @@ const panelIconButtonClass =
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<string | null>(null);
+  const [selectedIsland, setSelectedIsland] = useState<IslandId>("iki");
+  const [isIslandSheetOpen, setIsIslandSheetOpen] = useState(false);
+  const [mapCameraTarget, setMapCameraTarget] = useState<MapCameraTarget | null>(null);
+  const [islandSwitchToastMessage, setIslandSwitchToastMessage] = useState<string | null>(null);
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
   const [plannerView, setPlannerView] = useState<PlannerView>("input");
   const [progressIndex, setProgressIndex] = useState(0);
@@ -396,6 +452,9 @@ export default function Home() {
   const [isDraggingExploreSheet, setIsDraggingExploreSheet] = useState(false);
   const [exploreSheetDragOffset, setExploreSheetDragOffset] = useState(0);
   const [exploreSheetView, setExploreSheetView] = useState<"list" | "iwami_story">("list");
+  const [isPlannerSheetPresented, setIsPlannerSheetPresented] = useState(false);
+  const [isDraggingPlannerSheet, setIsDraggingPlannerSheet] = useState(false);
+  const [plannerSheetDragOffset, setPlannerSheetDragOffset] = useState(0);
   const [isDraggingPlanResultSheet, setIsDraggingPlanResultSheet] = useState(false);
   const [planResultSheetDragOffset, setPlanResultSheetDragOffset] = useState(0);
   const headerAuthMenuRef = useRef<HTMLDivElement | null>(null);
@@ -403,7 +462,10 @@ export default function Home() {
   const returnTransportDropdownRef = useRef<HTMLDivElement | null>(null);
   const returnStationDropdownRef = useRef<HTMLDivElement | null>(null);
   const exploreSheetDragRef = useRef<{ pointerId: number; startY: number } | null>(null);
+  const plannerSheetDragRef = useRef<{ pointerId: number; startY: number } | null>(null);
   const planResultSheetDragRef = useRef<{ pointerId: number; startY: number } | null>(null);
+  const plannerCloseTimerRef = useRef<number | null>(null);
+  const generationPreviewTimerRef = useRef<number | null>(null);
   const planTraceCursorRef = useRef(0);
   const planTraceRequestIdRef = useRef<string | null>(null);
 
@@ -430,7 +492,16 @@ export default function Home() {
   };
 
   const openPlanner = () => {
+    if (plannerCloseTimerRef.current !== null) {
+      window.clearTimeout(plannerCloseTimerRef.current);
+      plannerCloseTimerRef.current = null;
+    }
+    setIsIslandSheetOpen(false);
     setIsPlannerOpen(true);
+    setIsPlannerSheetPresented(false);
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => setIsPlannerSheetPresented(true));
+    });
     setIsPlanResultSheetOpen(false);
     setPlannerView("input");
     setProgressIndex(0);
@@ -447,19 +518,27 @@ export default function Home() {
   };
 
   const closePlanner = () => {
-    setIsPlannerOpen(false);
-    setPlannerView("input");
-    setProgressIndex(0);
-    setPlanRequestId(null);
-    setPlanPollToken(null);
-    setPlanResult(null);
-    setPlanGenerationError(null);
-    setGenerationProgressPercent(0);
-    setPlanSubmitError(null);
-    setPlanValidationErrors({});
-    setSelectedPlanResultSpotId(null);
-    planTraceRequestIdRef.current = null;
-    planTraceCursorRef.current = 0;
+    clearGenerationPreviewTimer();
+    setIsPlannerSheetPresented(false);
+    if (plannerCloseTimerRef.current !== null) {
+      window.clearTimeout(plannerCloseTimerRef.current);
+    }
+    plannerCloseTimerRef.current = window.setTimeout(() => {
+      plannerCloseTimerRef.current = null;
+      setIsPlannerOpen(false);
+      setPlannerView("input");
+      setProgressIndex(0);
+      setPlanRequestId(null);
+      setPlanPollToken(null);
+      setPlanResult(null);
+      setPlanGenerationError(null);
+      setGenerationProgressPercent(0);
+      setPlanSubmitError(null);
+      setPlanValidationErrors({});
+      setSelectedPlanResultSpotId(null);
+      planTraceRequestIdRef.current = null;
+      planTraceCursorRef.current = 0;
+    }, 780);
   };
 
   const handleLocateCurrentPosition = () => {
@@ -538,6 +617,22 @@ export default function Home() {
     }
   };
 
+  const handleSelectIsland = (islandId: IslandId) => {
+    const nextIsland = islandOptions.find((item) => item.id === islandId);
+    if (!nextIsland) return;
+    setSelectedIsland(nextIsland.id);
+    setMapCameraTarget({
+      center: nextIsland.center,
+      zoom: nextIsland.zoom,
+    });
+    setMapFocusCenter(null);
+    setSelectedPlanResultSpotId(null);
+    setActiveTab(null);
+    setExploreSheetView("list");
+    setIsIslandSheetOpen(false);
+    setIslandSwitchToastMessage(`${nextIsland.label}に切り替えました`);
+  };
+
   useEffect(() => {
     if (!isPlannerOpen || plannerView !== "generating") return;
     if (!planRequestId || !planPollToken) return;
@@ -574,6 +669,8 @@ export default function Home() {
           setActivePlanResultId(response.result.plans[0]?.id ?? null);
           setSelectedPlanResultSpotId(null);
           setActiveTab(null);
+          setIsPlannerSheetPresented(false);
+          clearGenerationPreviewTimer();
           setIsPlannerOpen(false);
           setIsPlanResultSheetOpen(true);
           setPlannerView("result");
@@ -582,7 +679,7 @@ export default function Home() {
 
         if (response.status === "failed") {
           console.error(`[AI Plan][${planRequestId}] generation failed`, response.error ?? {});
-          setPlanGenerationError(response.error?.message ?? "プラン生成に失敗しました。");
+          setPlanGenerationError(response.error?.message ?? "ルート生成に失敗しました。");
           setPlannerView("failed");
         }
       } catch (error) {
@@ -672,6 +769,12 @@ export default function Home() {
   }, [currentLocationError]);
 
   useEffect(() => {
+    if (!islandSwitchToastMessage) return;
+    const timer = window.setTimeout(() => setIslandSwitchToastMessage(null), 1800);
+    return () => window.clearTimeout(timer);
+  }, [islandSwitchToastMessage]);
+
+  useEffect(() => {
     const unsubscribe = subscribePublishedSpots({
       onData: (nextSpots) => {
         setSpots(nextSpots);
@@ -723,17 +826,80 @@ export default function Home() {
     return notes.slice(0, 2);
   }, [mainTransports, requestText]);
 
+  const clearGenerationPreviewTimer = () => {
+    if (generationPreviewTimerRef.current === null) return;
+    window.clearTimeout(generationPreviewTimerRef.current);
+    generationPreviewTimerRef.current = null;
+  };
+
+  const selectedIslandOption = useMemo(
+    () => islandOptions.find((island) => island.id === selectedIsland) ?? islandOptions[0],
+    [selectedIsland],
+  );
+
+  const generationConditionChips = useMemo(() => {
+    const transportLabels: Record<MainTransport, { label: string; icon: IconName }> = {
+      walk: { label: "徒歩", icon: "directions_walk" },
+      rental_cycle: { label: "レンタサイクル", icon: "pedal_bike" },
+      car: { label: "車", icon: "directions_car" },
+      bus: { label: "バス", icon: "directions_bus" },
+    };
+    const durationLabel =
+      duration === "2h"
+        ? "2時間"
+        : duration === "4h"
+          ? "4時間"
+          : duration === "custom" && hasValidCustomDurationMinutes
+            ? `${parsedCustomDurationMinutes}分`
+            : null;
+    const chips: Array<{ label: string; icon: IconName }> = [
+      { label: selectedIslandOption.label, icon: "landscape" },
+    ];
+
+    if (durationLabel) chips.push({ label: durationLabel, icon: "schedule" });
+    for (const transport of mainTransports.slice(0, 2)) {
+      chips.push(transportLabels[transport]);
+    }
+    if (selectedReturnTransportLabel) {
+      chips.push({ label: `帰りは${selectedReturnTransportLabel}`, icon: selectedReturnTransportLabel === "車" ? "directions_car" : "schedule" });
+    }
+    if (mustSpots[0]) {
+      chips.push({ label: mustSpots[0], icon: "history_edu" });
+    }
+
+    return chips.slice(0, 5);
+  }, [
+    duration,
+    hasValidCustomDurationMinutes,
+    mainTransports,
+    mustSpots,
+    parsedCustomDurationMinutes,
+    selectedIslandOption.label,
+    selectedReturnTransportLabel,
+  ]);
+
+  const islandScopedSpots = useMemo(() => {
+    const prefixes = selectedIslandOption.spotSlugPrefixes;
+    if (prefixes.length === 0) return spots;
+    return spots.filter((spot) =>
+      prefixes.some((prefix) => spot.slug.startsWith(prefix) || spot.id.startsWith(prefix)),
+    );
+  }, [selectedIslandOption, spots]);
+
   const visibleSpots = useMemo(() => {
     if (activeTab && navItems.some((item) => item.id === activeTab)) {
-      return spots.filter((spot) => spot.primaryCategory === activeTab);
+      return islandScopedSpots.filter((spot) => spot.primaryCategory === activeTab);
     }
-    return spots;
-  }, [activeTab, spots]);
+    return islandScopedSpots;
+  }, [activeTab, islandScopedSpots]);
   const isExploreSheetOpen = activeTab === exploreNavItem.id;
+  const isCategorySheetOpen = isExploreSheetOpen;
+  const isAnyBottomSheetOpen = isCategorySheetOpen || isIslandSheetOpen;
+  const showFloatingAiCta = !isAnyBottomSheetOpen && !isPlanResultSheetOpen && !isPlannerOpen;
 
   const spotLookup = useMemo(() => {
     const byKey = new Map<string, SpotMapPin>();
-    for (const spot of spots) {
+    for (const spot of islandScopedSpots) {
       byKey.set(spot.id, spot);
       byKey.set(spot.slug, spot);
       byKey.set(normalizeSpotLookupKey(spot.id), spot);
@@ -742,7 +908,7 @@ export default function Home() {
       byKey.set(normalizeSpotLookupKey(spot.nameJa), spot);
     }
     return byKey;
-  }, [spots]);
+  }, [islandScopedSpots]);
 
   const activePlanResult = useMemo(() => {
     const plans = planResult?.plans ?? [];
@@ -809,9 +975,130 @@ export default function Home() {
 
   const activePlanRouteColor = activePlanResult ? planStyleRouteColor(activePlanResult.planStyle) : "#1d4ed8";
 
+  const activePlanMapSpots = useMemo(() => {
+    if (!isPlanResultSheetOpen || !activePlanResult) return [];
+    const byId = new Map(islandScopedSpots.map((spot) => [spot.id, spot]));
+    const picked: SpotMapPin[] = [];
+    const pickedIds = new Set<string>();
+
+    for (const item of activePlanTimelineWithLocations) {
+      if (!item.mapSpotId || pickedIds.has(item.mapSpotId)) continue;
+      const spot = byId.get(item.mapSpotId);
+      if (!spot) continue;
+      picked.push(spot);
+      pickedIds.add(spot.id);
+    }
+
+    return picked;
+  }, [activePlanResult, activePlanTimelineWithLocations, islandScopedSpots, isPlanResultSheetOpen]);
+
+  const buildPreviewPlanResult = (): PlanGenerationResult => {
+    const sourceSpots = islandScopedSpots.length > 0 ? islandScopedSpots : visibleSpots;
+    const fallbackSpots = sourceSpots.slice(0, 9);
+    const durationMinutes =
+      duration === "2h"
+        ? 120
+        : duration === "4h"
+          ? 240
+          : duration === "custom" && hasValidCustomDurationMinutes
+            ? parsedCustomDurationMinutes
+            : 180;
+    const transportModes = mainTransports.length > 0 ? mainTransports : (["car"] as MainTransport[]);
+    const startTime = departureTime || "10:00";
+    const [startHour = 10, startMinute = 0] = startTime.split(":").map((value) => Number.parseInt(value, 10));
+    const startMinutes = (Number.isFinite(startHour) ? startHour : 10) * 60 + (Number.isFinite(startMinute) ? startMinute : 0);
+    const formatClock = (minutes: number) => {
+      const normalized = ((minutes % 1440) + 1440) % 1440;
+      const hour = Math.floor(normalized / 60).toString().padStart(2, "0");
+      const minute = (normalized % 60).toString().padStart(2, "0");
+      return `${hour}:${minute}`;
+    };
+    const planStyles: Array<PlanGenerationResult["plans"][number]["planStyle"]> = ["scenic", "food", "balanced"];
+    const planTitles = ["景色を楽しむ", "島の味を楽しむ", "バランスよくめぐる"];
+    const selectedRequestText = requestText.trim();
+
+    return {
+      summary: `${selectedIslandOption.label}での条件に合わせた旅ルートのプレビューです。`,
+      generationNotes: [
+        "現在はUI確認用に、入力条件と登録スポットからプレビュー候補を表示しています。",
+        "本生成ではAIとルールベースで営業時間、移動時間、帰着条件を確認します。",
+      ],
+      warnings: [],
+      plans: planStyles.map((planStyle, planIndex) => {
+        const selectedSpots = fallbackSpots.slice(planIndex * 3, planIndex * 3 + 3);
+        const timelineSpots = selectedSpots.length > 0 ? selectedSpots : fallbackSpots.slice(0, 3);
+        const timeline: PlanTimelineItem[] = timelineSpots.map((spot, index) => {
+          const arrivalMinutes = startMinutes + 20 + index * 55 + planIndex * 8;
+          const stayMinutes = index === 0 ? 35 : index === 1 ? 45 : 30;
+          return {
+            spotId: spot.slug || spot.id,
+            spotName: spot.shortName || spot.nameJa,
+            arrivalAt: formatClock(arrivalMinutes),
+            departureAt: formatClock(arrivalMinutes + stayMinutes),
+            stayMinutes,
+            transportFromPrev: index === 0 ? "none" : transportModes[0],
+            travelMinutesFromPrev: index === 0 ? 0 : 15 + index * 5,
+            note:
+              index === 0
+                ? "最初に立ち寄りやすいスポットとして配置しています。"
+                : selectedRequestText
+                  ? `「${selectedRequestText}」に合う立ち寄り先として組み込んでいます。`
+                  : "移動しやすさと滞在時間のバランスを見て配置しています。",
+          };
+        });
+
+        return {
+          id: `preview-plan-${planIndex + 1}`,
+          title: planTitles[planIndex],
+          description: `${selectedIslandOption.label}を${planTitles[planIndex]}流れでめぐる候補です。`,
+          planStyle,
+          matchSummary: selectedRequestText
+            ? `入力された「${selectedRequestText}」という希望をもとに、${planTitles[planIndex]}方向でまとめています。`
+            : "入力条件をもとに、回りやすい順番で候補をまとめています。",
+          reasonWhyRecommended: `候補${planIndex + 1}は、${planTitles[planIndex]}ことを重視したルートです。`,
+          estimatedDurationMinutes: Math.min(durationMinutes, 180 + planIndex * 20),
+          transportModes,
+          waypoints: timeline.map((item) => ({ id: item.spotId, name: item.spotName })),
+          timeline,
+          constraintChecks: [
+            { code: "preview", passed: true, message: "プレビュー表示用の候補です。" },
+          ],
+          tags: [selectedIslandOption.label, planTitles[planIndex]],
+          couponCompatible: false,
+          storyCompatible: true,
+        };
+      }),
+    };
+  };
+
+  const showPlanPreviewResult = () => {
+    const previewResult = buildPreviewPlanResult();
+    setPlanResult(previewResult);
+    setActivePlanResultId(previewResult.plans[0]?.id ?? null);
+    setSelectedPlanResultSpotId(null);
+    setActiveTab(null);
+    setIsPlannerSheetPresented(false);
+    setIsPlannerOpen(false);
+    setIsPlanResultSheetOpen(true);
+    setPlannerView("result");
+  };
+
+  const getSheetDragMaxOffset = () => {
+    if (typeof window === "undefined") return 720;
+    return Math.max(420, Math.floor(window.innerHeight * 0.9));
+  };
+
+  const getSheetCloseThreshold = () => {
+    if (typeof window === "undefined") return 140;
+    return Math.max(140, Math.floor(window.innerHeight * 0.16));
+  };
+
   const handleExploreSheetDragStart = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (!isExploreSheetOpen) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (typeof event.currentTarget.setPointerCapture === "function") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     exploreSheetDragRef.current = { pointerId: event.pointerId, startY: event.clientY };
     setIsDraggingExploreSheet(true);
     setExploreSheetDragOffset(0);
@@ -821,9 +1108,24 @@ export default function Home() {
   const handlePlanResultSheetDragStart = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (!isPlanResultSheetOpen) return;
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (typeof event.currentTarget.setPointerCapture === "function") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
     planResultSheetDragRef.current = { pointerId: event.pointerId, startY: event.clientY };
     setIsDraggingPlanResultSheet(true);
     setPlanResultSheetDragOffset(0);
+    event.preventDefault();
+  };
+
+  const handlePlannerSheetDragStart = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (!isPlannerOpen) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (typeof event.currentTarget.setPointerCapture === "function") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+    plannerSheetDragRef.current = { pointerId: event.pointerId, startY: event.clientY };
+    setIsDraggingPlannerSheet(true);
+    setPlannerSheetDragOffset(0);
     event.preventDefault();
   };
 
@@ -833,7 +1135,7 @@ export default function Home() {
     const handlePointerMove = (event: PointerEvent) => {
       const drag = exploreSheetDragRef.current;
       if (!drag || event.pointerId !== drag.pointerId) return;
-      const delta = Math.max(0, Math.min(320, event.clientY - drag.startY));
+      const delta = Math.max(0, Math.min(getSheetDragMaxOffset(), event.clientY - drag.startY));
       setExploreSheetDragOffset(delta);
     };
 
@@ -841,12 +1143,14 @@ export default function Home() {
       const drag = exploreSheetDragRef.current;
       if (!drag || event.pointerId !== drag.pointerId) return;
       const delta = Math.max(0, event.clientY - drag.startY);
-      const shouldClose = delta > 120;
+      const shouldClose = delta > getSheetCloseThreshold();
       exploreSheetDragRef.current = null;
       setIsDraggingExploreSheet(false);
-      setExploreSheetDragOffset(0);
       if (shouldClose) {
         setActiveTab((prev) => (prev === exploreNavItem.id ? null : prev));
+        window.requestAnimationFrame(() => setExploreSheetDragOffset(0));
+      } else {
+        setExploreSheetDragOffset(0);
       }
     };
 
@@ -862,12 +1166,48 @@ export default function Home() {
   }, [isDraggingExploreSheet]);
 
   useEffect(() => {
+    if (!isDraggingPlannerSheet) return;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const drag = plannerSheetDragRef.current;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const delta = Math.max(0, Math.min(getSheetDragMaxOffset(), event.clientY - drag.startY));
+      setPlannerSheetDragOffset(delta);
+    };
+
+    const finishDrag = (event: PointerEvent) => {
+      const drag = plannerSheetDragRef.current;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      const delta = Math.max(0, event.clientY - drag.startY);
+      const shouldClose = delta > getSheetCloseThreshold();
+      plannerSheetDragRef.current = null;
+      setIsDraggingPlannerSheet(false);
+      if (shouldClose) {
+        closePlanner();
+        window.requestAnimationFrame(() => setPlannerSheetDragOffset(0));
+      } else {
+        setPlannerSheetDragOffset(0);
+      }
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", finishDrag);
+    window.addEventListener("pointercancel", finishDrag);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", finishDrag);
+      window.removeEventListener("pointercancel", finishDrag);
+    };
+  }, [isDraggingPlannerSheet]);
+
+  useEffect(() => {
     if (!isDraggingPlanResultSheet) return;
 
     const handlePointerMove = (event: PointerEvent) => {
       const drag = planResultSheetDragRef.current;
       if (!drag || event.pointerId !== drag.pointerId) return;
-      const delta = Math.max(0, Math.min(320, event.clientY - drag.startY));
+      const delta = Math.max(0, Math.min(getSheetDragMaxOffset(), event.clientY - drag.startY));
       setPlanResultSheetDragOffset(delta);
     };
 
@@ -875,12 +1215,14 @@ export default function Home() {
       const drag = planResultSheetDragRef.current;
       if (!drag || event.pointerId !== drag.pointerId) return;
       const delta = Math.max(0, event.clientY - drag.startY);
-      const shouldClose = delta > 120;
+      const shouldClose = delta > getSheetCloseThreshold();
       planResultSheetDragRef.current = null;
       setIsDraggingPlanResultSheet(false);
-      setPlanResultSheetDragOffset(0);
       if (shouldClose) {
         setIsPlanResultSheetOpen(false);
+        window.requestAnimationFrame(() => setPlanResultSheetDragOffset(0));
+      } else {
+        setPlanResultSheetDragOffset(0);
       }
     };
 
@@ -904,6 +1246,23 @@ export default function Home() {
   }, [isExploreSheetOpen]);
 
   useEffect(() => {
+    if (isPlannerOpen) return;
+    setIsPlannerSheetPresented(false);
+    setIsDraggingPlannerSheet(false);
+    setPlannerSheetDragOffset(0);
+    plannerSheetDragRef.current = null;
+  }, [isPlannerOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (plannerCloseTimerRef.current !== null) {
+        window.clearTimeout(plannerCloseTimerRef.current);
+      }
+      clearGenerationPreviewTimer();
+    };
+  }, []);
+
+  useEffect(() => {
     if (isPlanResultSheetOpen) return;
     setIsDraggingPlanResultSheet(false);
     setPlanResultSheetDragOffset(0);
@@ -916,7 +1275,7 @@ export default function Home() {
 
   const mapPins = useMemo(
     () =>
-      (isPlanResultSheetOpen ? spots : visibleSpots).map((spot) => ({
+      (isPlanResultSheetOpen ? activePlanMapSpots : visibleSpots).map((spot) => ({
         id: spot.id,
         label: spot.shortName,
         lat: pendingSpotPositions[spot.id]?.lat ?? spot.lat,
@@ -924,7 +1283,7 @@ export default function Home() {
         category: spot.primaryCategory,
         imageUrl: spot.imageUrl,
       })),
-    [isPlanResultSheetOpen, pendingSpotPositions, spots, visibleSpots],
+    [activePlanMapSpots, isPlanResultSheetOpen, pendingSpotPositions, visibleSpots],
   );
 
   const removeSpot = (spot: string) => setMustSpots((prev) => prev.filter((value) => value !== spot));
@@ -990,11 +1349,22 @@ export default function Home() {
   };
 
   const handleSubmitPlanRequest = async () => {
-    if (isSubmittingPlanRequest || !isPlanFormValid) return;
+    if (isSubmittingPlanRequest) return;
 
     const payload = buildPlanRequestPayload();
     if (!payload) {
-      setPlanSubmitError("入力内容を確認してください。");
+      setPlanSubmitError(null);
+      setPlanValidationErrors({});
+      setPlanResult(null);
+      setPlanGenerationError(null);
+      setGenerationProgressPercent(0);
+      setProgressIndex(0);
+      setPlannerView("generating");
+      clearGenerationPreviewTimer();
+      generationPreviewTimerRef.current = window.setTimeout(() => {
+        generationPreviewTimerRef.current = null;
+        showPlanPreviewResult();
+      }, 3000);
       return;
     }
 
@@ -1014,6 +1384,11 @@ export default function Home() {
         setProgressIndex(0);
         planTraceRequestIdRef.current = response.planRequestId;
         planTraceCursorRef.current = 0;
+        clearGenerationPreviewTimer();
+        generationPreviewTimerRef.current = window.setTimeout(() => {
+          generationPreviewTimerRef.current = null;
+          showPlanPreviewResult();
+        }, 3000);
         console.info(`[AI Plan][${response.planRequestId}] request accepted. polling started.`);
         return;
       }
@@ -1026,7 +1401,7 @@ export default function Home() {
       }, {});
 
       setPlanValidationErrors(nextFieldErrors);
-      setPlanSubmitError(response.message || "プラン作成のリクエスト送信に失敗しました。");
+      setPlanSubmitError(response.message || "ルート計画リクエストの送信に失敗しました。");
     } catch (error) {
       const message =
         error instanceof Error && error.message.trim().length > 0
@@ -1220,6 +1595,7 @@ export default function Home() {
     >
       <GoogleMapBackground
         className="absolute inset-0"
+        cameraTarget={mapCameraTarget}
         focusCenter={mapFocusCenter}
         pins={mapPins}
         enablePinEditing={isSpotAdmin && isSpotAdminSidebarOpen}
@@ -1240,19 +1616,6 @@ export default function Home() {
         </div>
       ) : null}
 
-      <div className="absolute top-6 left-6 z-40">
-        <button
-          type="button"
-          onClick={openPlanner}
-          aria-label="AI旅行計画を開く"
-          className="group relative flex h-12 overflow-hidden rounded-full border border-[#e5e7eb] bg-white/88 px-4 shadow-[0_14px_30px_rgba(17,24,39,0.14),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/96 hover:shadow-[0_18px_34px_rgba(17,24,39,0.18),inset_0_1px_0_rgba(255,255,255,0.95)] active:translate-y-0"
-        >
-          <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0.9)_0%,rgba(255,255,255,0.45)_50%,rgba(229,231,235,0.6)_100%)]" />
-          <span className="relative flex items-center">
-            <span className="font-label text-sm font-semibold tracking-[0.01em] text-[#111827]">AIで旅プランを作る</span>
-          </span>
-        </button>
-      </div>
       {planResult && !isPlanResultSheetOpen && !isPlannerOpen ? (
         <div className="absolute top-20 left-6 z-40">
           <button
@@ -1267,68 +1630,21 @@ export default function Home() {
         </div>
       ) : null}
 
-      <div ref={headerAuthMenuRef} className="absolute top-6 right-6 z-50">
+      <div className="absolute top-6 right-6 z-50 flex items-start gap-2">
         <button
           type="button"
-          aria-label={accessibleLabel}
           onClick={() => {
             setHeaderAuthMenuError(null);
-            setIsHeaderAuthMenuOpen((prev) => !prev);
+            setIsHeaderAuthMenuOpen(false);
+            setActiveTab(null);
+            setExploreSheetView("list");
+            setIsIslandSheetOpen(true);
           }}
-          className="group relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-[#e5e7eb] bg-white/88 shadow-[0_16px_30px_rgba(17,24,39,0.14),inset_0_1px_0_rgba(255,255,255,0.94)] backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/96 active:translate-y-0"
+          aria-label="表示する島を選ぶ"
+          className="group relative inline-flex h-10 items-center rounded-full border border-white/80 bg-white/76 px-4 text-[#111827] shadow-[0_8px_18px_rgba(15,23,42,0.12),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/85 hover:shadow-[0_10px_20px_rgba(15,23,42,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] active:translate-y-0"
         >
-          <span className="pointer-events-none absolute inset-[3px] rounded-full border border-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]" />
-          {isFirebaseSignedIn && firebaseAvatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={firebaseAvatarUrl} alt="User profile" className="relative h-8 w-8 rounded-full object-cover" />
-          ) : (
-            <AppIcon name="person_circle" className="relative h-[26px] w-[26px] text-[#111827]" />
-          )}
+          <span className="font-label text-[13px] font-semibold tracking-[0.01em]">{selectedIslandOption.label}</span>
         </button>
-
-        {isHeaderAuthMenuOpen ? (
-          <div className="absolute top-14 right-0 w-[236px] rounded-2xl border border-[#e5e7eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(249,250,251,0.94)_100%)] p-3 backdrop-blur-2xl shadow-[0_20px_38px_rgba(17,24,39,0.14),inset_0_1px_0_rgba(255,255,255,0.95)]">
-            <p className="text-xs leading-[17px] font-semibold text-[#374151]">{accessibleLabel}</p>
-            {isSpotAdmin ? (
-              <button
-                type="button"
-                onClick={() => {
-                  void handleCreateSpotFromCenter();
-                }}
-                disabled={isCreatingSpot}
-                className={`mt-2 flex min-h-[36px] w-full items-center justify-center rounded-xl border px-3 text-[12px] font-semibold transition-colors ${
-                  isCreatingSpot
-                    ? "cursor-wait border-[#d1d5db] bg-[#f3f4f6] text-[#9ca3af]"
-                    : "border-[#d1d5db] bg-white text-[#374151] hover:bg-[#f9fafb]"
-                }`}
-              >
-                {isCreatingSpot ? "スポット追加中..." : "スポット追加"}
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={isFirebaseSignedIn ? handleHeaderSignOutPress : handleHeaderGoogleSignInPress}
-              disabled={isHeaderAuthActionBusy}
-              className={`mt-2 flex min-h-[38px] w-full items-center justify-center gap-2 rounded-xl border px-3 text-[13px] font-bold transition-colors ${
-                isHeaderAuthActionBusy
-                  ? "cursor-not-allowed border-[#d7dae0] bg-[#e6e8ee] text-[#707881]"
-                  : "border-[#111827] bg-[#111827] text-white hover:bg-[#1f2937]"
-              }`}
-            >
-              {isHeaderAuthActionBusy ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              ) : isFirebaseSignedIn ? (
-                <AppIcon name="logout" className="h-4 w-4" />
-              ) : (
-                <span className="font-semibold text-[12px]">G</span>
-              )}
-              <span>{headerAuthButtonLabel}</span>
-            </button>
-            {headerAuthMenuError ? (
-              <p className="mt-2 text-[11px] leading-4 font-semibold text-[#ba1a1a]">{headerAuthMenuError}</p>
-            ) : null}
-          </div>
-        ) : null}
       </div>
 
       <SpotAdminSidebar
@@ -1341,7 +1657,7 @@ export default function Home() {
         onDeleted={handleSpotAdminDeleted}
       />
 
-      <div className="absolute right-6 bottom-32 z-40">
+      <div className="absolute right-6 z-40" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 164px)" }}>
         <div className="flex flex-col items-end gap-2">
           <button
             type="button"
@@ -1370,6 +1686,31 @@ export default function Home() {
       </div>
 
       <div
+        className={`fixed inset-x-0 z-[48] flex justify-center px-3 transition-all duration-200 ease-out ${
+          showFloatingAiCta ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
+        }`}
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 102px)" }}
+      >
+        <button
+          type="button"
+          onClick={openPlanner}
+          aria-label="AIで旅ルートを作る"
+          className="group relative inline-flex min-h-[48px] w-full max-w-[720px] items-center justify-center gap-2 overflow-hidden rounded-full border border-[#0b1220]/90 bg-[linear-gradient(180deg,#1f2937_0%,#0f172a_100%)] px-5 py-3 text-white shadow-[0_12px_24px_rgba(15,23,42,0.24),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all duration-220 hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(15,23,42,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] active:translate-y-0"
+        >
+          <AppIcon name="auto_awesome" className="h-4.5 w-4.5 text-white" filled />
+          <span className="font-label text-[15px] font-bold tracking-[0.01em]">AIで旅ルートを作る</span>
+        </button>
+      </div>
+
+      {islandSwitchToastMessage ? (
+        <div className="pointer-events-none fixed inset-x-0 z-[66] flex justify-center px-4" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 178px)" }}>
+          <p className="rounded-full border border-white/80 bg-[#0f172a]/88 px-4 py-2 text-[12px] font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(15,23,42,0.25)] backdrop-blur-md">
+            {islandSwitchToastMessage}
+          </p>
+        </div>
+      ) : null}
+
+      <div
         className={`pointer-events-none fixed inset-x-0 bottom-0 z-[45] h-[86vh] bg-[radial-gradient(120%_120%_at_50%_100%,rgba(15,23,42,0.24)_0%,rgba(15,23,42,0.1)_42%,rgba(15,23,42,0)_76%)] transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isExploreSheetOpen ? "opacity-100" : "opacity-0"
         }`}
@@ -1378,7 +1719,7 @@ export default function Home() {
       {!isPlanResultSheetOpen ? (
         <nav
           className={`fixed inset-x-0 bottom-0 z-50 pointer-events-none transition-[padding,transform] duration-[720ms] ease-[cubic-bezier(0.19,1,0.22,1)] ${
-            isExploreSheetOpen ? "translate-y-0 px-0" : "translate-y-[6px] px-2"
+            isExploreSheetOpen ? "translate-y-0 px-0" : "translate-y-[6px] px-3"
           }`}
           style={
             isExploreSheetOpen
@@ -1395,7 +1736,7 @@ export default function Home() {
               ? exploreSheetView === "iwami_story"
                 ? "is-open mb-0 h-[78vh] min-h-[420px] max-h-[900px] max-w-[2000px] rounded-t-[2.1rem] rounded-b-none px-0 pt-1 pb-0 translate-y-0"
                 : "is-open mb-0 h-[78vh] min-h-[420px] max-h-[900px] max-w-[2000px] rounded-t-[2.1rem] rounded-b-none px-3 pt-2 pb-4 translate-y-0"
-              : "mb-3 h-[88px] max-w-[700px] rounded-[2.15rem] px-3 pt-3 pb-4 translate-y-0"
+              : "mb-3 h-[90px] max-w-[720px] rounded-[2rem] px-2.5 pt-2.5 pb-3 translate-y-0"
           }`}
         >
           {!(isExploreSheetOpen && exploreSheetView === "iwami_story") ? (
@@ -1433,61 +1774,54 @@ export default function Home() {
               </div>
             )
           ) : (
-            <div className="flex items-center justify-between">
-              <div className="relative min-w-0 flex-1 pr-2">
-                <span className="pointer-events-none absolute top-1/2 right-1.5 z-10 -translate-y-1/2 text-[12px] text-[#9ca3af]">›</span>
-                <div className="flex gap-1 overflow-x-auto pr-5">
-                  {navItems.map((item) => {
-                    const isActive = activeTab === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setActiveTab(item.id)}
-                        className={`group active:scale-95 relative flex min-w-[66px] shrink-0 flex-col items-center justify-center rounded-2xl px-3 py-2.5 transition-all duration-200 ease-out ${
-                          isActive
-                            ? "bg-[linear-gradient(180deg,rgba(255,255,255,0.99)_0%,rgba(243,244,246,0.94)_100%)] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_6px_14px_rgba(17,24,39,0.14)]"
-                            : "text-[#6b7280] hover:bg-white/50 hover:text-[#111827]"
-                        }`}
-                        style={{ color: isActive ? "#111827" : item.tint }}
-                      >
-                        <AppIcon
-                          name={item.icon}
-                          className={`mb-1 h-5 w-5 transition-transform duration-200 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
-                          filled={isActive}
-                        />
-                        <span className="font-label text-[10px] font-semibold tracking-wider">{item.label}</span>
-                        {isActive ? <span className="mt-1 h-1 w-1 rounded-full bg-[#111827]" /> : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            <div className="grid grid-cols-6 gap-1.5">
+              {navItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setActiveTab((prev) => (prev === item.id ? null : item.id))}
+                    className={`group active:scale-95 relative flex min-h-[60px] flex-col items-center justify-center rounded-2xl border px-2 py-2.5 transition-all duration-200 ease-out ${
+                      isActive
+                        ? "border-[#d8e0ea] bg-[linear-gradient(180deg,rgba(255,255,255,0.99)_0%,rgba(243,244,246,0.94)_100%)] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_6px_14px_rgba(17,24,39,0.14)]"
+                        : "border-transparent text-[#6b7280] hover:border-[#e7ecf3] hover:bg-white/58 hover:text-[#111827]"
+                    }`}
+                    style={{ color: isActive ? "#111827" : item.tint }}
+                  >
+                    <AppIcon
+                      name={item.icon}
+                      className={`mb-1 h-5 w-5 transition-transform duration-200 ${isActive ? "scale-105" : "group-hover:scale-105"}`}
+                      filled={isActive}
+                    />
+                    <span className="font-label text-[9.5px] leading-none font-semibold tracking-[0.06em] whitespace-nowrap">{item.label}</span>
+                    {isActive ? <span className="mt-1 h-1 w-1 rounded-full bg-[#111827]" /> : null}
+                  </button>
+                );
+              })}
 
-              <button
-                type="button"
-                onClick={() => setActiveTab(activeTab === exploreNavItem.id ? null : exploreNavItem.id)}
-                className={`group active:scale-95 relative ml-1 flex min-h-[58px] min-w-[78px] flex-col items-center justify-center rounded-2xl px-3.5 py-2.5 transition-colors duration-200 ${
-                  activeTab === exploreNavItem.id
-                    ? "bg-[#e9eef5] text-[#111827]"
-                    : "bg-[#f4f6f9] text-[#4b5563] hover:bg-[#eef2f7] hover:text-[#111827]"
-                }`}
-                aria-label={exploreNavItem.label}
-                aria-expanded={isExploreSheetOpen}
-              >
-                <span
-                  className={`mb-1 flex h-7 w-7 items-center justify-center rounded-full ${
-                    activeTab === exploreNavItem.id ? "bg-white/85" : "bg-white/72"
+              <div className="relative">
+                <span className="pointer-events-none absolute top-2.5 bottom-2.5 left-[-3px] w-px bg-[#cbd5e1]/85" />
+                <button
+                  type="button"
+                  onClick={() => setActiveTab(activeTab === exploreNavItem.id ? null : exploreNavItem.id)}
+                  className={`group active:scale-95 relative flex min-h-[60px] w-full flex-col items-center justify-center rounded-2xl border px-2 py-2.5 transition-colors duration-200 ${
+                    activeTab === exploreNavItem.id
+                      ? "border-[#d8e0ea] bg-[linear-gradient(180deg,rgba(255,255,255,0.99)_0%,rgba(243,244,246,0.94)_100%)] text-[#111827] shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_6px_14px_rgba(17,24,39,0.14)]"
+                      : "border-transparent text-[#4b5563] hover:border-[#e7ecf3] hover:bg-white/58 hover:text-[#111827]"
                   }`}
+                  aria-label={exploreNavItem.label}
+                  aria-expanded={isExploreSheetOpen}
                 >
                   <AppIcon
                     name={exploreNavItem.icon}
-                    className="h-4.5 w-4.5"
+                    className={`mb-1 h-5 w-5 transition-transform duration-200 ${activeTab === exploreNavItem.id ? "scale-105" : "group-hover:scale-105"}`}
                     filled={activeTab === exploreNavItem.id}
                   />
-                </span>
-                <span className="font-label text-[10px] font-semibold tracking-[0.08em]">{exploreNavItem.label}</span>
-              </button>
+                  <span className="font-label text-[9.5px] leading-none font-semibold tracking-[0.06em] whitespace-nowrap">{exploreNavItem.label}</span>
+                  {activeTab === exploreNavItem.id ? <span className="mt-1 h-1 w-1 rounded-full bg-[#111827]" /> : null}
+                </button>
+              </div>
             </div>
           )}
 
@@ -1628,6 +1962,62 @@ export default function Home() {
         </nav>
       ) : null}
 
+      <div
+        className={`fixed inset-0 z-[59] transition-opacity duration-220 ${
+          isIslandSheetOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        aria-hidden={!isIslandSheetOpen}
+      >
+        <div
+          className="absolute inset-0 bg-[#0f172a]/26 backdrop-blur-[1px]"
+          onClick={() => setIsIslandSheetOpen(false)}
+        />
+      </div>
+      <aside
+        className={`pointer-events-none fixed top-0 right-0 bottom-0 z-[60] w-[clamp(280px,34vw,420px)] max-w-[88vw] transition-transform duration-260 ease-out ${
+          isIslandSheetOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        aria-hidden={!isIslandSheetOpen}
+      >
+        <div className="pointer-events-auto relative flex h-full w-full flex-col overflow-hidden border-l border-[#e5e7eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.97)_0%,rgba(249,250,251,0.94)_100%)] px-3 pt-4 pb-4 shadow-[-18px_0_34px_rgba(15,23,42,0.16)] backdrop-blur-2xl">
+          <div className="relative z-30 flex items-center justify-between px-1 py-1">
+            <h3 className="font-headline text-[16px] font-bold tracking-[0.02em] text-[#111827]">島を選ぶ</h3>
+            <button
+              type="button"
+              onClick={() => setIsIslandSheetOpen(false)}
+              className="rounded-full border border-[#d1d5db] bg-white px-3 py-1 text-[12px] font-semibold text-[#374151]"
+            >
+              閉じる
+            </button>
+          </div>
+          <div className="mt-3 min-h-0 flex-1 overflow-y-auto rounded-2xl bg-white/70 p-3">
+            <div className="space-y-2">
+              {islandOptions.map((island) => {
+                const isSelected = island.id === selectedIsland;
+                return (
+                  <button
+                    key={island.id}
+                    type="button"
+                    onClick={() => handleSelectIsland(island.id)}
+                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition-all ${
+                      isSelected
+                        ? "border-[#111827] bg-[#111827] text-white shadow-[0_10px_20px_rgba(17,24,39,0.22)]"
+                        : "border-[#d1d5db] bg-white text-[#111827] hover:bg-[#f8fafc]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <AppIcon name="compass" className={`h-4 w-4 ${isSelected ? "text-white" : "text-[#6b7280]"}`} />
+                      <span className="text-[14px] font-semibold tracking-[0.01em]">{island.label}</span>
+                    </div>
+                    <span className={`text-[14px] font-bold ${isSelected ? "text-white" : "text-[#9ca3af]"}`}>{isSelected ? "✓" : ""}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </aside>
+
       {isPlanResultSheetOpen && activePlanResult ? (
         <>
           <div
@@ -1658,7 +2048,7 @@ export default function Home() {
                 </button>
               </div>
               <div className="relative z-30 flex items-center justify-between px-2 py-1">
-                <h3 className="font-headline text-[15px] font-bold tracking-[0.02em] text-[#111827]">AI旅プラン候補</h3>
+                <h3 className="font-headline text-[15px] font-bold tracking-[0.02em] text-[#111827]">AI旅ルート候補</h3>
                 <button
                   type="button"
                   onClick={() => setIsPlanResultSheetOpen(false)}
@@ -1764,44 +2154,69 @@ export default function Home() {
         </>
       ) : null}
 
-      <div
-        className={`fixed inset-0 z-[80] transition-colors duration-300 ${
-          isPlannerOpen ? "pointer-events-auto bg-[#05162b59]" : "pointer-events-none bg-transparent"
-        }`}
-        onClick={(event) => {
-          if (event.target === event.currentTarget) closePlanner();
-        }}
-      >
-        <aside
-          className={`absolute inset-y-0 left-0 h-full w-full max-w-[850px] overflow-hidden border-r border-[#e5e7eb] bg-[radial-gradient(130%_110%_at_0%_0%,#ffffff_0%,#f8fafc_52%,#f3f4f6_100%)] transform-gpu transition-transform duration-300 ease-out will-change-transform ${
-            isPlannerOpen ? "translate-x-0 shadow-[20px_0_48px_rgba(5,24,52,0.28)]" : "-translate-x-full"
-          }`}
-        >
-          {plannerView === "input" ? (
-            <div className="relative flex h-full flex-col bg-transparent text-[#181c20]">
-              <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,250,251,0.92)_100%)] px-6 backdrop-blur-2xl">
+      {isPlannerOpen ? (
+        <>
+          <div
+            className={`fixed inset-0 z-[79] bg-transparent transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              isPlannerSheetPresented ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+            }`}
+            onClick={(event) => {
+              if (event.target === event.currentTarget) closePlanner();
+            }}
+          />
+          <section
+            className={`pointer-events-none fixed inset-x-0 bottom-0 z-[80] transition-[padding,transform] duration-[720ms] ease-[cubic-bezier(0.19,1,0.22,1)] ${
+              isPlannerSheetPresented ? "translate-y-0 px-0" : "translate-y-[6px] px-3"
+            }`}
+            style={{
+              ...(isPlannerSheetPresented
+                ? {
+                    transform: `translateY(${plannerSheetDragOffset}px)`,
+                    transitionDuration: isDraggingPlannerSheet ? "0ms" : undefined,
+                  }
+                : {}),
+            }}
+          >
+            <div
+              className={`explore-sheet-surface pointer-events-auto relative mx-auto flex w-full flex-col overflow-hidden border border-[#e5e7eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(249,250,251,0.9)_100%)] shadow-[0_22px_42px_rgba(17,24,39,0.14),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-2xl transition-[max-width,height,margin,border-radius,padding,transform,box-shadow] duration-[780ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[max-width,height,margin,border-radius,padding,transform,box-shadow] ${
+                isPlannerSheetPresented
+                  ? "is-open mb-0 h-[78vh] min-h-[420px] max-h-[900px] max-w-[2000px] rounded-t-[2.1rem] rounded-b-none px-3 pt-2 pb-4 translate-y-0"
+                  : "mb-3 h-[90px] max-w-[720px] rounded-[2rem] px-2.5 pt-2.5 pb-3 translate-y-0"
+              }`}
+            >
+              <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
+              <div className="mx-auto mb-2 flex w-full items-center justify-center">
                 <button
                   type="button"
-                  onClick={closePlanner}
-                  className={panelIconButtonClass}
+                  onPointerDown={handlePlannerSheetDragStart}
+                  className="touch-none pointer-events-auto flex h-7 w-20 items-center justify-center rounded-full"
+                  aria-label="下にドラッグして閉じる"
                 >
-                  <span className="pointer-events-none absolute inset-[3px] rounded-full border border-white/80" />
-                  <AppIcon name="arrow_back" className="relative h-5 w-5" />
+                  <span
+                    className={`h-1.5 w-12 rounded-full transition-colors duration-200 ${
+                      isDraggingPlannerSheet ? "bg-[#9ca3af]" : "bg-[#d1d5db]"
+                    }`}
+                  />
                 </button>
-                <div className="h-9 w-9" aria-hidden />
-              </header>
-
-              <div className="flex-1 overflow-y-auto pb-32">
-                <main className="mx-auto max-w-3xl space-y-6 px-5 py-6">
-                  <section className={`${panelCardClass} relative z-20 overflow-visible`}>
-                    <h1 className="font-headline text-[1.35rem] font-bold tracking-tight text-[#111827]">AIで旅プランを作る</h1>
-                    <p className="mt-3 text-[0.9375rem] leading-7 text-[#404850]">
-                      出発地や滞在時間、移動手段、やりたいことに合わせて、岩美町での回り方を提案します。
-                      <br className="hidden sm:block" />
-                      海・駅周辺・食・体験を組み合わせたプランを、AIが複数つくります。
-                    </p>
-                  </section>
-
+              </div>
+              <div className={`relative z-30 flex items-center justify-center px-2 py-1.5 transition-opacity duration-500 ${isPlannerSheetPresented ? "opacity-100 delay-150" : "opacity-0 delay-0"}`}>
+                <h3 className="font-headline text-[15px] font-bold tracking-[0.02em] text-[#111827]">AIで旅ルートを作る</h3>
+              </div>
+              <div
+                className={`mt-3 h-px w-full bg-[#e5e7eb] transition-opacity duration-500 ease-out ${
+                  isPlannerSheetPresented ? "opacity-100 delay-150" : "opacity-0 delay-0"
+                }`}
+              />
+              <div
+                className={`mt-3 min-h-0 flex-1 overflow-hidden rounded-2xl bg-white/55 transition-[opacity,transform,filter] duration-[620ms] ease-[cubic-bezier(0.2,0.9,0.2,1)] ${
+                  isPlannerSheetPresented ? "translate-y-0 opacity-100 blur-0 delay-120" : "translate-y-5 opacity-0 blur-[2px] delay-0"
+                }`}
+              >
+                <div className="h-full overflow-y-auto p-3">
+          {plannerView === "input" ? (
+            <div className="relative flex h-full min-h-0 flex-col bg-transparent text-[#181c20]">
+              <div className="flex-1 overflow-y-auto pb-18">
+                <main className="mx-auto max-w-3xl space-y-5">
                   <section className={panelCardClass}>
                     <h2 className="font-headline mb-2 flex items-center gap-3 text-[1.125rem] font-semibold text-[#111827]">
                       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111827] text-[0.875rem] font-bold text-white shadow-sm">
@@ -1810,7 +2225,7 @@ export default function Home() {
                       出発と滞在の条件
                     </h2>
                     <p className="mb-7 text-[0.8125rem] leading-6 text-[#5f6873]">
-                      どこから出発して、どれくらい回るかをもとに、無理のないプランを組み立てます。
+                      どこから出発して、どれくらい回るかをもとに、無理のないルートを組み立てます。
                     </p>
 
                     <div className="space-y-7">
@@ -2212,7 +2627,7 @@ export default function Home() {
                       </div>
                       {mainTransports.includes("rental_cycle") ? (
                         <p className="mt-3 text-[0.75rem] leading-5 text-[#6b7580]">
-                          レンタサイクルを選ぶと、貸出場所を含めてプランを提案します。
+                          レンタサイクルを選ぶと、貸出場所を含めてルートを提案します。
                         </p>
                       ) : null}
                       {getValidationError("localTransports") ? (
@@ -2231,7 +2646,7 @@ export default function Home() {
                     <p className="mb-7 text-[0.8125rem] leading-6 text-[#5f6873]">
                       ざっくりした希望でも大丈夫です。
                       <br />
-                      景色・食・体験を組み合わせて、あなたに合うプランを提案します。
+                      景色・食・体験を組み合わせて、あなたに合うルートを提案します。
                     </p>
 
                     <div className="space-y-8">
@@ -2314,116 +2729,158 @@ export default function Home() {
                 </main>
               </div>
 
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#f9fafb] via-[#f9fafbf2] to-transparent px-5 pb-8 pt-10 backdrop-blur-sm">
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#f9fafb] via-[#f9fafbf2] to-transparent px-4 pb-3 pt-3 backdrop-blur-sm">
                 <div className="pointer-events-auto mx-auto max-w-3xl">
                   <button
-                    type="button"
-                    onClick={handleSubmitPlanRequest}
-                    disabled={!isPlanFormValid || isSubmittingPlanRequest}
-                    className={`flex w-full items-center justify-center gap-2.5 rounded-full border px-6 py-4 text-[1.0625rem] font-bold transition-all duration-200 ${
-                      isPlanFormValid && !isSubmittingPlanRequest
-                        ? "border-[#111827] bg-[#111827] text-white shadow-[0_8px_20px_rgba(17,24,39,0.26)] hover:bg-[#1f2937] hover:shadow-[0_12px_24px_rgba(17,24,39,0.34)] active:scale-[0.98]"
-                        : "cursor-not-allowed border-[#d7dae0] bg-[#e6e8ee] text-[#707881] shadow-none"
+	                    type="button"
+	                    onClick={handleSubmitPlanRequest}
+	                    disabled={isSubmittingPlanRequest}
+	                    className={`flex min-h-[44px] w-full items-center justify-center gap-2.5 rounded-full border px-6 py-2.5 text-[0.9375rem] font-bold transition-all duration-200 ${
+	                      !isSubmittingPlanRequest
+	                        ? "border-[#111827] bg-[#111827] text-white shadow-[0_8px_20px_rgba(17,24,39,0.26)] hover:bg-[#1f2937] hover:shadow-[0_12px_24px_rgba(17,24,39,0.34)] active:scale-[0.98]"
+	                        : "cursor-not-allowed border-[#d7dae0] bg-[#e6e8ee] text-[#707881] shadow-none"
                     }`}
                   >
-                    {isSubmittingPlanRequest ? "送信中..." : "AIでプランをつくる"}
+                    {isSubmittingPlanRequest ? "送信中..." : "AIで旅ルートを作る"}
                   </button>
-                  {planSubmitError ? <p className="mt-2 text-center text-xs text-[#b42318]">{planSubmitError}</p> : null}
-                  {!isPlanFormValid ? (
-                    <p className="mt-2 text-center text-xs text-[#707881]">
-                      必須項目を入力すると、AIでプランをつくれます。
-                    </p>
-                  ) : null}
+                  {planSubmitError ? <p className="mt-1.5 text-center text-[11px] text-[#b42318]">{planSubmitError}</p> : null}
+	                  {!isPlanFormValid ? <p className="mt-1.5 text-center text-[11px] text-[#707881]">テスト中のため、未入力でもプレビューできます。</p> : null}
                 </div>
               </div>
             </div>
           ) : (
-            <div className="relative flex h-full flex-col bg-transparent text-[#181c20]">
-              <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(249,250,251,0.92)_100%)] px-6 backdrop-blur-2xl">
-                <button
-                  type="button"
-                  onClick={() => setPlannerView("input")}
-                  className={panelIconButtonClass}
-                >
-                  <span className="pointer-events-none absolute inset-[3px] rounded-full border border-white/80" />
-                  <AppIcon name="arrow_back" className="relative h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={closePlanner}
-                  className={panelIconButtonClass}
-                >
-                  <span className="pointer-events-none absolute inset-[3px] rounded-full border border-white/80" />
-                  <AppIcon name="close" className="relative h-5 w-5" />
-                </button>
-              </header>
-
-              <div className="flex-1 overflow-y-auto px-6 py-8 sm:px-8">
+            <div className="relative flex h-full min-h-0 flex-col bg-transparent text-[#181c20]">
+              <div className="flex-1 overflow-y-auto">
                 {plannerView === "generating" ? (
-                  <section className={panelCardClass}>
-                    <div className="mx-auto flex max-w-[460px] flex-col items-center text-center">
-                      <div className="relative h-24 w-24">
-                        <span className="absolute inset-0 rounded-full bg-[#e5e7eb] opacity-55 blur-[2px]" />
-                        <span className="absolute inset-1 animate-ping rounded-full border border-[#9ca3af]" />
-                        <span className="absolute inset-2 rounded-full border border-[#374151]" />
-                        <span className="absolute inset-[14px] animate-spin rounded-full border-4 border-[#d1d5db] border-t-[#111827]" />
-                        <span className="absolute inset-0 flex items-center justify-center text-[#111827]">
-                          <AppIcon name="auto_awesome" filled className="h-8 w-8" />
-                        </span>
-                      </div>
+                  <section className="flex min-h-full flex-col justify-center rounded-[2rem] bg-white px-5 py-5 shadow-[0_8px_20px_rgba(17,24,39,0.06),inset_0_1px_0_rgba(255,255,255,0.96)]">
+                    <style jsx>{`
+                      .planner-shimmer {
+                        background: linear-gradient(90deg, #eff4f8 0%, #ffffff 50%, #eff4f8 100%);
+                        background-size: 200% 100%;
+                        animation: planner-shimmer 2s infinite;
+                      }
+	                      .planner-pulse-soft {
+	                        animation: planner-pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	                      }
+	                      .planner-route-glow {
+	                        animation: planner-route-glow 2.4s ease-in-out infinite;
+	                      }
+	                      .planner-route-dash {
+	                        stroke-dasharray: 7 8;
+	                        animation: planner-route-dash 1.8s linear infinite;
+	                      }
+                      @keyframes planner-shimmer {
+                        0% {
+                          background-position: 200% 0;
+                        }
+                        100% {
+                          background-position: -200% 0;
+                        }
+                      }
+                      @keyframes planner-pulse-soft {
+                        0%,
+                        100% {
+                          opacity: 1;
+                          transform: scale(1);
+                        }
+	                        50% {
+	                          opacity: 0.72;
+	                          transform: scale(0.985);
+	                        }
+	                      }
+	                      @keyframes planner-route-glow {
+	                        0%,
+	                        100% {
+	                          box-shadow: 0 10px 24px rgba(17, 24, 39, 0.12);
+	                          transform: translateY(0);
+	                        }
+	                        50% {
+	                          box-shadow: 0 14px 30px rgba(17, 24, 39, 0.18);
+	                          transform: translateY(-2px);
+	                        }
+	                      }
+	                      @keyframes planner-route-dash {
+	                        0% {
+	                          stroke-dashoffset: 0;
+	                        }
+	                        100% {
+	                          stroke-dashoffset: -30;
+	                        }
+	                      }
+	                    `}</style>
 
-                      <h3 className="font-headline mt-5 text-2xl font-bold text-[#111827]">AIが旅プランを作成中です</h3>
-                      <p className="mt-2 text-sm leading-7 text-[#404850]">岩美町で回りやすい順番を考えています。</p>
-                    </div>
+	                    <div className="mx-auto flex w-full max-w-[520px] flex-col gap-4">
+	                      <div className="planner-route-glow relative mx-auto flex h-[86px] w-[186px] items-center justify-center rounded-[1.75rem] border border-[#e5e7eb] bg-[linear-gradient(180deg,#ffffff_0%,#f5f7fa_100%)]">
+	                        <svg className="absolute inset-0 h-full w-full" viewBox="0 0 186 86" aria-hidden="true">
+	                          <path
+	                            d="M38 55 C62 20 88 72 112 37 C129 12 151 25 159 30"
+	                            fill="none"
+	                            stroke="#cbd5e1"
+	                            strokeWidth="8"
+	                            strokeLinecap="round"
+	                          />
+	                          <path
+	                            className="planner-route-dash"
+	                            d="M38 55 C62 20 88 72 112 37 C129 12 151 25 159 30"
+	                            fill="none"
+	                            stroke="#111827"
+	                            strokeWidth="3"
+	                            strokeLinecap="round"
+	                          />
+	                        </svg>
+	                        <span className="absolute left-[25px] top-[45px] h-4 w-4 rounded-full border-2 border-white bg-[#111827] shadow-sm" />
+	                        <span className="absolute left-[104px] top-[30px] h-4 w-4 rounded-full border-2 border-white bg-[#64748b] shadow-sm" />
+	                        <span className="absolute right-[21px] top-[22px] flex h-7 w-7 items-center justify-center rounded-full border border-white bg-[#111827] text-white shadow-md">
+	                          <AppIcon name="auto_awesome" filled className="h-3.5 w-3.5" />
+	                        </span>
+	                      </div>
 
-                    <div className="mt-6 space-y-2">
-                      {generationMessages.map((message, index) => {
-                        const done = index <= progressIndex;
-                        return (
-                          <div
-                            key={message}
-                            className={`rounded-xl px-3 py-2 text-sm transition-all duration-300 ${
-                              done
-                                ? "bg-[linear-gradient(180deg,#ffffff_0%,#f3f4f6_100%)] text-[#111827]"
-                                : "bg-[#f1f4f9] text-[#707881]"
-                            }`}
+	                      <div className="flex flex-col items-center gap-2 text-center">
+	                        <p className="rounded-full bg-[#eff4f8] px-3 py-1 text-[11px] font-semibold tracking-[0.08em] text-[#4b5563]">
+	                          ROUTE BUILDING
+	                        </p>
+	                        <h3 className="font-headline text-[20px] leading-7 font-bold tracking-normal text-[#172033]">
+	                          AIが旅の流れを組み立てています
+	                        </h3>
+	                        <p className="max-w-[300px] text-[14px] leading-5 text-[#43474c]">
+	                          条件に合うスポットを選び、無理なく回れる3つのルート案に整えています。
+	                        </p>
+	                      </div>
+
+                      <div className="flex flex-wrap justify-center gap-2 px-2">
+                        {generationConditionChips.map((chip) => (
+                          <span
+                            key={`${chip.icon}-${chip.label}`}
+                            className="inline-flex items-center gap-1 rounded-full border border-[#c4c6cd]/40 bg-[#eff4f8] px-3 py-1.5 text-[11px] leading-[14px] text-[#43474c]"
                           >
-                            <span
-                              className="mr-2 inline-block h-2 w-2 rounded-full align-middle"
-                              style={{ backgroundColor: done ? "#111827" : "#bfc7d1" }}
-                            />
-                            <span className="align-middle">{message}</span>
-                          </div>
-                        );
-                      })}
+                            <AppIcon name={chip.icon} className="h-3.5 w-3.5" />
+                            {chip.label}
+                          </span>
+                        ))}
+                      </div>
+
+	                      <div className="flex w-full flex-col gap-2.5">
+	                        {[0, 1, 2].map((item) => (
+	                          <div
+	                            key={item}
+	                            className="planner-shimmer planner-pulse-soft flex h-14 w-full items-center gap-3 rounded-2xl border border-[#c4c6cd]/25 bg-[#eff4f8] px-3.5 shadow-[0_4px_12px_rgba(17,24,39,0.05)]"
+	                            style={{ animationDelay: `${item * 0.2}s` }}
+	                          >
+	                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e3e9ed] text-[12px] font-bold text-[#64748b]">
+	                              {item + 1}
+	                            </div>
+	                            <div className="flex w-full flex-col gap-2">
+	                              <div className={`h-3.5 rounded bg-[#e3e9ed] ${item === 0 ? "w-2/3" : item === 1 ? "w-3/4" : "w-[58%]"}`} />
+	                              <div className={`h-2.5 rounded bg-[#e3e9ed] ${item === 0 ? "w-1/3" : item === 1 ? "w-1/2" : "w-[42%]"}`} />
+	                            </div>
+	                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="mt-5 rounded-2xl bg-[linear-gradient(180deg,#ffffff_0%,#f5f7fa_100%)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]">
-                      <p className="text-[11px] font-semibold tracking-wide text-[#111827]">補足</p>
-                      <div className="mt-2 space-y-1.5 text-xs leading-6 text-[#404850]">
-                        {generationNotes.length > 0 ? (
-                          generationNotes.map((note) => <p key={note}>・{note}</p>)
-                        ) : (
-                          <p>・入力条件をもとに、景色・食・体験のバランスを見ながらプランをまとめています。</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <div className="mb-2 flex items-center justify-between text-xs font-semibold text-[#404850]">
-                        <span>生成進捗</span>
-                        <span>{Math.round(progressPercent)}%</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-[#e0e2e8]">
-                        <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,#6b7280_0%,#111827_100%)] transition-all duration-500"
-                          style={{ width: `${progressPercent}%` }}
-                        />
-                      </div>
-                      <p className="mt-2 text-xs text-[#707881]">まもなく3つのプランが表示されます。</p>
-                      {planRequestId ? (
-                        <p className="mt-1 text-[11px] text-[#8b95a1]">受付ID: {planRequestId}</p>
-                      ) : null}
+                    <div className="sr-only" aria-live="polite">
+                      {generationMessages[progressIndex] ?? "ルート候補を作成しています"}
+                      {Math.round(progressPercent)}%
                     </div>
                   </section>
                 ) : null}
@@ -2439,7 +2896,7 @@ export default function Home() {
 
                 {plannerView === "failed" ? (
                   <section className={panelCardClass}>
-                    <h3 className="font-headline text-2xl font-bold text-[#111827]">プラン生成に失敗しました</h3>
+                    <h3 className="font-headline text-2xl font-bold text-[#111827]">ルート生成に失敗しました</h3>
                     <p className="mt-3 text-sm leading-7 text-[#b42318]">
                       {planGenerationError ?? "時間をおいて再度お試しください。"}
                     </p>
@@ -2464,8 +2921,12 @@ export default function Home() {
               </div>
             </div>
           )}
-        </aside>
-      </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      ) : null}
     </main>
   );
 }

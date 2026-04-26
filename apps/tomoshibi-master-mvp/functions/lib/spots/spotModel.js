@@ -8,6 +8,128 @@ exports.validateSpotSearchFilters = validateSpotSearchFilters;
 const businessRules_1 = require("./businessRules");
 const spotSchema_1 = require("./spotSchema");
 const spotErrors_1 = require("./spotErrors");
+function asPlainObject(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value))
+        return null;
+    return value;
+}
+function asTrimmedString(value) {
+    if (typeof value !== "string")
+        return null;
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : null;
+}
+function asNormalizedStringArray(value) {
+    if (!Array.isArray(value))
+        return [];
+    return value
+        .filter((item) => typeof item === "string")
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0);
+}
+function isDefined(value) {
+    return value !== undefined;
+}
+function derivePriceLabel(params) {
+    const current = asTrimmedString(params.currentLabel);
+    if (current)
+        return current;
+    const priceType = asTrimmedString(params.priceType);
+    const min = typeof params.priceMinYen === "number" && Number.isFinite(params.priceMinYen) ? Math.round(params.priceMinYen) : null;
+    const max = typeof params.priceMaxYen === "number" && Number.isFinite(params.priceMaxYen) ? Math.round(params.priceMaxYen) : null;
+    if (priceType === "free")
+        return "無料";
+    if (priceType === "purchase_optional")
+        return "購入時のみ料金";
+    if (priceType === "paid") {
+        if (min != null && max != null) {
+            if (min === max)
+                return `${min}円`;
+            return `${min}〜${max}円`;
+        }
+        if (min != null)
+            return `${min}円〜`;
+        if (max != null)
+            return `〜${max}円`;
+        return "有料";
+    }
+    return null;
+}
+function preprocessSpotInputForAuthoring(rawInput) {
+    const root = asPlainObject(rawInput);
+    if (!root)
+        return rawInput;
+    const next = { ...root };
+    const nameJa = asTrimmedString(root.nameJa);
+    const descriptionShort = asTrimmedString(root.descriptionShort);
+    if (!asTrimmedString(root.shortName) && nameJa) {
+        next.shortName = nameJa;
+    }
+    if (!asTrimmedString(root.descriptionLong) && descriptionShort) {
+        next.descriptionLong = descriptionShort;
+    }
+    if (!Array.isArray(root.tags)) {
+        next.tags = [];
+    }
+    if (!Array.isArray(root.secondaryCategories)) {
+        next.secondaryCategories = [];
+    }
+    if (!Array.isArray(root.relatedSpotIds)) {
+        next.relatedSpotIds = [];
+    }
+    const tags = asNormalizedStringArray(next.tags);
+    const pricing = asPlainObject(root.pricing);
+    if (pricing) {
+        const nextPricing = { ...pricing };
+        const priceType = asTrimmedString(nextPricing.priceType);
+        if (!isDefined(nextPricing.priceMinYen)) {
+            nextPricing.priceMinYen = priceType === "free" ? 0 : null;
+        }
+        if (!isDefined(nextPricing.priceMaxYen)) {
+            nextPricing.priceMaxYen = priceType === "free" ? 0 : null;
+        }
+        nextPricing.priceLabel = derivePriceLabel({
+            priceType: nextPricing.priceType,
+            priceMinYen: nextPricing.priceMinYen,
+            priceMaxYen: nextPricing.priceMaxYen,
+            currentLabel: nextPricing.priceLabel,
+        });
+        next.pricing = nextPricing;
+    }
+    const plannerAttributes = asPlainObject(root.plannerAttributes);
+    if (plannerAttributes) {
+        const nextPlannerAttributes = { ...plannerAttributes };
+        if (!Array.isArray(nextPlannerAttributes.themes)) {
+            nextPlannerAttributes.themes = tags.slice(0, 6);
+        }
+        if (!Array.isArray(nextPlannerAttributes.moodTags)) {
+            nextPlannerAttributes.moodTags = tags.slice(0, 6);
+        }
+        next.plannerAttributes = nextPlannerAttributes;
+    }
+    const planner = asPlainObject(next.plannerAttributes);
+    const themes = asNormalizedStringArray(planner?.themes);
+    const moodTags = asNormalizedStringArray(planner?.moodTags);
+    const aiContext = asPlainObject(root.aiContext);
+    const nextAiContext = { ...(aiContext ?? {}) };
+    if (!asTrimmedString(nextAiContext.plannerSummary)) {
+        nextAiContext.plannerSummary = descriptionShort ?? nameJa ?? "スポット情報";
+    }
+    if (!Array.isArray(nextAiContext.whyVisit) || asNormalizedStringArray(nextAiContext.whyVisit).length === 0) {
+        nextAiContext.whyVisit = [descriptionShort ?? `${nameJa ?? "このスポット"}を楽しめます`];
+    }
+    if (!Array.isArray(nextAiContext.bestFor) || asNormalizedStringArray(nextAiContext.bestFor).length === 0) {
+        nextAiContext.bestFor = [...themes, ...moodTags].slice(0, 4);
+    }
+    if (!Array.isArray(nextAiContext.avoidIf)) {
+        nextAiContext.avoidIf = [];
+    }
+    if (!Array.isArray(nextAiContext.sampleUseCases) || asNormalizedStringArray(nextAiContext.sampleUseCases).length === 0) {
+        nextAiContext.sampleUseCases = descriptionShort ? [descriptionShort] : [];
+    }
+    next.aiContext = nextAiContext;
+    return next;
+}
 function normalizeSpaces(value) {
     return value.replace(/\s+/g, " ").trim();
 }
@@ -112,7 +234,7 @@ function buildSearchText(input) {
         .map((value) => normalizeSpaces(value).toLowerCase())).join(" ");
 }
 function validateSpotInput(rawInput) {
-    const parsed = spotSchema_1.spotWriteInputSchema.safeParse(rawInput);
+    const parsed = spotSchema_1.spotWriteInputSchema.safeParse(preprocessSpotInputForAuthoring(rawInput));
     if (!parsed.success) {
         const details = (0, spotErrors_1.zodIssuesToSpotValidationIssues)(parsed.error.issues);
         throw new spotErrors_1.SpotValidationError(details[0]?.message ?? "Invalid spot input", details);

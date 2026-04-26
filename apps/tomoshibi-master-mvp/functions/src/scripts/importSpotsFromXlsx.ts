@@ -329,11 +329,22 @@ function buildSpotFromRow(row: SpreadsheetRow, rowNumber: number): SpotWriteInpu
     stationId: normalizeStationId(station.stationId),
   }));
 
+  const requiresFirstStop = asBoolean(row.requiresFirstStop, false);
   const requiredFirstStopReasonText = asTrimmedString(row.requiredFirstStopReason);
-  const requiredFirstStopReason = (requiredFirstStopReasonText &&
-  SPOT_REQUIRED_FIRST_STOP_REASON_VALUES.includes(requiredFirstStopReasonText as SpotRequiredFirstStopReason)
-    ? requiredFirstStopReasonText
-    : null) as SpotRequiredFirstStopReason | null;
+  const requiredFirstStopReason = (() => {
+    if (!requiresFirstStop) return null;
+    if (requiredFirstStopReasonText && SPOT_REQUIRED_FIRST_STOP_REASON_VALUES.includes(requiredFirstStopReasonText as SpotRequiredFirstStopReason)) {
+      return requiredFirstStopReasonText as SpotRequiredFirstStopReason;
+    }
+    if (requiredFirstStopReasonText) {
+      console.warn(
+        `[importSpotsFromXlsx] row ${rowNumber}: requiredFirstStopReason "${requiredFirstStopReasonText}" is not in enum. mapped to "other".`,
+      );
+    } else {
+      console.warn(`[importSpotsFromXlsx] row ${rowNumber}: requiredFirstStopReason is empty. mapped to "other".`);
+    }
+    return "other";
+  })();
 
   const parsed: SpotWriteInput = {
     id: slug,
@@ -384,7 +395,7 @@ function buildSpotFromRow(row: SpreadsheetRow, rowNumber: number): SpotWriteInpu
       parkingAvailable: asBoolean(row.parkingAvailable, false),
       bikeParkingAvailable: asBoolean(row.bikeParkingAvailable, false),
       busStopNearby: asBoolean(row.busStopNearby, false),
-      requiresFirstStop: asBoolean(row.requiresFirstStop, false),
+      requiresFirstStop,
       requiredFirstStopReason,
     },
     plannerAttributes: {

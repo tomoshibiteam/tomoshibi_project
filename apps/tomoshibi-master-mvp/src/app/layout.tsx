@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Iwami Explorer - Map",
-  description: "Iwami Explorer map home screen",
+  title: "TOMOSHIBI | 壱岐",
+  description: "TOMOSHIBI | 壱岐 map home screen",
 };
 
 export default function RootLayout({

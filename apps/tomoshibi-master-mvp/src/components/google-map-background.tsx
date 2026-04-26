@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 const MAPS_SCRIPT_ID = "iwami-google-maps-script";
 
-const IWAMI_CENTER = { lat: 35.5748, lng: 134.3324 };
+const IWAMI_CENTER = { lat: 33.7506, lng: 129.718 };
 const IWAMI_ZOOM = 15;
-const IWAMI_INITIAL_ZOOM = 12.5;
+const IWAMI_INITIAL_ZOOM = 11.7;
 const PIN_FOCUS_ZOOM = 17;
 const PIN_ENTER_DURATION_MS = 220;
 const PIN_EXIT_DURATION_MS = 170;
@@ -21,14 +21,11 @@ const MAP_MAX_ZOOM = 20;
 const MAP_GESTURE_HANDLING = "greedy" as const;
 const SPOT_DRAG_START_THRESHOLD_PX = 2;
 const DRAG_GUARD_TIMEOUT_MS = 15000;
-const WHEEL_ZOOM_STEP_IN = 0.12;
-const WHEEL_ZOOM_STEP_OUT = 0.14;
-const WHEEL_ZOOM_THROTTLE_MS = 8;
-const WHEEL_ZOOM_EASE_TIME_MS = 110;
-const WHEEL_ZOOM_BLEND_MIN = 0.1;
-const WHEEL_ZOOM_BLEND_MAX = 0.28;
-const WHEEL_ZOOM_DELTA_SCALE_MIN = 0.7;
-const WHEEL_ZOOM_DELTA_SCALE_MAX = 1.5;
+const MAP_TOUCH_ACTION_DEFAULT = "pan-x pan-y pinch-zoom";
+const PIN_WHEEL_ZOOM_STEP_IN = 0.12;
+const PIN_WHEEL_ZOOM_STEP_OUT = 0.14;
+const PIN_WHEEL_ZOOM_DELTA_SCALE_MIN = 0.7;
+const PIN_WHEEL_ZOOM_DELTA_SCALE_MAX = 1.5;
 
 const PIN_WIDTH = 68;
 const PIN_HEIGHT = 96;
@@ -611,11 +608,6 @@ class PhotoPinOverlayController {
   private dragListenersAttached = false;
   private dragGuardTimerId: number | null = null;
   private mapDivInteractionListenersAttached = false;
-  private lastWheelZoomAt = 0;
-  private wheelZoomRafId: number | null = null;
-  private wheelZoomTarget: number | null = null;
-  private wheelZoomLastFrameAt = 0;
-  private wheelZoomCenter: LatLngLiteral | null = null;
   private mapGestureLockedByDrag = false;
   private queuedPinsWhileDragging: MapPin[] | null = null;
 
@@ -679,7 +671,6 @@ class PhotoPinOverlayController {
     this.overlay.onRemove = () => {
       this.cancelAnimation();
       this.cancelFocusAnimation();
-      this.cancelWheelZoomAnimation();
       this.stopDraggingSpot();
       this.removeAllMarkerNodes();
       if (this.root?.parentNode) {
@@ -692,7 +683,6 @@ class PhotoPinOverlayController {
     this.attachMapDivInteractionListeners();
 
     if (typeof this.map.addListener === "function") {
-      this.listeners.push(this.map.addListener("zoom_changed", this.handleZoomChanged));
       this.listeners.push(this.map.addListener("click", this.handleMapClick));
       this.listeners.push(this.map.addListener("dragstart", this.handleMapInteractionStart));
     }
@@ -740,7 +730,6 @@ class PhotoPinOverlayController {
   destroy(): void {
     this.cancelAnimation();
     this.cancelFocusAnimation();
-    this.cancelWheelZoomAnimation();
     this.stopDraggingSpot();
     this.detachMapDivInteractionListeners();
     this.listeners.forEach((listener) => listener.remove());
@@ -759,7 +748,6 @@ class PhotoPinOverlayController {
     if (!mapDiv) return;
     mapDiv.addEventListener("pointerdown", this.handleMapInteractionStart, { passive: true });
     mapDiv.addEventListener("touchstart", this.handleMapInteractionStart, { passive: true });
-    mapDiv.addEventListener("wheel", this.handleMapWheel, { passive: false, capture: true });
     this.mapDivInteractionListenersAttached = true;
   }
 
@@ -769,17 +757,76 @@ class PhotoPinOverlayController {
     if (mapDiv) {
       mapDiv.removeEventListener("pointerdown", this.handleMapInteractionStart);
       mapDiv.removeEventListener("touchstart", this.handleMapInteractionStart);
-      mapDiv.removeEventListener("wheel", this.handleMapWheel, { capture: true });
     }
     this.mapDivInteractionListenersAttached = false;
   }
 
   private updateSpotNodeTouchAction(): void {
-    const nextTouchAction = this.enablePinEditing ? "none" : "manipulation";
+    const nextTouchAction = this.enablePinEditing ? "none" : MAP_TOUCH_ACTION_DEFAULT;
     for (const node of this.markerNodes.values()) {
       if (node.kind !== "spot") continue;
       node.button.style.touchAction = nextTouchAction;
     }
+  }
+
+  private handlePinWheelZoom(event: WheelEvent): void {
+    if (this.draggingNodeKey) return;
+    if (typeof this.map.getZoom !== "function") return;
+    const currentZoom = this.map.getZoom();
+    if (typeof currentZoom !== "number" || !Number.isFinite(currentZoom)) return;
+
+    const dominantDelta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    if (!Number.isFinite(dominantDelta) || Math.abs(dominantDelta) < 0.01) return;
+
+    const deltaScale = clampNumber(
+      Math.abs(dominantDelta) / 16,
+      PIN_WHEEL_ZOOM_DELTA_SCALE_MIN,
+      PIN_WHEEL_ZOOM_DELTA_SCALE_MAX,
+    );
+    const zoomStep = (dominantDelta < 0 ? PIN_WHEEL_ZOOM_STEP_IN : -PIN_WHEEL_ZOOM_STEP_OUT) * deltaScale;
+    const nextZoom = this.clampZoom(currentZoom + zoomStep);
+    if (Math.abs(nextZoom - currentZoom) < 0.0001) return;
+
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+    event.stopPropagation();
+    this.cancelFocusAnimation();
+    const currentCenter = this.readCurrentCenter(IWAMI_CENTER);
+    const pointerPixel = this.projectClientToMapPixel({
+      clientX: event.clientX,
+      clientY: event.clientY,
+    });
+    const mapRect = this.getMapViewportRect();
+    const viewportWidth = mapRect?.width ?? 0;
+    const viewportHeight = mapRect?.height ?? 0;
+
+    let nextCenter = currentCenter;
+    if (pointerPixel && viewportWidth > 0 && viewportHeight > 0) {
+      const dx = pointerPixel.x - viewportWidth / 2;
+      const dy = pointerPixel.y - viewportHeight / 2;
+
+      const centerWorldBefore = projectLatLngToWorld(currentCenter, currentZoom);
+      const anchorWorldBefore = {
+        x: centerWorldBefore.x + dx,
+        y: centerWorldBefore.y + dy,
+      };
+      const anchorLatLng = unprojectWorldToLatLng(anchorWorldBefore, currentZoom);
+
+      const anchorWorldAfter = projectLatLngToWorld(anchorLatLng, nextZoom);
+      const centerWorldAfter = {
+        x: anchorWorldAfter.x - dx,
+        y: anchorWorldAfter.y - dy,
+      };
+      const computedCenter = unprojectWorldToLatLng(centerWorldAfter, nextZoom);
+      nextCenter = {
+        lat: clampNumber(computedCenter.lat, -85.05112878, 85.05112878),
+        lng: ((computedCenter.lng + 540) % 360) - 180,
+      };
+    }
+
+    this.applyCamera(nextCenter, nextZoom);
+    this.requestDraw();
   }
 
   private cancelAnimation(): void {
@@ -794,16 +841,6 @@ class PhotoPinOverlayController {
       window.cancelAnimationFrame(this.focusRafId);
       this.focusRafId = null;
     }
-  }
-
-  private cancelWheelZoomAnimation(): void {
-    if (this.wheelZoomRafId != null) {
-      window.cancelAnimationFrame(this.wheelZoomRafId);
-      this.wheelZoomRafId = null;
-    }
-    this.wheelZoomTarget = null;
-    this.wheelZoomLastFrameAt = 0;
-    this.wheelZoomCenter = null;
   }
 
   private readonly requestDraw = () => {
@@ -939,7 +976,6 @@ class PhotoPinOverlayController {
     this.dragMoved = false;
     this.draggingSpotId = params.node.spot.id;
     this.cancelFocusAnimation();
-    this.cancelWheelZoomAnimation();
     this.clearNodeAnimationHandles(params.node);
     params.node.isExiting = false;
     params.node.button.disabled = false;
@@ -1045,10 +1081,6 @@ class PhotoPinOverlayController {
   private clampZoom(nextZoom: number): number {
     return clampNumber(nextZoom, MAP_MIN_ZOOM, MAP_MAX_ZOOM);
   }
-
-  private readonly handleZoomChanged = () => {
-    this.requestDraw();
-  };
 
   private readCurrentCenter(fallback: LatLngLiteral): LatLngLiteral {
     if (typeof this.map.getCenter === "function") {
@@ -1158,85 +1190,6 @@ class PhotoPinOverlayController {
 
   private readonly handleMapInteractionStart = () => {
     this.cancelFocusAnimation();
-    this.cancelWheelZoomAnimation();
-  };
-
-  private startWheelZoomAnimation(): void {
-    if (this.wheelZoomRafId != null) return;
-    this.wheelZoomLastFrameAt = 0;
-
-    const tick = (now: number) => {
-      const targetZoom = this.wheelZoomTarget;
-      if (targetZoom == null || typeof this.map.getZoom !== "function") {
-        this.wheelZoomCenter = null;
-        this.wheelZoomRafId = null;
-        return;
-      }
-
-      const currentZoom = this.map.getZoom();
-      if (typeof currentZoom !== "number" || !Number.isFinite(currentZoom)) {
-        this.wheelZoomRafId = null;
-        return;
-      }
-
-      const diff = targetZoom - currentZoom;
-      if (Math.abs(diff) < 0.008) {
-        const finalCenter = this.wheelZoomCenter ?? this.readCurrentCenter(IWAMI_CENTER);
-        this.applyCamera(finalCenter, targetZoom);
-        this.wheelZoomTarget = null;
-        this.wheelZoomCenter = null;
-        this.wheelZoomRafId = null;
-        this.requestDraw();
-        return;
-      }
-
-      const dt = this.wheelZoomLastFrameAt > 0 ? Math.max(1, now - this.wheelZoomLastFrameAt) : 16;
-      this.wheelZoomLastFrameAt = now;
-      const blend = this.prefersReducedMotion
-        ? 1
-        : clampNumber(1 - Math.exp(-dt / WHEEL_ZOOM_EASE_TIME_MS), WHEEL_ZOOM_BLEND_MIN, WHEEL_ZOOM_BLEND_MAX);
-      const nextZoom = this.clampZoom(currentZoom + diff * blend);
-      const center = this.wheelZoomCenter ?? this.readCurrentCenter(IWAMI_CENTER);
-      this.applyCamera(center, nextZoom);
-      this.wheelZoomRafId = window.requestAnimationFrame(tick);
-    };
-
-    this.wheelZoomRafId = window.requestAnimationFrame(tick);
-  }
-
-  private readonly handleMapWheel = (event: WheelEvent) => {
-    this.cancelFocusAnimation();
-    if (this.draggingNodeKey) return;
-    if (typeof this.map.getZoom !== "function") return;
-    const currentZoom = this.map.getZoom();
-    if (typeof currentZoom !== "number" || !Number.isFinite(currentZoom)) return;
-
-    const dominantDelta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
-    if (!Number.isFinite(dominantDelta) || Math.abs(dominantDelta) < 0.35) return;
-
-    const now = performance.now();
-    if (now - this.lastWheelZoomAt < WHEEL_ZOOM_THROTTLE_MS) {
-      event.preventDefault();
-      return;
-    }
-    this.lastWheelZoomAt = now;
-    event.preventDefault();
-    if (this.wheelZoomCenter == null) {
-      this.wheelZoomCenter = this.readCurrentCenter(IWAMI_CENTER);
-    }
-
-    const deltaScale = clampNumber(
-      Math.abs(dominantDelta) / 16,
-      WHEEL_ZOOM_DELTA_SCALE_MIN,
-      WHEEL_ZOOM_DELTA_SCALE_MAX,
-    );
-    const baseStep = dominantDelta < 0 ? WHEEL_ZOOM_STEP_IN : -WHEEL_ZOOM_STEP_OUT;
-    const zoomStep = baseStep * deltaScale;
-    const baseZoom = this.wheelZoomTarget ?? currentZoom;
-    const nextTargetZoom = this.clampZoom(baseZoom + zoomStep);
-    if (Math.abs(nextTargetZoom - baseZoom) < 0.005) return;
-    this.wheelZoomTarget = nextTargetZoom;
-    this.startWheelZoomAnimation();
   };
 
   private readonly handleWindowBlur = () => {
@@ -1426,8 +1379,11 @@ class PhotoPinOverlayController {
     button.style.background = "transparent";
     button.style.pointerEvents = "auto";
     button.style.cursor = "pointer";
-    button.style.touchAction = params.kind === "spot" && this.enablePinEditing ? "none" : "manipulation";
+    button.style.touchAction = params.kind === "spot" && this.enablePinEditing ? "none" : MAP_TOUCH_ACTION_DEFAULT;
     button.style.setProperty("-webkit-tap-highlight-color", "transparent");
+    button.addEventListener("wheel", (event) => {
+      this.handlePinWheelZoom(event);
+    }, { passive: false });
 
     const content = document.createElement("span");
     content.className = "iwami-photo-pin__content";
@@ -1994,6 +1950,7 @@ class PhotoPinOverlayController {
 
 type GoogleMapBackgroundProps = {
   className?: string;
+  cameraTarget?: { center: LatLngLiteral; zoom?: number } | null;
   focusCenter?: LatLngLiteral | null;
   pins?: MapPin[];
   enablePinEditing?: boolean;
@@ -2008,6 +1965,7 @@ type GoogleMapBackgroundProps = {
 
 export function GoogleMapBackground({
   className,
+  cameraTarget = null,
   focusCenter = null,
   pins = [],
   enablePinEditing = false,
@@ -2188,6 +2146,23 @@ export function GoogleMapBackground({
       map.fitBounds(bounds, { top: 120, right: 56, bottom: 260, left: 56 });
     }
   }, [mapReady, routeColor, routePath]);
+
+  useEffect(() => {
+    if (!cameraTarget || !mapReady) return;
+
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (typeof map.panTo === "function") {
+      map.panTo(cameraTarget.center);
+    } else if (typeof map.setCenter === "function") {
+      map.setCenter(cameraTarget.center);
+    }
+
+    if (typeof cameraTarget.zoom === "number" && Number.isFinite(cameraTarget.zoom) && typeof map.setZoom === "function") {
+      map.setZoom(clampNumber(cameraTarget.zoom, MAP_MIN_ZOOM, MAP_MAX_ZOOM));
+    }
+  }, [cameraTarget, mapReady]);
 
   useEffect(() => {
     if (!focusCenter || !mapReady) return;

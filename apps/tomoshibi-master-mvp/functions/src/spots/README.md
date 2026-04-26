@@ -15,6 +15,18 @@
   を使い分け可能にする
 - 将来拡張を見越し、重い項目は削除せず optional で先に構造化
 
+## 入力運用の最適化（重複項目の自動補完）
+
+作成/更新時 (`validateSpotInput`) で、重複しやすい項目は自動補完します。
+
+- `shortName` 未入力: `nameJa` を採用
+- `descriptionLong` 未入力: `descriptionShort` を採用
+- `pricing.priceLabel` 未入力: `priceType / priceMinYen / priceMaxYen` から自動生成
+- `plannerAttributes.themes` / `moodTags` 未入力: `tags` から補完
+- `aiContext` 未入力: `descriptionShort` / `nameJa` / `themes` / `moodTags` から補完
+
+補完は「入力を軽くするため」の前処理で、保存後の `spots` ドキュメント構造は従来どおりです。
+
 ## コレクション
 
 - `spots/{slug}`

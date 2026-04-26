@@ -68,6 +68,38 @@ describe("spotModel validation", () => {
     expect(normalized.business.operationalJudgement).toBeDefined();
   });
 
+  it("auto-fills duplicated authoring fields when omitted", () => {
+    const raw = buildValidSpotInput();
+    const authoringInput = {
+      ...raw,
+      tags: ["壱岐", "海景観", "写真映え", "ゆったり"],
+      pricing: {
+        ...raw.pricing,
+        priceLabel: null,
+      },
+      plannerAttributes: {
+        ...raw.plannerAttributes,
+      },
+    } as Record<string, unknown>;
+
+    delete authoringInput.shortName;
+    delete authoringInput.descriptionLong;
+    delete (authoringInput.plannerAttributes as Record<string, unknown>).themes;
+    delete (authoringInput.plannerAttributes as Record<string, unknown>).moodTags;
+    delete authoringInput.aiContext;
+
+    const validated = validateSpotInput(authoringInput);
+    const normalized = normalizeSpotData(validated);
+
+    expect(normalized.shortName).toBe(normalized.nameJa);
+    expect(normalized.descriptionLong).toBe(normalized.descriptionShort);
+    expect(normalized.pricing.priceLabel).toBe("無料");
+    expect(normalized.plannerAttributes.themes.length).toBeGreaterThan(0);
+    expect(normalized.plannerAttributes.moodTags.length).toBeGreaterThan(0);
+    expect(normalized.aiContext.plannerSummary.length).toBeGreaterThan(0);
+    expect(normalized.aiContext.whyVisit.length).toBeGreaterThan(0);
+  });
+
   it("buildSearchText concatenates name, tags and descriptions", () => {
     const searchText = buildSearchText({
       nameJa: "浦富海岸",

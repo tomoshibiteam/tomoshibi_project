@@ -239,11 +239,22 @@ function buildSpotFromRow(row, rowNumber) {
         ...station,
         stationId: normalizeStationId(station.stationId),
     }));
+    const requiresFirstStop = asBoolean(row.requiresFirstStop, false);
     const requiredFirstStopReasonText = asTrimmedString(row.requiredFirstStopReason);
-    const requiredFirstStopReason = (requiredFirstStopReasonText &&
-        spotConstants_1.SPOT_REQUIRED_FIRST_STOP_REASON_VALUES.includes(requiredFirstStopReasonText)
-        ? requiredFirstStopReasonText
-        : null);
+    const requiredFirstStopReason = (() => {
+        if (!requiresFirstStop)
+            return null;
+        if (requiredFirstStopReasonText && spotConstants_1.SPOT_REQUIRED_FIRST_STOP_REASON_VALUES.includes(requiredFirstStopReasonText)) {
+            return requiredFirstStopReasonText;
+        }
+        if (requiredFirstStopReasonText) {
+            console.warn(`[importSpotsFromXlsx] row ${rowNumber}: requiredFirstStopReason "${requiredFirstStopReasonText}" is not in enum. mapped to "other".`);
+        }
+        else {
+            console.warn(`[importSpotsFromXlsx] row ${rowNumber}: requiredFirstStopReason is empty. mapped to "other".`);
+        }
+        return "other";
+    })();
     const parsed = {
         id: slug,
         slug,
@@ -293,7 +304,7 @@ function buildSpotFromRow(row, rowNumber) {
             parkingAvailable: asBoolean(row.parkingAvailable, false),
             bikeParkingAvailable: asBoolean(row.bikeParkingAvailable, false),
             busStopNearby: asBoolean(row.busStopNearby, false),
-            requiresFirstStop: asBoolean(row.requiresFirstStop, false),
+            requiresFirstStop,
             requiredFirstStopReason,
         },
         plannerAttributes: {
