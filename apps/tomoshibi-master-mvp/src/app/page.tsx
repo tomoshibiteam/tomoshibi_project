@@ -37,6 +37,11 @@ type IconName =
   | "schedule"
   | "landscape"
   | "history_edu"
+  | "pin_drop"
+  | "arrow_right_alt"
+  | "lightbulb"
+  | "star"
+  | "route"
   | "person_circle"
   | "logout";
 
@@ -1657,8 +1662,8 @@ export default function Home() {
         onDeleted={handleSpotAdminDeleted}
       />
 
-      <div className="absolute right-6 z-40" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 164px)" }}>
-        <div className="flex flex-col items-end gap-2">
+      <div className="absolute top-6 left-6 z-50">
+        <div className="flex flex-col items-start gap-2">
           <button
             type="button"
             onClick={handleLocateCurrentPosition}
@@ -2032,7 +2037,7 @@ export default function Home() {
               transitionDuration: isDraggingPlanResultSheet ? "0ms" : undefined,
             }}
           >
-            <div className="explore-sheet-surface is-open pointer-events-auto relative mx-auto flex w-full flex-col overflow-hidden border border-[#e5e7eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(249,250,251,0.9)_100%)] shadow-[0_22px_42px_rgba(17,24,39,0.14),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-2xl transition-[max-width,height,margin,border-radius,padding,transform,box-shadow] duration-[780ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[max-width,height,margin,border-radius,padding,transform,box-shadow] mb-0 h-[78vh] min-h-[420px] max-h-[900px] max-w-[2000px] rounded-t-[2.1rem] rounded-b-none px-3 pt-2 pb-4 translate-y-0">
+            <div className="explore-sheet-surface is-open pointer-events-auto relative mx-auto flex w-full flex-col overflow-hidden border border-[#e5e7eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(249,250,251,0.9)_100%)] shadow-[0_22px_42px_rgba(17,24,39,0.14),inset_0_1px_0_rgba(255,255,255,0.92)] backdrop-blur-2xl transition-[max-width,height,margin,border-radius,padding,transform,box-shadow] duration-[780ms] ease-[cubic-bezier(0.16,1,0.3,1)] will-change-[max-width,height,margin,border-radius,padding,transform,box-shadow] mb-0 h-[50vh] min-h-[320px] max-h-[620px] max-w-[2000px] rounded-t-[2.1rem] rounded-b-none px-3 pt-2 pb-4 translate-y-0">
               <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent" />
               <div className="mx-auto mb-2 flex w-full items-center justify-center">
                 <button
@@ -2054,7 +2059,16 @@ export default function Home() {
               <div className="mt-3 h-px w-full bg-[#e5e7eb]" />
               <div className="mt-3 min-h-0 flex-1 overflow-hidden rounded-2xl bg-white/55">
                 <div className="h-full overflow-y-auto p-3">
-                  <div className="flex gap-2 overflow-x-auto px-1 pb-2">
+                  <div className="px-1 pb-3">
+                    <h2 className="font-headline text-[20px] leading-7 font-bold text-[#2c3e50]">
+                      AIが3つのルートを提案しました
+                    </h2>
+                    <p className="mt-1 text-[13px] leading-5 text-[#43474c]">
+                      条件に合わせて、回り方の違う3案を作成しました
+                    </p>
+                  </div>
+
+                  <div className="flex w-full rounded-full bg-[#e9eff3] p-1 shadow-inner">
                     {(planResult?.plans ?? []).map((plan, index) => {
                       const selected = plan.id === activePlanResult.id;
                       return (
@@ -2065,37 +2079,112 @@ export default function Home() {
                             setActivePlanResultId(plan.id);
                             setSelectedPlanResultSpotId(null);
                           }}
-                          className={`min-w-[160px] rounded-2xl border px-3 py-2 text-left transition-all ${
+                          className={`flex-1 rounded-full px-3 py-1.5 text-center transition-all ${
                             selected
-                              ? "border-[#111827] bg-[#111827] text-white shadow-[0_10px_18px_rgba(17,24,39,0.22)]"
-                              : "border-[#d1d5db] bg-white text-[#1f2937] hover:bg-[#f8fafc]"
+                              ? "bg-white text-[#2c3e50] shadow-[0_2px_4px_rgba(17,24,39,0.08)]"
+                              : "text-[#43474c] hover:text-[#2c3e50]"
                           }`}
                         >
-                          <p className="text-[12px] font-bold tracking-[0.04em]">候補{index + 1}</p>
+                          <span className={`text-[12px] ${selected ? "font-bold" : "font-medium"}`}>ルート{index + 1}</span>
                         </button>
                       );
                     })}
                   </div>
-                  <div className="mt-1 rounded-2xl bg-white/70 p-3">
-                    <p className="text-[11px] font-semibold tracking-[0.08em] text-[#64748b]">コース一覧</p>
-                    <div className="mt-2 space-y-1.5">
-                      {(planResult?.plans ?? []).map((plan, index) => {
-                        const selected = plan.id === activePlanResult.id;
-                        return (
-                          <p key={`course-name-${plan.id}`} className={`text-[12px] ${selected ? "font-semibold text-[#0f172a]" : "text-[#475569]"}`}>
-                            候補{index + 1}: {plan.title}コース
+
+                  <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {(planResult?.plans ?? []).map((plan, index) => {
+                      const selected = plan.id === activePlanResult.id;
+                      const waypoints = plan.timeline.map((item) => item.spotName).slice(0, 5);
+                      return (
+                        <article
+                          key={`route-card-${plan.id}`}
+                          className={`relative flex min-w-[85vw] snap-center flex-col overflow-hidden rounded-2xl border p-3 shadow-[0_4px_12px_rgba(17,24,39,0.05)] md:min-w-[400px] ${
+                            selected
+                              ? "border-[#b5c8df]/50 bg-[#f4fafe]"
+                              : "border-[#c4c6cd]/30 bg-white"
+                          }`}
+                        >
+                          {index === 0 ? (
+                            <div className="absolute top-0 right-0 flex items-center rounded-bl-lg bg-[#d1e4fb] px-2 py-0.5 text-[10px] font-bold text-[#091d2e]">
+                              <AppIcon name="star" filled className="mr-1 h-2.5 w-2.5" />
+                              おすすめ
+                            </div>
+                          ) : null}
+
+                          <h3 className="pr-20 text-[16px] leading-6 font-bold text-[#2c3e50]">
+                            {plan.title}コース
+                          </h3>
+                          <div className="mt-1 mb-2 flex items-center gap-2 text-[11px] text-[#43474c]">
+                            <span className="flex items-center">
+                              <AppIcon name="schedule" className="mr-1 h-3 w-3" />
+                              {Math.round(plan.estimatedDurationMinutes / 60 * 10) / 10}時間
+                            </span>
+                            <span className="flex items-center">
+                              <AppIcon name="pin_drop" className="mr-1 h-3 w-3" />
+                              {plan.timeline.length}スポット
+                            </span>
+                          </div>
+
+                          <div className="mb-2 flex min-h-[42px] items-center overflow-hidden rounded-lg bg-[#eff4f8] p-2">
+                            {waypoints.length > 0 ? (
+                              <div className="flex min-w-0 flex-nowrap items-center gap-1 overflow-hidden text-[10px] text-[#43474c]">
+                                {waypoints.map((name, waypointIndex) => (
+                                  <span key={`${plan.id}-${name}-${waypointIndex}`} className="flex min-w-0 items-center gap-1">
+                                    <span className="max-w-[70px] truncate font-bold text-[#2c3e50]">{name}</span>
+                                    {waypointIndex < waypoints.length - 1 ? (
+                                      <AppIcon name="arrow_right_alt" className="h-3 w-3 shrink-0 text-[#9ca3af]" />
+                                    ) : null}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="flex items-center text-[10px] text-[#43474c]">
+                                <AppIcon name="route" className="mr-1 h-3.5 w-3.5" />
+                                ルート概要は詳細で確認できます
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="mb-3 line-clamp-1 text-[12px] text-[#43474c]">
+                            <AppIcon name="lightbulb" className="mr-1 inline h-3.5 w-3.5 align-text-bottom text-[#1f6773]" />
+                            {plan.reasonWhyRecommended}
                           </p>
-                        );
-                      })}
-                    </div>
+
+                          <div className="mt-auto flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActivePlanResultId(plan.id);
+                                setSelectedPlanResultSpotId(null);
+                              }}
+                              className="flex-1 rounded-full bg-[#2c3e50] py-2 text-center text-[12px] font-bold text-white transition-opacity hover:opacity-90"
+                            >
+                              このルートを使う
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActivePlanResultId(plan.id);
+                                setSelectedPlanResultSpotId(null);
+                              }}
+                              className="flex-1 rounded-full bg-[#e9eff3] py-2 text-center text-[12px] font-bold text-[#2c3e50] transition-colors hover:bg-[#e3e9ed]"
+                            >
+                              詳細を見る
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
-                  <div className="mt-2 rounded-2xl bg-white/70 p-3">
+
+                  <div className="mt-1 rounded-2xl bg-white/70 p-3">
                     <p className="text-[13px] font-semibold text-[#0f172a]">{activePlanResult.reasonWhyRecommended}</p>
                     <p className="mt-1 text-[12px] leading-6 text-[#475569]">{activePlanResult.matchSummary}</p>
                     <p className="mt-2 text-[11px] font-medium text-[#64748b]">
                       想定所要時間: {activePlanResult.estimatedDurationMinutes}分
                     </p>
                   </div>
+
                   <div className="mt-2 rounded-2xl bg-white/60 p-3">
                     <ol className="space-y-2">
                       {activePlanTimelineWithLocations.map((item, index) => {
