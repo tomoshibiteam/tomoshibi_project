@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.listTransitServices = exports.listTransitCalendars = exports.listOriginReturnStations = exports.listBusStopCandidates = exports.getNextTrips = exports.getOutgoingSchedules = exports.getNode = exports.searchSpots = exports.listSpotsByCategory = exports.listSpots = exports.getSpotById = exports.updateSpot = exports.deleteSpot = exports.createSpot = exports.searchSpotsCallable = exports.listSpotsByCategoryCallable = exports.listSpotsCallable = exports.getSpotByIdCallable = exports.updateSpotCallable = exports.uploadSpotImageCallable = exports.deleteSpotCallable = exports.createSpotCallable = exports.computeApproximateRouteMatrix = exports.runPlanGenerationWithFailureHandling = exports.generatePlans = exports.buildPlanGenerationPrompt = exports.updatePlanRequestStatus = exports.savePlanRequestError = exports.savePlanRequestResult = exports.savePlanRequest = exports.normalizePlanRequest = exports.validatePlanRequestInput = exports.onPlanRequestCreated = exports.getPlanRequestStatus = exports.createPlanRequest = void 0;
+exports.trackOutboundClick = exports.listGuideSessionMessages = exports.getJourneyMemory = exports.listJourneyMemories = exports.completeJourney = exports.updateCharacterCustomization = exports.getCharacterCustomization = exports.getAvailableCharacters = exports.getUserCompanionState = exports.getActiveGuideSession = exports.saveUserFeedback = exports.respondToCompanion = exports.suggestGuideRoute = exports.createGuideSession = exports.tomoshibiAiHealth = exports.listTransitServices = exports.listTransitCalendars = exports.listOriginReturnStations = exports.listBusStopCandidates = exports.getNextTrips = exports.getOutgoingSchedules = exports.getNode = exports.searchSpots = exports.listSpotsByCategory = exports.listSpots = exports.getSpotById = exports.updateSpot = exports.deleteSpot = exports.createSpot = exports.searchSpotsCallable = exports.listSpotsByCategoryCallable = exports.listSpotsCallable = exports.getSpotByIdCallable = exports.updateSpotCallable = exports.uploadSpotImageCallable = exports.deleteSpotCallable = exports.createSpotCallable = exports.computeApproximateRouteMatrix = exports.runPlanGenerationWithFailureHandling = exports.generatePlans = exports.buildPlanGenerationPrompt = exports.updatePlanRequestStatus = exports.savePlanRequestError = exports.savePlanRequestResult = exports.savePlanRequest = exports.normalizePlanRequest = exports.validatePlanRequestInput = exports.onPlanRequestCreated = exports.getPlanRequestStatus = exports.createPlanRequest = void 0;
 var create_plan_request_1 = require("./create-plan-request");
 Object.defineProperty(exports, "createPlanRequest", { enumerable: true, get: function () { return create_plan_request_1.createPlanRequest; } });
 var get_plan_request_status_1 = require("./get-plan-request-status");
@@ -48,4 +48,20 @@ Object.defineProperty(exports, "listBusStopCandidates", { enumerable: true, get:
 Object.defineProperty(exports, "listOriginReturnStations", { enumerable: true, get: function () { return repository_2.listOriginReturnStations; } });
 Object.defineProperty(exports, "listTransitCalendars", { enumerable: true, get: function () { return repository_2.listTransitCalendars; } });
 Object.defineProperty(exports, "listTransitServices", { enumerable: true, get: function () { return repository_2.listTransitServices; } });
+var aiCompanion_1 = require("./aiCompanion");
+Object.defineProperty(exports, "tomoshibiAiHealth", { enumerable: true, get: function () { return aiCompanion_1.health; } });
+Object.defineProperty(exports, "createGuideSession", { enumerable: true, get: function () { return aiCompanion_1.createGuideSession; } });
+Object.defineProperty(exports, "suggestGuideRoute", { enumerable: true, get: function () { return aiCompanion_1.suggestGuideRoute; } });
+Object.defineProperty(exports, "respondToCompanion", { enumerable: true, get: function () { return aiCompanion_1.respondToCompanion; } });
+Object.defineProperty(exports, "saveUserFeedback", { enumerable: true, get: function () { return aiCompanion_1.saveUserFeedback; } });
+Object.defineProperty(exports, "getActiveGuideSession", { enumerable: true, get: function () { return aiCompanion_1.getActiveGuideSession; } });
+Object.defineProperty(exports, "getUserCompanionState", { enumerable: true, get: function () { return aiCompanion_1.getUserCompanionState; } });
+Object.defineProperty(exports, "getAvailableCharacters", { enumerable: true, get: function () { return aiCompanion_1.getAvailableCharacters; } });
+Object.defineProperty(exports, "getCharacterCustomization", { enumerable: true, get: function () { return aiCompanion_1.getCharacterCustomization; } });
+Object.defineProperty(exports, "updateCharacterCustomization", { enumerable: true, get: function () { return aiCompanion_1.updateCharacterCustomization; } });
+Object.defineProperty(exports, "completeJourney", { enumerable: true, get: function () { return aiCompanion_1.completeJourney; } });
+Object.defineProperty(exports, "listJourneyMemories", { enumerable: true, get: function () { return aiCompanion_1.listJourneyMemories; } });
+Object.defineProperty(exports, "getJourneyMemory", { enumerable: true, get: function () { return aiCompanion_1.getJourneyMemory; } });
+Object.defineProperty(exports, "listGuideSessionMessages", { enumerable: true, get: function () { return aiCompanion_1.listGuideSessionMessages; } });
+Object.defineProperty(exports, "trackOutboundClick", { enumerable: true, get: function () { return aiCompanion_1.trackOutboundClick; } });
 //# sourceMappingURL=index.js.map

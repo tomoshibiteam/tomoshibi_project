@@ -10,3 +10,4 @@ export { computeApproximateRouteMatrix } from "./routing/approximateRouteMatrix"
 export { createSpotCallable, deleteSpotCallable, uploadSpotImageCallable, updateSpotCallable, getSpotByIdCallable, listSpotsCallable, listSpotsByCategoryCallable, searchSpotsCallable, } from "./spots/spotFunctions";
 export { createSpot, deleteSpot, updateSpot, getSpotById, listSpots, listSpotsByCategory, searchSpots, } from "./spots/spotService";
 export { getNode, getOutgoingSchedules, getNextTrips, listBusStopCandidates, listOriginReturnStations, listTransitCalendars, listTransitServices, } from "./transit/repository";
+export { health as tomoshibiAiHealth, createGuideSession, suggestGuideRoute, respondToCompanion, saveUserFeedback, getActiveGuideSession, getUserCompanionState, getAvailableCharacters, getCharacterCustomization, updateCharacterCustomization, completeJourney, listJourneyMemories, getJourneyMemory, listGuideSessionMessages, trackOutboundClick, } from "./aiCompanion";

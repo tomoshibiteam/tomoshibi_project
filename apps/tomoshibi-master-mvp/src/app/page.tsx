@@ -1,6 +1,39 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  completeJourney,
+  createGuideSession,
+  getActiveGuideSession,
+  getAvailableCharacters,
+  getCharacterCustomization,
+  getUserCompanionState,
+  listGuideSessionMessages,
+  listJourneyMemories,
+  respondToCompanion,
+  saveUserFeedback,
+  suggestGuideRoute,
+  TOMOSHIBI_AI_DEFAULT_CHARACTER_ID,
+  TOMOSHIBI_AI_DEFAULT_USER_ID,
+  updateCharacterCustomization,
+} from "@/lib/tomoshibi-ai-api";
+import type {
+  Character,
+  CharacterPart,
+  CharacterPartCategory,
+  CharacterPartSelection,
+  CompanionGuideOutput,
+  GetCharacterCustomizationOutput,
+  GeoPointInput,
+  GuideSessionMessage,
+  JourneyMemory,
+  Mobility,
+  Relationship,
+  RespondToCompanionOutput,
+  SaveUserFeedbackInput,
+  RoutePlan,
+  UserCharacterCustomization,
+} from "@/lib/tomoshibi-ai-types";
 
 // ═══════════════════════════════════════════════════════════
 // SVG コンポーネント
@@ -108,59 +141,315 @@ type Message = {
   type: "companion" | "user" | "suggestion";
   text?: string;
   suggestion?: SuggestionData;
+  actions?: RespondToCompanionOutput["nextActions"];
 };
 
-// ═══════════════════════════════════════════════════════════
-// データ
-// ═══════════════════════════════════════════════════════════
+type CompanionActionButton = NonNullable<RespondToCompanionOutput["nextActions"]>[number];
 
-const SUGGESTION_BEACH: SuggestionData = {
-  id: "s1",
-  title: "夕暮れの浜辺へ",
-  place: "辰ノ島",
-  region: "壱岐",
-  quote: "ここで夕日を見てほしかったんだ。海の向こうに落ちていく光が、なんか…言葉にならなくて。",
-  highlightWords: ["夕日", "言葉にならなくて"],
-  walkTime: "徒歩15分",
-  distance: "1.2km",
-  rating: "4.8",
-  category: "海辺",
-  categoryEmoji: "🌊",
-  storyText: "断崖の上に立つと、水平線が丸く見える。古くから漁師たちが灯台代わりに仰いできたというこの場所は、夕暮れ時になると空と海の境界が溶け合い、世界の果てにいるような錯覚を覚える。誰かと一緒に来たとき、二人ともしばらく言葉を失った——そんな話を、地元の老人から聞いた……",
-  tags: ["絶景", "夕日", "海辺", "ひとり旅", "カップル"],
+type CharacterCustomizationState = {
+  customization: UserCharacterCustomization;
+  availableParts: CharacterPart[];
+  defaultAppearance?: GetCharacterCustomizationOutput["defaultAppearance"];
 };
 
-const SUGGESTION_CASTLE: SuggestionData = {
-  id: "s2",
-  title: "隠れた絶景スポット",
-  place: "勝本城跡",
-  region: "壱岐",
-  quote: "あなたが歴史好きって話してたの、覚えてるよ。ここ、きっと気に入ると思う。",
-  highlightWords: ["歴史好き", "覚えてる"],
-  walkTime: "車で20分",
-  distance: "8.5km",
-  rating: "4.6",
-  category: "歴史",
-  categoryEmoji: "🏯",
-  storyText: "戦国時代、対馬を望むこの丘に築かれた小さな城。今は石垣と眺望だけが残るが、かつてここに立った武将たちも、同じ海を見ていた。草に覆われた石段を登り切ったとき、眼下に広がる紺碧の入り江は——地図には載っていない、知る人ぞ知る景色だ……",
-  tags: ["歴史", "城跡", "絶景", "穴場", "散策"],
+type GuideAreaMode = "nearby" | "iki";
+type GuideOriginMode = "current" | "manual";
+
+type GuidePreferenceState = {
+  areaMode: GuideAreaMode;
+  originMode: GuideOriginMode;
+  manualOrigin: GeoPointInput;
+  availableMinutes: number;
+  mobility: Mobility;
+  interests: string[];
+  mood: string;
 };
 
-const INITIAL_MESSAGES: Message[] = [
-  { id: "1", type: "companion", text: "来てくれたんだね。ちょうど話したいことがあったんだ。" },
-  { id: "2", type: "companion", text: "昨日ね、ずっと気になってた場所を調べてたんだよ。" },
-  { id: "3", type: "suggestion", suggestion: SUGGESTION_BEACH },
-  { id: "4", type: "companion", text: "一緒に行ってみない？" },
+const GUIDE_AREA_OPTIONS: { value: GuideAreaMode; label: string }[] = [
+  { value: "nearby", label: "現在地周辺" },
+  { value: "iki", label: "壱岐" },
 ];
 
-const COMPANION_REPLIES = [
-  "そうなんだ。もう少し聞かせてくれる？",
-  "なるほど…ちょっと考えさせて。",
-  "うん、わかった。それ覚えておくね。",
-  "それ、すごく素敵だと思う。",
-  "ふふ、あなたらしいね。",
-  "そういえばね、気になる場所がまた一個増えたんだ。",
+const GUIDE_ORIGIN_PRESETS: { id: string; label: string; origin: GeoPointInput; areaMode?: GuideAreaMode }[] = [
+  { id: "tokyo_station", label: "東京駅", origin: { lat: 35.681236, lng: 139.767125, label: "東京駅" }, areaMode: "nearby" },
+  { id: "iki_center", label: "壱岐中心", origin: { lat: 33.749, lng: 129.69, label: "壱岐" }, areaMode: "iki" },
+  { id: "gonoura", label: "郷ノ浦", origin: { lat: 33.7459, lng: 129.6896, label: "郷ノ浦" }, areaMode: "iki" },
+  { id: "ashibe", label: "芦辺", origin: { lat: 33.8002, lng: 129.7364, label: "芦辺" }, areaMode: "iki" },
 ];
+
+const GUIDE_MINUTE_OPTIONS = [20, 30, 45, 60];
+
+const GUIDE_MOBILITY_OPTIONS: { value: Mobility; label: string }[] = [
+  { value: "walk", label: "徒歩" },
+  { value: "bike", label: "自転車" },
+  { value: "car", label: "車" },
+  { value: "public_transport", label: "公共交通" },
+];
+
+const GUIDE_INTEREST_OPTIONS = [
+  { value: "cafe", label: "カフェ" },
+  { value: "quiet", label: "静か" },
+  { value: "history", label: "歴史" },
+  { value: "shrine", label: "神社" },
+  { value: "scenic", label: "景色" },
+  { value: "sea", label: "海" },
+  { value: "local_story", label: "土地の話" },
+];
+
+const DEFAULT_GUIDE_PREFERENCES: GuidePreferenceState = {
+  areaMode: "nearby",
+  originMode: "current",
+  manualOrigin: GUIDE_ORIGIN_PRESETS[0].origin,
+  availableMinutes: 30,
+  mobility: "walk",
+  interests: ["cafe", "quiet"],
+  mood: "少し外に出たい",
+};
+
+type GoogleMapInstance = {
+  setCenter(center: { lat: number; lng: number }): void;
+  setZoom(zoom: number): void;
+  fitBounds(bounds: GoogleMapBoundsInstance): void;
+};
+
+type GoogleMapBoundsInstance = {
+  extend(latLng: { lat: number; lng: number }): void;
+};
+
+type GoogleMapMarkerInstance = {
+  setMap(map: GoogleMapInstance | null): void;
+};
+
+type GoogleMapsWindow = Window & {
+  __tomoshibiMasterMvpGoogleMapsLoaded?: () => void;
+  google?: {
+    maps?: {
+      Map?: new (
+        mapElement: HTMLElement,
+        options: {
+          center: { lat: number; lng: number };
+          zoom: number;
+          disableDefaultUI?: boolean;
+          clickableIcons?: boolean;
+          gestureHandling?: "cooperative" | "greedy" | "none" | "auto";
+          keyboardShortcuts?: boolean;
+          mapTypeControl?: boolean;
+          streetViewControl?: boolean;
+          fullscreenControl?: boolean;
+          zoomControl?: boolean;
+          styles?: Array<Record<string, unknown>>;
+        },
+      ) => GoogleMapInstance;
+      Marker?: new (options: {
+        map: GoogleMapInstance;
+        position: { lat: number; lng: number };
+        title?: string;
+        icon?: {
+          path: string;
+          fillColor: string;
+          fillOpacity: number;
+          strokeColor: string;
+          strokeWeight: number;
+          scale: number;
+          anchor?: { x: number; y: number };
+        };
+      }) => GoogleMapMarkerInstance;
+      LatLngBounds?: new () => GoogleMapBoundsInstance;
+      Point?: new (x: number, y: number) => { x: number; y: number };
+      SymbolPath?: { CIRCLE: string };
+    };
+  };
+};
+
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
+const MASTER_MVP_MAP_SCRIPT_ID = "tomoshibi-master-mvp-google-maps-script";
+const MASTER_MVP_MAP_CALLBACK = "__tomoshibiMasterMvpGoogleMapsLoaded";
+const DEFAULT_MAP_CENTER = { lat: 35.681236, lng: 139.767125 };
+const DEFAULT_MAP_ZOOM = 12;
+
+let googleMapsScriptPromise: Promise<void> | null = null;
+
+function loadGoogleMapsScript(apiKey: string): Promise<void> {
+  if (!apiKey) {
+    return Promise.reject(new Error("NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing"));
+  }
+
+  const mapsWindow = window as GoogleMapsWindow;
+  if (mapsWindow.google?.maps?.Map) {
+    return Promise.resolve();
+  }
+
+  if (googleMapsScriptPromise) {
+    return googleMapsScriptPromise;
+  }
+
+  googleMapsScriptPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.getElementById(MASTER_MVP_MAP_SCRIPT_ID) as HTMLScriptElement | null;
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    mapsWindow.__tomoshibiMasterMvpGoogleMapsLoaded = () => {
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.id = MASTER_MVP_MAP_SCRIPT_ID;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=ja&region=JP&loading=async&callback=${MASTER_MVP_MAP_CALLBACK}`;
+    script.async = true;
+    script.defer = true;
+    script.addEventListener(
+      "error",
+      () => {
+        googleMapsScriptPromise = null;
+        delete mapsWindow.__tomoshibiMasterMvpGoogleMapsLoaded;
+        reject(new Error("Failed to load Google Maps script"));
+      },
+      { once: true },
+    );
+    document.head.appendChild(script);
+  });
+
+  return googleMapsScriptPromise;
+}
+
+function routePlanToSuggestion(route: RoutePlan, companion?: CompanionGuideOutput | null): SuggestionData {
+  const firstPlace = route.places[0]?.place;
+  const routeSummary = companion?.routeSummaries.find((summary) => summary.routeId === route.id);
+  const tags = route.tags.length > 0 ? route.tags : firstPlace?.tomoshibiTags ?? firstPlace?.types ?? [];
+  const primaryTag = tags[0] ?? "外出";
+
+  return {
+    id: route.id,
+    title: route.title,
+    place: firstPlace?.name ?? "現在地周辺",
+    region: firstPlace?.address ?? "現在地から",
+    quote: routeSummary?.companionComment ?? routeSummary?.whyRecommended ?? route.concept,
+    highlightWords: [],
+    walkTime: `${route.estimatedMinutes}分`,
+    distance: route.totalDistanceMeters ? `${(route.totalDistanceMeters / 1000).toFixed(1)}km` : `${route.places.length}箇所`,
+    rating: typeof firstPlace?.rating === "number" ? firstPlace.rating.toFixed(1) : `${Math.round(route.score)}`,
+    category: primaryTag,
+    categoryEmoji: "📍",
+    storyText:
+      routeSummary?.whyRecommended ??
+      firstPlace?.localStory?.short ??
+      `${route.concept} ${route.places.map((item) => item.place.name).join("、")}をめぐる候補です。`,
+    tags: tags.slice(0, 5),
+  };
+}
+
+function routePlanToActions(route: RoutePlan): CompanionActionButton[] {
+  const firstPlace = route.places[0]?.place;
+  const payload = firstPlace ? { routeId: route.id, placeId: firstPlace.providerPlaceId } : { routeId: route.id };
+  return [
+    { label: "もっと知る", action: "tell_more", payload },
+    { label: "保存", action: "save_place", payload },
+    { label: "行った", action: "visited", payload },
+  ];
+}
+
+function guideSessionMessageToMessage(message: GuideSessionMessage): Message {
+  return {
+    id: message.id,
+    type: message.role === "user" ? "user" : "companion",
+    text: message.content,
+  };
+}
+
+function isCompanionActionType(value: string): value is NonNullable<Parameters<typeof respondToCompanion>[0]["action"]>["type"] {
+  return [
+    "tell_more",
+    "change_mood",
+    "skip_place",
+    "save_place",
+    "arrived",
+    "visited",
+    "liked",
+    "not_interested",
+    "next_suggestion",
+  ].includes(value);
+}
+
+function feedbackTypeForUiAction(action: string): SaveUserFeedbackInput["type"] | null {
+  if (action === "save_place" || action === "save_route") return "saved";
+  if (action === "visited") return "visited";
+  if (action === "arrived") return "arrived";
+  if (action === "liked") return "liked";
+  if (action === "not_interested") return "not_interested";
+  if (action === "skip_place") return "skipped";
+  if (action === "start_route") return "route_selected";
+  return null;
+}
+
+function feedbackMessageForAction(action: string): string {
+  if (action === "save_place" || action === "save_route") return "保存しました。次の提案にも反映します。";
+  if (action === "visited") return "行った記録を残しました。今日のおしまいで思い出にまとめます。";
+  if (action === "arrived") return "到着を記録しました。";
+  if (action === "liked") return "気に入った記録を残しました。";
+  if (action === "not_interested") return "興味なしとして記録しました。";
+  if (action === "skip_place") return "この候補はスキップしました。";
+  if (action === "start_route") return "このルートを選びました。";
+  return "操作を記録しました。";
+}
+
+function companionActionKey(messageId: string, action: CompanionActionButton, index: number): string {
+  const payload = action.payload ?? {};
+  const placeId = typeof payload.placeId === "string" ? payload.placeId : "";
+  const routeId = typeof payload.routeId === "string" ? payload.routeId : "";
+  return `${messageId}-${index}-${action.action}-${action.label}-${routeId}-${placeId}`;
+}
+
+function getBrowserLocation(): Promise<{ lat: number; lng: number }> {
+  return new Promise((resolve, reject) => {
+    if (!("geolocation" in navigator)) {
+      reject(new Error("このブラウザでは現在地を取得できません。"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => {
+        reject(new Error(error.code === error.PERMISSION_DENIED ? "位置情報の許可が必要です。" : "現在地を取得できませんでした。"));
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 60_000,
+        timeout: 10_000,
+      },
+    );
+  });
+}
+
+async function resolveGuideOrigin(preferences: GuidePreferenceState): Promise<GeoPointInput> {
+  if (preferences.originMode === "manual") {
+    validateManualOrigin(preferences.manualOrigin);
+    return preferences.manualOrigin;
+  }
+
+  try {
+    return await getBrowserLocation();
+  } catch (error) {
+    validateManualOrigin(preferences.manualOrigin);
+    return {
+      ...preferences.manualOrigin,
+      label:
+        preferences.manualOrigin.label ??
+        (error instanceof Error ? `手動地点（${error.message}）` : "手動地点"),
+    };
+  }
+}
+
+function validateManualOrigin(origin: GeoPointInput): void {
+  if (!Number.isFinite(origin.lat) || !Number.isFinite(origin.lng)) {
+    throw new Error("現在地を取得できませんでした。地点指定の緯度・経度を確認してください。");
+  }
+}
 
 function getTimeGreeting(): { line1: string; line2: string } {
   const h = new Date().getHours();
@@ -192,6 +481,50 @@ function HighlightedText({ text, words }: { text: string; words: string[] }) {
         )
       )}
     </>
+  );
+}
+
+const CHARACTER_PART_CATEGORIES: CharacterPartCategory[] = [
+  "faceShape",
+  "eyes",
+  "eyebrows",
+  "mouth",
+  "hair",
+  "outfit",
+  "accessory",
+  "colorTheme",
+];
+
+const CHARACTER_PART_LABELS: Record<CharacterPartCategory, string> = {
+  faceShape: "輪郭",
+  eyes: "目",
+  eyebrows: "眉",
+  mouth: "口元",
+  hair: "髪型",
+  outfit: "服装",
+  accessory: "アクセサリ",
+  colorTheme: "テーマカラー",
+};
+
+function formatJourneyDate(isoString?: string): string {
+  if (!isoString) return "記録未設定";
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return "記録未設定";
+  return new Intl.DateTimeFormat("ja-JP", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function groupPartsByCategory(parts: CharacterPart[]): Record<CharacterPartCategory, CharacterPart[]> {
+  return CHARACTER_PART_CATEGORIES.reduce(
+    (acc, category) => {
+      acc[category] = parts.filter((part) => part.category === category);
+      return acc;
+    },
+    {} as Record<CharacterPartCategory, CharacterPart[]>,
   );
 }
 
@@ -401,15 +734,51 @@ function SuggestionCard({
 
 function HomeScreen({
   companionName,
+  companionDescription,
+  relationship,
+  routeSuggestions = [],
+  journeys = [],
+  characters = [],
+  selectedCharacterId,
+  guidePreferences,
+  integrationStatus,
+  integrationError,
   onOpenChat,
   onSuggestionTap,
+  onStartGuide,
+  onSelectCharacter,
+  onGuidePreferenceChange,
 }: {
   companionName: string;
+  companionDescription: string;
+  relationship: Relationship | null;
+  routeSuggestions: SuggestionData[];
+  journeys: JourneyMemory[];
+  characters: Character[];
+  selectedCharacterId: string;
+  guidePreferences: GuidePreferenceState;
+  integrationStatus: "idle" | "loading" | "ready" | "error";
+  integrationError: string | null;
   onOpenChat: () => void;
   onSuggestionTap: (s: SuggestionData) => void;
+  onStartGuide: () => void;
+  onSelectCharacter: (characterId: string) => void;
+  onGuidePreferenceChange: (preferences: GuidePreferenceState) => void;
 }) {
-  const [greeting, setGreeting] = useState({ line1: "", line2: "" });
-  useEffect(() => { setGreeting(getTimeGreeting()); }, []);
+  const [greeting] = useState(() => getTimeGreeting());
+  const primarySuggestion = routeSuggestions[0] ?? null;
+  const setGuidePreference = <TKey extends keyof GuidePreferenceState>(
+    key: TKey,
+    value: GuidePreferenceState[TKey],
+  ) => {
+    onGuidePreferenceChange({ ...guidePreferences, [key]: value });
+  };
+  const toggleInterest = (interest: string) => {
+    const interests = guidePreferences.interests.includes(interest)
+      ? guidePreferences.interests.filter((item) => item !== interest)
+      : [...guidePreferences.interests, interest];
+    onGuidePreferenceChange({ ...guidePreferences, interests });
+  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -433,40 +802,284 @@ function HomeScreen({
         <div className="fade-in-up text-center mb-5" style={{ animationDelay: "0.2s" }}>
           <p className="text-[#9C8B78] text-[10px] tracking-[0.2em] uppercase mb-1">あなたのコンパニオン</p>
           <h2 className="text-white text-xl font-bold font-headline">{companionName}</h2>
+          <p className="text-[#9C8B78] text-[11px] mt-1 max-w-64 line-clamp-2">{companionDescription}</p>
         </div>
+        {characters.length > 0 && (
+          <div className="fade-in-up mb-4 flex w-full gap-2 overflow-x-auto" style={{ animationDelay: "0.25s" }}>
+            {characters.map((character) => (
+              <button
+                key={character.id}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold ${
+                  selectedCharacterId === character.id
+                    ? "border-[#E8722A] bg-[#E8722A] text-white"
+                    : "border-[#3A2A18] bg-[#2A1C10] text-[#D4C9B8]"
+                }`}
+                type="button"
+                onClick={() => onSelectCharacter(character.id)}
+              >
+                {character.name}
+              </button>
+            ))}
+          </div>
+        )}
         <button onClick={onOpenChat} className="fade-in-up w-full active:opacity-80" style={{ animationDelay: "0.3s" }}>
           <div className="bg-[#2A1C10] rounded-2xl rounded-tl-sm px-5 py-4 border border-[#3A2A18] text-left">
             <p className="text-white text-sm leading-relaxed">{greeting.line1}</p>
             <p className="text-[#9C8B78] text-xs mt-1">{greeting.line2}</p>
-            <p className="text-[#E8722A] text-[10px] mt-2 font-medium">話しかける →</p>
+            <p className="text-[#E8722A] text-[10px] mt-2 font-medium">
+              {relationship ? `Lv.${relationship.relationshipLevel} · ${relationship.totalSessions}回の外出` : "話しかける →"}
+            </p>
           </div>
         </button>
       </div>
 
       {/* コンテンツ */}
       <div className="flex-1 overflow-y-auto px-4 pt-5 pb-4 flex flex-col gap-5">
+        <section className="fade-in-up rounded-2xl border border-[#D4C9B8] bg-white px-4 py-4 shadow-sm" style={{ animationDelay: "0.35s" }}>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.18em] text-[#9C8B78]">GUIDE MODE</p>
+              <h3 className="text-sm font-bold text-[#2A1C10] font-headline">外出条件</h3>
+            </div>
+            <span className="rounded-full bg-[#F5F0E8] px-2.5 py-1 text-[10px] font-bold text-[#9C8B78]">
+              {guidePreferences.areaMode === "iki" ? "壱岐モード" : "日常散歩"}
+            </span>
+          </div>
+
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            {GUIDE_AREA_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`rounded-xl border px-3 py-2 text-xs font-bold ${
+                  guidePreferences.areaMode === option.value
+                    ? "border-[#E8722A] bg-[#E8722A] text-white"
+                    : "border-[#D4C9B8] bg-[#F9F6F0] text-[#2A1C10]"
+                }`}
+                onClick={() => {
+                  const nextInterests =
+                    option.value === "iki"
+                      ? ["history", "shrine", "scenic", "local_story", "sea"]
+                      : ["cafe", "quiet"];
+                  const nextPreset =
+                    option.value === "iki"
+                      ? GUIDE_ORIGIN_PRESETS.find((preset) => preset.id === "iki_center") ?? GUIDE_ORIGIN_PRESETS[0]
+                      : GUIDE_ORIGIN_PRESETS[0];
+                  onGuidePreferenceChange({
+                    ...guidePreferences,
+                    areaMode: option.value,
+                    originMode: option.value === "iki" ? "manual" : guidePreferences.originMode,
+                    manualOrigin: option.value === "iki" ? nextPreset.origin : guidePreferences.manualOrigin,
+                    interests: nextInterests,
+                  });
+                }}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mb-3 grid grid-cols-2 gap-2">
+            {(
+              [
+                { value: "current" as GuideOriginMode, label: "現在地を使う" },
+                { value: "manual" as GuideOriginMode, label: "地点を指定" },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`rounded-xl border px-3 py-2 text-xs font-bold ${
+                  guidePreferences.originMode === option.value
+                    ? "border-[#2A1C10] bg-[#2A1C10] text-white"
+                    : "border-[#D4C9B8] bg-[#F9F6F0] text-[#2A1C10]"
+                }`}
+                onClick={() => setGuidePreference("originMode", option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {guidePreferences.originMode === "manual" && (
+            <div className="mb-3 rounded-xl border border-[#D4C9B8] bg-[#F9F6F0] px-3 py-3">
+              <div className="mb-2 flex flex-wrap gap-2">
+                {GUIDE_ORIGIN_PRESETS.filter((preset) => !preset.areaMode || preset.areaMode === guidePreferences.areaMode).map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${
+                      guidePreferences.manualOrigin.label === preset.origin.label
+                        ? "border-[#E8722A] bg-[#E8722A]/10 text-[#E8722A]"
+                        : "border-[#D4C9B8] bg-white text-[#9C8B78]"
+                    }`}
+                    onClick={() => setGuidePreference("manualOrigin", preset.origin)}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  className="rounded-lg border border-[#D4C9B8] bg-white px-2 py-2 text-xs text-[#2A1C10] outline-none"
+                  inputMode="decimal"
+                  value={String(guidePreferences.manualOrigin.lat)}
+                  onChange={(event) =>
+                    setGuidePreference("manualOrigin", {
+                      ...guidePreferences.manualOrigin,
+                      lat: Number(event.target.value),
+                    })
+                  }
+                  placeholder="緯度"
+                />
+                <input
+                  className="rounded-lg border border-[#D4C9B8] bg-white px-2 py-2 text-xs text-[#2A1C10] outline-none"
+                  inputMode="decimal"
+                  value={String(guidePreferences.manualOrigin.lng)}
+                  onChange={(event) =>
+                    setGuidePreference("manualOrigin", {
+                      ...guidePreferences.manualOrigin,
+                      lng: Number(event.target.value),
+                    })
+                  }
+                  placeholder="経度"
+                />
+              </div>
+              <input
+                className="mt-2 w-full rounded-lg border border-[#D4C9B8] bg-white px-2 py-2 text-xs text-[#2A1C10] outline-none placeholder:text-[#9C8B78]"
+                value={guidePreferences.manualOrigin.label ?? ""}
+                onChange={(event) =>
+                  setGuidePreference("manualOrigin", {
+                    ...guidePreferences.manualOrigin,
+                    label: event.target.value,
+                  })
+                }
+                placeholder="地点名"
+              />
+            </div>
+          )}
+
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+            {GUIDE_MINUTE_OPTIONS.map((minutes) => (
+              <button
+                key={minutes}
+                type="button"
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold ${
+                  guidePreferences.availableMinutes === minutes
+                    ? "border-[#E8722A] bg-[#E8722A] text-white"
+                    : "border-[#D4C9B8] bg-white text-[#9C8B78]"
+                }`}
+                onClick={() => setGuidePreference("availableMinutes", minutes)}
+              >
+                {minutes}分
+              </button>
+            ))}
+          </div>
+
+          <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+            {GUIDE_MOBILITY_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold ${
+                  guidePreferences.mobility === option.value
+                    ? "border-[#2A1C10] bg-[#2A1C10] text-white"
+                    : "border-[#D4C9B8] bg-white text-[#9C8B78]"
+                }`}
+                onClick={() => setGuidePreference("mobility", option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mb-3 flex flex-wrap gap-2">
+            {GUIDE_INTEREST_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                className={`rounded-full border px-2.5 py-1 text-[10px] font-bold ${
+                  guidePreferences.interests.includes(option.value)
+                    ? "border-[#E8722A] bg-[#E8722A]/10 text-[#E8722A]"
+                    : "border-[#D4C9B8] bg-white text-[#9C8B78]"
+                }`}
+                onClick={() => toggleInterest(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <input
+            className="w-full rounded-xl border border-[#D4C9B8] bg-[#F9F6F0] px-3 py-2 text-xs text-[#2A1C10] outline-none placeholder:text-[#9C8B78]"
+            value={guidePreferences.mood}
+            onChange={(event) => setGuidePreference("mood", event.target.value)}
+            placeholder="今の気分"
+          />
+        </section>
+
         <section className="fade-in-up" style={{ animationDelay: "0.4s" }}>
-          <p className="text-[#9C8B78] text-[10px] font-semibold tracking-[0.18em] uppercase mb-2">✦ {companionName}からの提案</p>
-          <SuggestionCard suggestion={SUGGESTION_BEACH} onTap={() => onSuggestionTap(SUGGESTION_BEACH)} />
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-[#9C8B78] text-[10px] font-semibold tracking-[0.18em] uppercase">✦ {companionName}からの提案</p>
+            <button
+              className="rounded-full bg-[#E8722A] px-3 py-1.5 text-[10px] font-bold text-white active:opacity-80 disabled:bg-[#D4C9B8]"
+              disabled={integrationStatus === "loading"}
+              type="button"
+              onClick={onStartGuide}
+            >
+              {integrationStatus === "loading" ? "検索中" : "現在地で探す"}
+            </button>
+          </div>
+          {integrationError && (
+            <p className="mb-2 rounded-xl border border-[#E8722A]/20 bg-[#E8722A]/10 px-3 py-2 text-xs text-[#9C5A28]">
+              {integrationError}
+            </p>
+          )}
+          {primarySuggestion ? (
+            <SuggestionCard suggestion={primarySuggestion} onTap={() => onSuggestionTap(primarySuggestion)} />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-[#D4C9B8] bg-white/70 px-4 py-5 text-sm leading-relaxed text-[#9C8B78]">
+              {integrationStatus === "loading"
+                ? "現在地と相棒の状態から候補を探しています。"
+                : "まだ候補はありません。現在地で探すと、バックエンドから提案を取得します。"}
+            </div>
+          )}
+          {routeSuggestions.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {routeSuggestions.slice(1, 4).map((suggestion) => (
+                <button
+                  key={suggestion.id}
+                  className="shrink-0 rounded-xl border border-[#D4C9B8] bg-white px-3 py-2 text-left shadow-sm"
+                  type="button"
+                  onClick={() => onSuggestionTap(suggestion)}
+                >
+                  <span className="block max-w-36 truncate text-xs font-bold text-[#2A1C10]">{suggestion.title}</span>
+                  <span className="text-[10px] text-[#9C8B78]">{suggestion.walkTime} · {suggestion.place}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="fade-in-up" style={{ animationDelay: "0.5s" }}>
           <p className="text-[#9C8B78] text-[10px] font-semibold tracking-[0.18em] uppercase mb-2">✦ 最近の思い出</p>
-          <div className="flex flex-col gap-2">
-            {[
-              { emoji: "🌊", title: "左京鼻の夕焼け", date: "3日前" },
-              { emoji: "🌿", title: "一支国博物館", date: "先週" },
-            ].map((item) => (
-              <button key={item.title} className="bg-white/70 rounded-2xl border border-[#D4C9B8] px-4 py-3 flex items-center gap-3 w-full text-left active:opacity-80">
-                <div className="w-11 h-11 rounded-xl bg-[#F5F0E8] border border-[#D4C9B8] flex items-center justify-center flex-shrink-0 text-xl">{item.emoji}</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[#2A1C10] text-sm font-medium truncate">{item.title}</p>
-                  <p className="text-[#9C8B78] text-xs">{item.date} · {companionName}と一緒に</p>
+          {journeys.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-[#D4C9B8] bg-white/70 px-4 py-5 text-sm leading-relaxed text-[#9C8B78]">
+              外出を完了すると、ここに {companionName} との記録が追加されます。
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {journeys.slice(0, 3).map((journey) => (
+                <div key={journey.id} className="bg-white/70 rounded-2xl border border-[#D4C9B8] px-4 py-3 flex items-start gap-3 w-full text-left">
+                  <div className="w-11 h-11 rounded-xl bg-[#F5F0E8] border border-[#D4C9B8] flex items-center justify-center flex-shrink-0 text-xl">🔥</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[#2A1C10] text-sm font-medium">{journey.title}</p>
+                    <p className="text-[#9C8B78] text-xs">{formatJourneyDate(journey.createdAt)} · {journey.summary}</p>
+                  </div>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4C9B8" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
-              </button>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
@@ -479,41 +1092,35 @@ function HomeScreen({
 
 function ConversationScreen({
   companionName,
+  messages,
+  hasActiveSession,
+  isSending,
+  onSendToCompanion,
+  onCompleteJourney,
   onSuggestionTap,
-  onStartOuting,
+  onRunAction,
 }: {
   companionName: string;
+  messages: Message[];
+  hasActiveSession: boolean;
+  isSending: boolean;
+  onSendToCompanion: (message: string) => Promise<RespondToCompanionOutput | null>;
+  onCompleteJourney: () => Promise<void>;
   onSuggestionTap: (s: SuggestionData) => void;
-  onStartOuting: () => void;
+  onRunAction: (action: NonNullable<Message["actions"]>[number]) => void;
 }) {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  }, [messages, isSending]);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
-    const userMsg: Message = { id: Date.now().toString(), type: "user", text: inputText.trim() };
-    setMessages((prev) => [...prev, userMsg]);
+    const nextInput = inputText.trim();
     setInputText("");
-    setIsTyping(true);
-
-    setTimeout(() => {
-      setIsTyping(false);
-      const replyText = COMPANION_REPLIES[Math.floor(Math.random() * COMPANION_REPLIES.length)];
-      const reply: Message = { id: (Date.now() + 1).toString(), type: "companion", text: replyText };
-      setMessages((prev) => {
-        const next = [...prev, reply];
-        if (Math.random() < 0.3) {
-          return [...next, { id: (Date.now() + 2).toString(), type: "suggestion", suggestion: SUGGESTION_CASTLE }];
-        }
-        return next;
-      });
-    }, 800 + Math.random() * 500);
+    void onSendToCompanion(nextInput);
   };
 
   return (
@@ -528,15 +1135,20 @@ function ConversationScreen({
           <p className="text-[#E8722A] text-[10px]">● オンライン</p>
         </div>
         <button
-          onClick={onStartOuting}
+          onClick={() => void onCompleteJourney()}
           className="text-[#E8722A] text-xs border border-[#E8722A]/40 bg-[#E8722A]/10 px-3 py-1.5 rounded-full active:opacity-70 font-medium"
         >
-          外出を始める
+          今日のおしまい
         </button>
       </div>
 
       {/* メッセージ */}
       <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3">
+        {!hasActiveSession && (
+          <div className="rounded-2xl border border-dashed border-[#D4C9B8] bg-white/80 px-4 py-5 text-sm leading-relaxed text-[#9C8B78]">
+            ホームで「現在地で探す」を押すと、相棒との外出会話が始まります。
+          </div>
+        )}
         {messages.map((msg) => {
           if (msg.type === "user") {
             return (
@@ -559,6 +1171,20 @@ function ConversationScreen({
                     onTap={() => onSuggestionTap(msg.suggestion!)}
                     compact
                   />
+                  {msg.actions && msg.actions.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {msg.actions.map((action, index) => (
+                        <button
+                          key={companionActionKey(msg.id, action, index)}
+                          className="rounded-full border border-[#D4C9B8] bg-white px-2.5 py-1 text-[10px] font-bold text-[#9C8B78]"
+                          type="button"
+                          onClick={() => onRunAction(action)}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -570,12 +1196,26 @@ function ConversationScreen({
               </div>
               <div className="bg-white border border-[#D4C9B8] text-[#2A1C10] text-sm px-4 py-3 rounded-2xl rounded-bl-sm max-w-[75%] leading-relaxed shadow-sm">
                 {msg.text}
+                {msg.actions && msg.actions.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {msg.actions.slice(0, 3).map((action, index) => (
+                      <button
+                        key={companionActionKey(msg.id, action, index)}
+                        className="rounded-full border border-[#D4C9B8] bg-[#F5F0E8] px-2.5 py-1 text-[10px] font-bold text-[#9C8B78]"
+                        type="button"
+                        onClick={() => onRunAction(action)}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           );
         })}
 
-        {isTyping && (
+        {isSending && (
           <div className="flex items-end gap-2 fade-in-up">
             <div className="w-8 h-8 rounded-full bg-[#2A1C10] border border-[#3A2A18] flex items-center justify-center flex-shrink-0">
               <FlameSvg size={18} />
@@ -607,6 +1247,7 @@ function ConversationScreen({
           />
           <button
             onClick={handleSend}
+            disabled={!hasActiveSession || !inputText.trim() || isSending}
             className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${inputText.trim() ? "bg-[#E8722A]" : "bg-[#D4C9B8]"}`}
           >
             <SendIcon />
@@ -621,335 +1262,426 @@ function ConversationScreen({
 // 記録画面
 // ═══════════════════════════════════════════════════════════
 
-type RecordTab = "album" | "achievement" | "companion";
-
-type AlbumEntry = {
-  id: string;
-  spotName: string;
-  title: string;
-  region: string;
-  date: string;
-  companionQuote: string;
-  steps: number;
-  duration: string;
-  emoji: string;
-  tags: string[];
-};
-
-type Badge = {
-  id: string;
-  emoji: string;
-  name: string;
-  description: string;
-  unlockedAt: string | null;
-};
-
-type RegionProgress = {
-  region: string;
-  visited: number;
-  total: number;
-};
-
-const MOCK_ALBUM: AlbumEntry[] = [
-  {
-    id: "a1",
-    spotName: "辰ノ島",
-    title: "夕暮れの浜辺へ",
-    region: "壱岐",
-    date: "4月25日（木）",
-    companionQuote: "言葉にならない夕日だったね。また来ようね。",
-    steps: 4820,
-    duration: "2時間15分",
-    emoji: "🌊",
-    tags: ["絶景", "夕日", "海辺"],
-  },
-  {
-    id: "a2",
-    spotName: "一支国博物館",
-    title: "歴史の海へ潜る旅",
-    region: "壱岐",
-    date: "4月18日（金）",
-    companionQuote: "あなたが遺跡の前で黙り込んでたの、覚えてるよ。",
-    steps: 3210,
-    duration: "1時間40分",
-    emoji: "🏛️",
-    tags: ["歴史", "博物館"],
-  },
-  {
-    id: "a3",
-    spotName: "左京鼻",
-    title: "岬に吹く風を感じに",
-    region: "壱岐",
-    date: "4月10日（水）",
-    companionQuote: "風が強くて、声も届かなくて。それがよかった。",
-    steps: 6100,
-    duration: "3時間05分",
-    emoji: "🌿",
-    tags: ["自然", "絶景", "岬"],
-  },
-];
-
-const MOCK_BADGES: Badge[] = [
-  { id: "b1", emoji: "🌊", name: "海の旅人", description: "海辺スポットを3箇所訪問", unlockedAt: "4月25日" },
-  { id: "b2", emoji: "🏛️", name: "歴史探訪者", description: "歴史スポットを2箇所訪問", unlockedAt: "4月18日" },
-  { id: "b3", emoji: "🔥", name: "初めての外出", description: "はじめて外出を完了した", unlockedAt: "4月10日" },
-  { id: "b4", emoji: "🌟", name: "壱岐の申し子", description: "壱岐のスポットを5箇所訪問", unlockedAt: null },
-  { id: "b5", emoji: "🌙", name: "夜の探索者", description: "夕暮れ以降に外出を完了", unlockedAt: null },
-  { id: "b6", emoji: "👣", name: "一万歩の達人", description: "1回の外出で1万歩を達成", unlockedAt: null },
-];
-
-const MOCK_REGION_PROGRESS: RegionProgress[] = [
-  { region: "壱岐", visited: 5, total: 12 },
-  { region: "対馬", visited: 0, total: 8 },
-  { region: "五島列島", visited: 0, total: 10 },
-];
-
-function AlbumTab({ companionName }: { companionName: string }) {
-  return (
-    <div className="px-4 py-5 flex flex-col gap-4">
-      {MOCK_ALBUM.map((entry, idx) => (
-        <div key={entry.id} className="fade-in-up" style={{ animationDelay: `${idx * 0.08}s` }}>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[#9C8B78] text-[10px] font-semibold">{entry.date}</span>
-            <div className="h-px flex-1 bg-[#D4C9B8]" />
-          </div>
-          <div className="bg-white rounded-2xl overflow-hidden border border-[#D4C9B8] shadow-sm">
-            <div className="h-32 bg-gradient-to-br from-[#1A0F06] via-[#2A1C10] to-[#3A2010] relative flex items-center justify-center overflow-hidden">
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-32 h-16 rounded-full bg-[#E8722A] opacity-20 blur-2xl" />
-              <span className="text-5xl relative z-10">{entry.emoji}</span>
-              <span className="absolute bottom-2 right-3 text-white/20 text-[9px]">写真を追加</span>
-            </div>
-            <div className="px-4 pt-3 pb-4">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div>
-                  <p className="text-[#9C8B78] text-[10px] font-semibold tracking-wider">{entry.region} · {entry.spotName}</p>
-                  <h3 className="text-[#2A1C10] font-bold text-base font-headline mt-0.5">{entry.title}</h3>
-                </div>
-                <div className="flex flex-wrap gap-1 justify-end">
-                  {entry.tags.slice(0, 2).map((tag) => (
-                    <span key={tag} className="bg-[#F5F0E8] border border-[#D4C9B8] text-[#9C8B78] text-[9px] px-2 py-0.5 rounded-full">#{tag}</span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-start gap-2 mb-3">
-                <div className="w-5 h-5 rounded-full bg-[#2A1C10] flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <FlameSvg size={11} />
-                </div>
-                <p className="text-[#3A2A18] text-xs leading-relaxed italic flex-1">「{entry.companionQuote}」</p>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-[#9C8B78] border-t border-[#F5F0E8] pt-2.5">
-                <span>👣 {entry.steps.toLocaleString()}歩</span>
-                <span>⏱ {entry.duration}</span>
-                <span className="ml-auto text-[10px]">{companionName}と一緒に</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AchievementTab() {
-  return (
-    <div className="px-4 py-5 flex flex-col gap-6">
-      <section>
-        <p className="text-[#9C8B78] text-[10px] font-semibold tracking-[0.18em] uppercase mb-3">
-          獲得バッジ {MOCK_BADGES.filter((b) => b.unlockedAt).length}/{MOCK_BADGES.length}
-        </p>
-        <div className="grid grid-cols-3 gap-3">
-          {MOCK_BADGES.map((badge, idx) => (
-            <div
-              key={badge.id}
-              className={`fade-in-up rounded-2xl p-3 flex flex-col items-center gap-1.5 border text-center ${
-                badge.unlockedAt ? "bg-white border-[#D4C9B8] shadow-sm" : "bg-[#F5F0E8] border-[#D4C9B8]/50"
-              }`}
-              style={{ animationDelay: `${idx * 0.05}s` }}
-            >
-              <span className={`text-3xl ${badge.unlockedAt ? "" : "grayscale opacity-30"}`}>{badge.emoji}</span>
-              <span className={`text-[10px] font-bold leading-tight ${badge.unlockedAt ? "text-[#2A1C10]" : "text-[#9C8B78]"}`}>
-                {badge.name}
-              </span>
-              {badge.unlockedAt
-                ? <span className="text-[#E8722A] text-[9px]">{badge.unlockedAt}</span>
-                : <span className="text-[#9C8B78] text-[9px]">🔒</span>
-              }
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <p className="text-[#9C8B78] text-[10px] font-semibold tracking-[0.18em] uppercase mb-3">地域別 達成状況</p>
-        <div className="flex flex-col gap-3">
-          {MOCK_REGION_PROGRESS.map((rp) => (
-            <div key={rp.region} className="bg-white rounded-2xl border border-[#D4C9B8] px-4 py-3 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[#2A1C10] text-sm font-semibold">{rp.region}</span>
-                <span className="text-[#9C8B78] text-xs">{rp.visited} / {rp.total} スポット</span>
-              </div>
-              <div className="h-1.5 bg-[#F5F0E8] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[#E8722A] rounded-full"
-                  style={{ width: `${(rp.visited / rp.total) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function CompanionStateTab({ companionName }: { companionName: string }) {
-  const memories = [
-    "夕日を一緒に見た（辰ノ島）",
-    "遺跡の前で沈黙した（一支国博物館）",
-    "岬の風の中で立ち止まった（左京鼻）",
-  ];
-  const items = [
-    { emoji: "🌊", name: "波の記憶", unlockedAt: "4月25日" },
-    { emoji: "🏛️", name: "歴史の欠片", unlockedAt: "4月18日" },
-    { emoji: "🌿", name: "風の声", unlockedAt: "4月10日" },
-    { emoji: "🔮", name: "???", unlockedAt: null },
-  ];
-
-  return (
-    <div className="px-4 py-5 flex flex-col gap-5">
-      {/* コンパニオンアバター + レベル */}
-      <div className="bg-[#140E09] rounded-3xl p-6 flex flex-col items-center gap-4 relative overflow-hidden">
-        <div className="glow-animate absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 rounded-full bg-[#E8722A] opacity-[0.07] blur-3xl pointer-events-none" />
-        <div className="relative">
-          <div className="w-20 h-20 rounded-full bg-[#2A1C10] border-2 border-[#3A2A18] flex items-center justify-center shadow-xl">
-            <div className="flame-animate"><FlameSvg size={44} /></div>
-          </div>
-          <div className="absolute -bottom-1 -right-1 bg-[#E8722A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full border-2 border-[#140E09]">
-            Lv.3
-          </div>
-        </div>
-        <div className="text-center">
-          <p className="text-[#9C8B78] text-[10px] tracking-wider uppercase mb-0.5">あなたのコンパニオン</p>
-          <h2 className="text-white font-bold text-lg font-headline">{companionName}</h2>
-          <p className="text-[#9C8B78] text-xs mt-1">旅の記憶を持つ灯火</p>
-        </div>
-        <div className="w-full">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[#9C8B78] text-[10px] font-semibold tracking-wider uppercase">親密度</span>
-            <span className="text-[#E8722A] text-[10px] font-bold">68 / 100</span>
-          </div>
-          <div className="h-2 bg-[#2A1C10] rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full"
-              style={{ width: "68%", background: "linear-gradient(90deg, #E8722A 0%, #F5A060 100%)" }}
-            />
-          </div>
-          <p className="text-[#9C8B78] text-[9px] mt-1 text-right">次のレベルまで 32</p>
-        </div>
-      </div>
-
-      {/* 蓄積された記憶 */}
-      <section>
-        <p className="text-[#9C8B78] text-[10px] font-semibold tracking-[0.18em] uppercase mb-3">✦ 蓄積された記憶</p>
-        <div className="flex flex-col gap-2">
-          {memories.map((memory, idx) => (
-            <div key={idx} className="bg-white rounded-xl border border-[#D4C9B8] px-4 py-3 flex items-center gap-3 shadow-sm">
-              <div className="w-1 h-8 rounded-full bg-[#E8722A] flex-shrink-0" />
-              <p className="text-[#3A2A18] text-xs leading-relaxed">{memory}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 解放アイテム */}
-      <section>
-        <p className="text-[#9C8B78] text-[10px] font-semibold tracking-[0.18em] uppercase mb-3">✦ 解放されたアイテム</p>
-        <div className="grid grid-cols-2 gap-3">
-          {items.map((item, idx) => (
-            <div
-              key={idx}
-              className={`rounded-2xl border p-3.5 flex items-center gap-3 ${
-                item.unlockedAt ? "bg-white border-[#D4C9B8] shadow-sm" : "bg-[#F5F0E8] border-[#D4C9B8]/50"
-              }`}
-            >
-              <span className={`text-2xl ${item.unlockedAt ? "" : "grayscale opacity-30"}`}>{item.emoji}</span>
-              <div className="min-w-0">
-                <p className={`text-xs font-bold truncate ${item.unlockedAt ? "text-[#2A1C10]" : "text-[#9C8B78]"}`}>{item.name}</p>
-                {item.unlockedAt
-                  ? <p className="text-[#E8722A] text-[9px]">{item.unlockedAt}</p>
-                  : <p className="text-[#9C8B78] text-[9px]">🔒 未解放</p>
-                }
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function RecordScreen({ companionName }: { companionName: string }) {
-  const [recordTab, setRecordTab] = useState<RecordTab>("album");
-
+function RecordScreen({
+  companionName,
+  journeys,
+  relationship,
+}: {
+  companionName: string;
+  journeys: JourneyMemory[];
+  relationship: Relationship | null;
+}) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="bg-[#140E09] px-5 pt-4 pb-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-white font-bold text-lg font-headline">記録</h1>
-          <span className="text-[#9C8B78] text-xs">{MOCK_ALBUM.length}回の外出</span>
-        </div>
-        <div className="flex bg-[#2A1C10] rounded-xl p-1 gap-1">
-          {(
-            [
-              { key: "album" as RecordTab, label: "アルバム" },
-              { key: "achievement" as RecordTab, label: "実績" },
-              { key: "companion" as RecordTab, label: "コンパニオン" },
-            ] as const
-          ).map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setRecordTab(key)}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-                recordTab === key ? "bg-[#E8722A] text-white shadow-sm" : "text-[#9C8B78]"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+          <span className="text-[#9C8B78] text-xs">{journeys.length}回の外出</span>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        {recordTab === "album" && <AlbumTab companionName={companionName} />}
-        {recordTab === "achievement" && <AchievementTab />}
-        {recordTab === "companion" && <CompanionStateTab companionName={companionName} />}
+      <div className="flex-1 overflow-y-auto px-4 py-5">
+        <div className="mb-4 rounded-3xl bg-[#140E09] p-5 text-white">
+          <p className="text-[10px] tracking-[0.18em] text-[#9C8B78]">COMPANION STATE</p>
+          <h2 className="mt-1 text-lg font-bold font-headline">{companionName}</h2>
+          <p className="mt-2 text-sm text-[#D4C9B8]">
+            {relationship
+              ? `関係性Lv.${relationship.relationshipLevel} / 外出${relationship.totalSessions}回 / 訪問地点${relationship.totalVisitedPlaces}件`
+              : "まだ関係性データはありません。外出を重ねると状態が更新されます。"}
+          </p>
+        </div>
+
+        {journeys.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#D4C9B8] bg-white px-4 py-5 text-sm leading-relaxed text-[#9C8B78]">
+            まだ記録はありません。会話から外出を完了すると、ここにバックエンド由来の記録が表示されます。
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {journeys.map((journey) => (
+              <div key={journey.id} className="rounded-2xl border border-[#D4C9B8] bg-white p-4 shadow-sm">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-[0.16em] text-[#9C8B78]">{formatJourneyDate(journey.createdAt)}</p>
+                    <h3 className="text-base font-bold text-[#2A1C10] font-headline">{journey.title}</h3>
+                  </div>
+                  <span className="rounded-full bg-[#F5F0E8] px-2.5 py-1 text-[10px] font-bold text-[#9C8B78]">Journey</span>
+                </div>
+                <p className="text-sm leading-relaxed text-[#3A2A18]">{journey.summary}</p>
+                <div className="mt-3 rounded-xl border border-[#F5F0E8] bg-[#F9F6F0] px-3 py-3 text-xs leading-relaxed text-[#3A2A18]">
+                  「{journey.companionMessage}」
+                </div>
+                {journey.visitedPlaces.length > 0 && (
+                  <p className="mt-3 text-xs text-[#9C8B78]">
+                    訪問: {journey.visitedPlaces.map((place) => place.name).join("、")}
+                  </p>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {journey.learnedPreferences && journey.learnedPreferences.length > 0 ? (
+                    journey.learnedPreferences.map((preference) => (
+                      <span key={preference} className="rounded-full border border-[#D4C9B8] bg-white px-2.5 py-1 text-[10px] font-bold text-[#9C8B78]">
+                        {preference}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-[#9C8B78]">学習済みの好みはまだありません。</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ═══════════════════════════════════════════════════════════
-// プレースホルダー
+// 設定画面
 // ═══════════════════════════════════════════════════════════
 
-const PLACEHOLDER_CONFIG: Record<string, { emoji: string; label: string; desc: string }> = {
-  map:      { emoji: "🗺️", label: "地図",   desc: "周辺スポットを地図で確認できます" },
-  settings: { emoji: "⚙️", label: "設定",   desc: "プロフィール・通知・コンパニオン編集" },
-};
+function SettingsScreen({
+  companionName,
+  characters,
+  selectedCharacterId,
+  relationship,
+  customizationState,
+  status,
+  error,
+  onSelectCharacter,
+  onSaveCustomization,
+}: {
+  companionName: string;
+  characters: Character[];
+  selectedCharacterId: string;
+  relationship: Relationship | null;
+  customizationState: CharacterCustomizationState | null;
+  status: "idle" | "loading" | "saving" | "error";
+  error: string | null;
+  onSelectCharacter: (characterId: string) => void;
+  onSaveCustomization: (selectedParts: CharacterPartSelection) => Promise<void>;
+}) {
+  const [draftParts, setDraftParts] = useState<CharacterPartSelection>(
+    () => customizationState?.customization.selectedParts ?? {},
+  );
 
-function PlaceholderScreen({ tab }: { tab: string }) {
-  const c = PLACEHOLDER_CONFIG[tab] ?? { emoji: "🔨", label: tab, desc: "準備中" };
+  const groupedParts = customizationState ? groupPartsByCategory(customizationState.availableParts) : null;
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="bg-[#140E09] px-5 pt-4 pb-4 flex-shrink-0 flex items-center">
-        <h1 className="text-white font-bold text-lg font-headline">{c.label}</h1>
+      <div className="bg-[#140E09] px-5 pt-4 pb-4 flex-shrink-0">
+        <h1 className="text-white font-bold text-lg font-headline">設定</h1>
+        <p className="mt-1 text-xs text-[#9C8B78]">{companionName} の状態と見た目をバックエンド経由で管理します。</p>
       </div>
-      <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center">
-        <div className="w-20 h-20 rounded-3xl bg-white border border-[#D4C9B8] flex items-center justify-center text-4xl shadow-sm">{c.emoji}</div>
-        <div>
-          <h3 className="text-[#2A1C10] font-bold text-lg font-headline mb-1">{c.label}</h3>
-          <p className="text-[#9C8B78] text-sm leading-relaxed">{c.desc}</p>
+      <div className="flex-1 overflow-y-auto px-4 py-5">
+        <div className="mb-4 flex gap-2 overflow-x-auto">
+          {characters.map((character) => (
+            <button
+              key={character.id}
+              type="button"
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold ${
+                selectedCharacterId === character.id
+                  ? "border-[#E8722A] bg-[#E8722A] text-white"
+                  : "border-[#D4C9B8] bg-white text-[#2A1C10]"
+              }`}
+              onClick={() => onSelectCharacter(character.id)}
+            >
+              {character.name}
+            </button>
+          ))}
         </div>
-        <span className="bg-[#D4C9B8]/50 text-[#9C8B78] text-xs px-3 py-1 rounded-full">開発中</span>
+
+        <div className="mb-4 rounded-2xl border border-[#D4C9B8] bg-white p-4 shadow-sm">
+          <p className="text-[10px] font-semibold tracking-[0.16em] text-[#9C8B78]">RELATIONSHIP</p>
+          <p className="mt-2 text-sm font-semibold text-[#2A1C10]">
+            {relationship
+              ? `Lv.${relationship.relationshipLevel} / 外出${relationship.totalSessions}回 / 訪問${relationship.totalVisitedPlaces}件`
+              : "関係性データはまだありません。"}
+          </p>
+        </div>
+
+        {error && (
+          <p className="mb-4 rounded-xl border border-[#E8722A]/20 bg-[#E8722A]/10 px-3 py-2 text-xs text-[#9C5A28]">
+            {error}
+          </p>
+        )}
+
+        {status === "loading" && (
+          <div className="rounded-2xl border border-dashed border-[#D4C9B8] bg-white px-4 py-5 text-sm text-[#9C8B78]">
+            カスタマイズ情報を取得しています。
+          </div>
+        )}
+
+        {status !== "loading" && customizationState && groupedParts && (
+          <div className="flex flex-col gap-4">
+            {CHARACTER_PART_CATEGORIES.map((category) => {
+              const parts = groupedParts[category];
+              if (parts.length === 0) return null;
+              return (
+                <section key={category} className="rounded-2xl border border-[#D4C9B8] bg-white p-4 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#2A1C10]">{CHARACTER_PART_LABELS[category]}</h3>
+                    <span className="text-[10px] text-[#9C8B78]">{parts.length}件</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {parts.map((part) => (
+                      <button
+                        key={part.id}
+                        type="button"
+                        className={`rounded-full border px-3 py-1.5 text-[11px] font-bold ${
+                          draftParts[category] === part.id
+                            ? "border-[#E8722A] bg-[#E8722A] text-white"
+                            : "border-[#D4C9B8] bg-[#F9F6F0] text-[#2A1C10]"
+                        }`}
+                        onClick={() => setDraftParts((prev) => ({ ...prev, [category]: part.id }))}
+                      >
+                        {part.name}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+
+            <button
+              type="button"
+              className="rounded-2xl bg-[#E8722A] px-4 py-3 text-sm font-bold text-white disabled:bg-[#D4C9B8]"
+              disabled={status === "saving"}
+              onClick={() => void onSaveCustomization(draftParts)}
+            >
+              {status === "saving" ? "保存中" : "見た目を保存"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MapScreen({ routes = [] }: { routes?: RoutePlan[] }) {
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<GoogleMapInstance | null>(null);
+  const markerRefs = useRef<GoogleMapMarkerInstance[]>([]);
+  const routeMarkerRefs = useRef<GoogleMapMarkerInstance[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "missing-key" | "error">(
+    GOOGLE_MAPS_API_KEY ? "loading" : "missing-key",
+  );
+  const [locationStatus, setLocationStatus] = useState<"idle" | "requesting" | "ready" | "unavailable" | "denied">(
+    "idle",
+  );
+
+  useEffect(() => {
+    let disposed = false;
+
+    if (!GOOGLE_MAPS_API_KEY) {
+      return;
+    }
+
+    loadGoogleMapsScript(GOOGLE_MAPS_API_KEY)
+      .then(() => {
+        if (disposed || !mapContainerRef.current) return;
+
+        const mapsApi = (window as GoogleMapsWindow).google?.maps;
+        const MapCtor = mapsApi?.Map;
+        if (!MapCtor) {
+          setStatus("error");
+          return;
+        }
+
+        mapRef.current = new MapCtor(mapContainerRef.current, {
+          center: DEFAULT_MAP_CENTER,
+          zoom: DEFAULT_MAP_ZOOM,
+          disableDefaultUI: true,
+          clickableIcons: false,
+          gestureHandling: "greedy",
+          keyboardShortcuts: false,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          zoomControl: true,
+          styles: [
+            { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+            { featureType: "transit", stylers: [{ visibility: "off" }] },
+            { featureType: "water", elementType: "geometry", stylers: [{ color: "#A9D6E8" }] },
+            { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#F0E7D6" }] },
+          ],
+        });
+        setStatus("ready");
+      })
+      .catch(() => setStatus("error"));
+
+    return () => {
+      disposed = true;
+      markerRefs.current.forEach((marker) => marker.setMap(null));
+      markerRefs.current = [];
+      routeMarkerRefs.current.forEach((marker) => marker.setMap(null));
+      routeMarkerRefs.current = [];
+      mapRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (status !== "ready" || !mapRef.current) return;
+
+    const mapsApi = (window as GoogleMapsWindow).google?.maps;
+    const MarkerCtor = mapsApi?.Marker;
+    if (!MarkerCtor || !("geolocation" in navigator)) {
+      window.setTimeout(() => setLocationStatus("unavailable"), 0);
+      return;
+    }
+
+    let disposed = false;
+    window.setTimeout(() => {
+      if (!disposed) setLocationStatus("requesting");
+    }, 0);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        if (disposed || !mapRef.current) return;
+
+        const currentLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
+        const icon =
+          mapsApi?.SymbolPath?.CIRCLE && mapsApi.Point
+            ? {
+                path: mapsApi.SymbolPath.CIRCLE,
+                fillColor: "#E8722A",
+                fillOpacity: 0.95,
+                strokeColor: "#FFFFFF",
+                strokeWeight: 3,
+                scale: 10,
+                anchor: new mapsApi.Point(0, 0),
+              }
+            : undefined;
+
+        markerRefs.current.forEach((marker) => marker.setMap(null));
+        markerRefs.current = [
+          new MarkerCtor({
+            map: mapRef.current,
+            position: currentLocation,
+            title: "現在地",
+            icon,
+          }),
+        ];
+        mapRef.current.setCenter(currentLocation);
+        mapRef.current.setZoom(15);
+        setLocationStatus("ready");
+      },
+      (error) => {
+        if (disposed) return;
+        setLocationStatus(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable");
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 60_000,
+        timeout: 10_000,
+      },
+    );
+
+    return () => {
+      disposed = true;
+    };
+  }, [status]);
+
+  useEffect(() => {
+    if (status !== "ready" || !mapRef.current || routes.length === 0) return;
+    const mapsApi = (window as GoogleMapsWindow).google?.maps;
+    const MarkerCtor = mapsApi?.Marker;
+    const LatLngBoundsCtor = mapsApi?.LatLngBounds;
+    if (!MarkerCtor) return;
+
+    routeMarkerRefs.current.forEach((marker) => marker.setMap(null));
+    routeMarkerRefs.current = [];
+
+    const routePlaces = routes.flatMap((route) => route.places.map((item) => item.place));
+    routeMarkerRefs.current = routePlaces.map(
+      (place) =>
+        new MarkerCtor({
+          map: mapRef.current as GoogleMapInstance,
+          position: { lat: place.lat, lng: place.lng },
+          title: place.name,
+        }),
+    );
+
+    if (LatLngBoundsCtor && routePlaces.length > 0) {
+      const bounds = new LatLngBoundsCtor();
+      routePlaces.forEach((place) => bounds.extend({ lat: place.lat, lng: place.lng }));
+      mapRef.current.fitBounds(bounds);
+    }
+  }, [routes, status]);
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      <div className="bg-[#140E09] px-5 pt-4 pb-4 flex-shrink-0 flex items-center justify-between">
+        <div>
+          <p className="text-[#E8722A] text-[10px] font-bold tracking-[0.18em] font-headline">MAP</p>
+          <h1 className="text-white font-bold text-lg font-headline">地図</h1>
+        </div>
+        <span className="rounded-full border border-[#3A2A18] bg-[#2A1C10] px-3 py-1 text-[11px] font-semibold text-[#D4C9B8]">
+          現在地
+        </span>
+      </div>
+
+      <div className="relative flex-1 overflow-hidden bg-[#D4C9B8]">
+        <div ref={mapContainerRef} className="absolute inset-0" />
+
+        {status === "loading" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#F5F0E8]">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="flame-animate">
+                <FlameSvg size={42} />
+              </div>
+              <p className="text-sm font-semibold text-[#2A1C10]">地図を読み込み中</p>
+            </div>
+          </div>
+        )}
+
+        {status === "missing-key" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#F5F0E8] px-8 text-center">
+            <div>
+              <h3 className="mb-2 text-base font-bold text-[#2A1C10] font-headline">Google Maps API key が未設定です</h3>
+              <p className="text-sm leading-relaxed text-[#9C8B78]">
+                apps/tomoshibi-master-mvp/.env.local に NEXT_PUBLIC_GOOGLE_MAPS_API_KEY を設定してください。
+              </p>
+            </div>
+          </div>
+        )}
+
+        {status === "error" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#F5F0E8] px-8 text-center">
+            <div>
+              <h3 className="mb-2 text-base font-bold text-[#2A1C10] font-headline">地図を表示できませんでした</h3>
+              <p className="text-sm leading-relaxed text-[#9C8B78]">Google Maps JavaScript API の読み込みを確認してください。</p>
+            </div>
+          </div>
+        )}
+
+        {status === "ready" && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-4">
+            <div className="explore-sheet-surface is-open pointer-events-auto rounded-2xl border border-white/80 bg-white/95 p-3 shadow-xl backdrop-blur-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.16em] text-[#9C8B78]">AROUND YOU</p>
+                  <h2 className="text-sm font-bold text-[#2A1C10] font-headline">
+                    {routes.length > 0 ? `${routes.length}件の提案` : "現在地"}
+                  </h2>
+                </div>
+                <span className="rounded-full bg-[#E8722A]/10 px-2.5 py-1 text-[10px] font-bold text-[#E8722A]">
+                  Google Maps
+                </span>
+              </div>
+
+              <p className="text-xs leading-relaxed text-[#9C8B78]">
+                {locationStatus === "requesting" && "現在地を取得しています。"}
+                {locationStatus === "ready" && "現在地を中心に表示しています。"}
+                {locationStatus === "denied" && "ブラウザの位置情報許可が必要です。"}
+                {locationStatus === "unavailable" && "現在地を取得できませんでした。"}
+                {locationStatus === "idle" && "地図を準備しています。"}
+                {routes.length > 0 && ` ${routes[0].title} などを表示しています。`}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -977,13 +1709,449 @@ function NavButton({ label, active, onClick, children }: {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("home");
   const [activeSuggestion, setActiveSuggestion] = useState<SuggestionData | null>(null);
-  const COMPANION_NAME = "ホタル";
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [selectedCharacterId, setSelectedCharacterId] = useState(TOMOSHIBI_AI_DEFAULT_CHARACTER_ID);
+  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [relationship, setRelationship] = useState<Relationship | null>(null);
+  const [journeys, setJourneys] = useState<JourneyMemory[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [routes, setRoutes] = useState<RoutePlan[]>([]);
+  const [companionGuide, setCompanionGuide] = useState<CompanionGuideOutput | null>(null);
+  const [apiMessages, setApiMessages] = useState<Message[]>([]);
+  const [visitedPlaceIds, setVisitedPlaceIds] = useState<string[]>([]);
+  const [guidePreferences, setGuidePreferences] = useState<GuidePreferenceState>(DEFAULT_GUIDE_PREFERENCES);
+  const [customizationState, setCustomizationState] = useState<CharacterCustomizationState | null>(null);
+  const [customizationStatus, setCustomizationStatus] = useState<"idle" | "loading" | "saving" | "error">("idle");
+  const [customizationError, setCustomizationError] = useState<string | null>(null);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [integrationStatus, setIntegrationStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [integrationError, setIntegrationError] = useState<string | null>(null);
+
+  const companionName = selectedCharacter?.name ?? (integrationStatus === "loading" ? "読み込み中" : "キャラクター未選択");
+  const companionDescription =
+    selectedCharacter?.description ?? (integrationStatus === "loading" ? "キャラクター情報を取得しています。" : "キャラクターを選択してください。");
+  const routeSuggestions = routes.map((route) => routePlanToSuggestion(route, companionGuide));
 
   const handleSuggestionTap = (s: SuggestionData) => setActiveSuggestion(s);
   const handleCloseDetail = () => setActiveSuggestion(null);
   const handleGo = () => {
     setActiveSuggestion(null);
-    // TODO: 外出開始演出へ
+    setActiveTab("map");
+  };
+
+  useEffect(() => {
+    let disposed = false;
+    setIntegrationStatus("loading");
+    getAvailableCharacters(TOMOSHIBI_AI_DEFAULT_USER_ID)
+      .then((result) => {
+        if (disposed) return;
+        const nextCharacters = result.characters.map((item) => item.character);
+        setCharacters(nextCharacters);
+        const nextSelected =
+          nextCharacters.find((character) => character.id === TOMOSHIBI_AI_DEFAULT_CHARACTER_ID) ?? nextCharacters[0] ?? null;
+        setSelectedCharacter(nextSelected);
+        if (nextSelected) {
+          setSelectedCharacterId(nextSelected.id);
+        }
+        setIntegrationError(nextCharacters.length === 0 ? "キャラクターがまだ登録されていません。seedを確認してください。" : null);
+        setIntegrationStatus("idle");
+      })
+      .catch((error) => {
+        if (disposed) return;
+        setIntegrationStatus("error");
+        setIntegrationError(error instanceof Error ? error.message : "キャラクター一覧を取得できませんでした。");
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCharacterId) return;
+    let disposed = false;
+    getUserCompanionState({ userId: TOMOSHIBI_AI_DEFAULT_USER_ID, characterId: selectedCharacterId })
+      .then((result) => {
+        if (disposed) return;
+        setSelectedCharacter(result.character);
+        setRelationship(result.relationship);
+      })
+      .catch(() => {
+        if (disposed) return;
+        setRelationship(null);
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, [selectedCharacterId]);
+
+  useEffect(() => {
+    if (!selectedCharacterId) return;
+    let disposed = false;
+
+    getActiveGuideSession({
+      userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+      characterId: selectedCharacterId,
+    })
+      .then(async (result) => {
+        if (disposed || !result.session) return;
+        setActiveSessionId(result.session.id);
+        if (result.latestSuggestion) {
+          setRoutes(result.latestSuggestion.routes);
+          setCompanionGuide(result.latestSuggestion.companion);
+        }
+
+        const messageResult = await listGuideSessionMessages({
+          userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+          sessionId: result.session.id,
+          limit: 50,
+        });
+        if (disposed) return;
+        const persistedMessages = messageResult.messages.map(guideSessionMessageToMessage);
+        const restoredMessages: Message[] =
+          persistedMessages.length > 0
+            ? [...persistedMessages]
+            : result.latestSuggestion
+              ? [
+                  {
+                    id: `restored-guide-${result.session.id}`,
+                    type: "companion",
+                    text: result.latestSuggestion.companion.openingMessage,
+                    actions: result.latestSuggestion.companion.nextActions,
+                  },
+                ]
+              : [];
+
+        if (result.latestSuggestion) {
+          restoredMessages.push(
+            ...result.latestSuggestion.routes.slice(0, 2).map((route) => ({
+              id: `restored-suggestion-${route.id}`,
+              type: "suggestion" as const,
+              suggestion: routePlanToSuggestion(route, result.latestSuggestion?.companion),
+              actions: routePlanToActions(route),
+            })),
+          );
+        }
+        setApiMessages(restoredMessages);
+      })
+      .catch(() => {
+        if (disposed) return;
+        setActiveSessionId(null);
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, [selectedCharacterId]);
+
+  const refreshJourneyMemories = async (characterId = selectedCharacterId) => {
+    const result = await listJourneyMemories({
+      userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+      characterId,
+      limit: 20,
+    });
+    setJourneys(result.memories);
+  };
+
+  useEffect(() => {
+    if (!selectedCharacterId) return;
+    let disposed = false;
+
+    listJourneyMemories({
+      userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+      characterId: selectedCharacterId,
+      limit: 20,
+    })
+      .then((result) => {
+        if (!disposed) setJourneys(result.memories);
+      })
+      .catch(() => {
+        if (!disposed) setJourneys([]);
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, [selectedCharacterId]);
+
+  useEffect(() => {
+    if (!selectedCharacterId) return;
+    let disposed = false;
+    setCustomizationStatus("loading");
+    setCustomizationError(null);
+
+    getCharacterCustomization({ userId: TOMOSHIBI_AI_DEFAULT_USER_ID, characterId: selectedCharacterId })
+      .then((result) => {
+        if (disposed) return;
+        setCustomizationState({
+          customization: result.customization,
+          availableParts: result.availableParts,
+          defaultAppearance: result.defaultAppearance,
+        });
+        setCustomizationStatus("idle");
+      })
+      .catch((error) => {
+        if (disposed) return;
+        setCustomizationState(null);
+        setCustomizationStatus("error");
+        setCustomizationError(error instanceof Error ? error.message : "カスタマイズ情報を取得できませんでした。");
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, [selectedCharacterId]);
+
+  const handleSelectCharacter = (characterId: string) => {
+    setSelectedCharacterId(characterId);
+    setSelectedCharacter(characters.find((character) => character.id === characterId) ?? null);
+    setActiveSessionId(null);
+    setRoutes([]);
+    setCompanionGuide(null);
+    setApiMessages([]);
+    setJourneys([]);
+    setVisitedPlaceIds([]);
+    setActiveSuggestion(null);
+    setCustomizationError(null);
+  };
+
+  const handleStartGuide = async () => {
+    setIntegrationStatus("loading");
+    setIntegrationError(null);
+
+    try {
+      const origin = await resolveGuideOrigin(guidePreferences);
+      const created = await createGuideSession({
+        userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+        characterId: selectedCharacterId,
+        mode: "daily_walk",
+        origin,
+        areaId: guidePreferences.areaMode === "iki" ? "iki" : undefined,
+        context: {
+          availableMinutes: guidePreferences.availableMinutes,
+          mobility: guidePreferences.mobility,
+          mood: guidePreferences.mood.trim() || undefined,
+          interests: guidePreferences.interests.length > 0 ? guidePreferences.interests : undefined,
+          companionType: "solo",
+        },
+      });
+
+      setActiveSessionId(created.sessionId);
+      setVisitedPlaceIds([]);
+      setApiMessages([{ id: `session-${created.sessionId}`, type: "companion", text: created.message }]);
+
+      const suggested = await suggestGuideRoute({
+        userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+        sessionId: created.sessionId,
+      });
+      setRoutes(suggested.routes);
+      setCompanionGuide(suggested.companion);
+      setApiMessages((prev) => [
+        ...prev,
+        {
+          id: `guide-${created.sessionId}`,
+          type: "companion",
+          text: suggested.companion.openingMessage,
+          actions: suggested.companion.nextActions,
+        },
+        ...suggested.routes.slice(0, 2).map((route) => ({
+          id: `suggestion-${route.id}`,
+          type: "suggestion" as const,
+          suggestion: routePlanToSuggestion(route, suggested.companion),
+          actions: routePlanToActions(route),
+        })),
+      ]);
+      setIntegrationStatus("ready");
+      setActiveTab("conversation");
+    } catch (error) {
+      setIntegrationStatus("error");
+      setIntegrationError(error instanceof Error ? error.message : "TOMOSHIBI AIバックエンドへ接続できませんでした。");
+    }
+  };
+
+  const handleSendToCompanion = async (message: string): Promise<RespondToCompanionOutput | null> => {
+    if (!activeSessionId) {
+      const noSessionResponse = { message: "先にホームから「現在地で探す」を押して、外出セッションを始めてください。" };
+      setApiMessages((prev) => [...prev, { id: `no-session-${Date.now()}`, type: "companion", text: noSessionResponse.message }]);
+      return noSessionResponse;
+    }
+
+    const userMessage: Message = { id: `user-${Date.now()}`, type: "user", text: message };
+    setApiMessages((prev) => [...prev, userMessage]);
+    setIsSendingMessage(true);
+
+    try {
+      const response = await respondToCompanion({
+        userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+        sessionId: activeSessionId,
+        message,
+      });
+      setApiMessages((prev) => [
+        ...prev,
+        {
+          id: `reply-${Date.now()}`,
+          type: "companion",
+          text: response.message,
+          actions: response.nextActions,
+        },
+      ]);
+      return response;
+    } catch (error) {
+      const failure = error instanceof Error ? error.message : "返答を取得できませんでした。";
+      setApiMessages((prev) => [...prev, { id: `reply-error-${Date.now()}`, type: "companion", text: failure }]);
+      return { message: failure };
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  const handleRunCompanionAction = async (action: NonNullable<Message["actions"]>[number]) => {
+    if (!activeSessionId) return;
+
+    const payload = action.payload ?? {};
+    const placeId = typeof payload.placeId === "string" ? payload.placeId : undefined;
+    const routeId = typeof payload.routeId === "string" ? payload.routeId : undefined;
+    const feedbackType = feedbackTypeForUiAction(action.action);
+
+    if (feedbackType) {
+      setIsSendingMessage(true);
+      try {
+        await saveUserFeedback({
+          userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+          sessionId: activeSessionId,
+          characterId: selectedCharacterId,
+          placeId,
+          routeId,
+          type: feedbackType,
+          metadata: payload,
+        });
+        if (feedbackType === "visited" && placeId) {
+          setVisitedPlaceIds((prev) => (prev.includes(placeId) ? prev : [...prev, placeId]));
+        }
+        setApiMessages((prev) => [
+          ...prev,
+          {
+            id: `feedback-${Date.now()}`,
+            type: "companion",
+            text: feedbackMessageForAction(action.action),
+          },
+        ]);
+        if (action.action === "start_route") {
+          setActiveTab("map");
+        }
+      } catch (error) {
+        setApiMessages((prev) => [
+          ...prev,
+          {
+            id: `feedback-error-${Date.now()}`,
+            type: "companion",
+            text: error instanceof Error ? error.message : "操作を記録できませんでした。",
+          },
+        ]);
+      } finally {
+        setIsSendingMessage(false);
+      }
+      return;
+    }
+
+    const actionType = isCompanionActionType(action.action) ? action.action : "tell_more";
+
+    setIsSendingMessage(true);
+    try {
+      const response = await respondToCompanion({
+        userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+        sessionId: activeSessionId,
+        action: {
+          type: actionType,
+          placeId,
+          routeId,
+          payload,
+        },
+      });
+      setApiMessages((prev) => [
+        ...prev,
+        {
+          id: `action-${Date.now()}`,
+          type: "companion",
+          text: response.message,
+          actions: response.nextActions,
+        },
+      ]);
+    } catch (error) {
+      setApiMessages((prev) => [
+        ...prev,
+        {
+          id: `action-error-${Date.now()}`,
+          type: "companion",
+          text: error instanceof Error ? error.message : "アクションを送信できませんでした。",
+        },
+      ]);
+    } finally {
+      setIsSendingMessage(false);
+    }
+  };
+
+  const handleCompleteJourney = async () => {
+    if (!activeSessionId) {
+      setApiMessages((prev) => [
+        ...prev,
+        { id: `no-session-${Date.now()}`, type: "companion", text: "まだ外出セッションが始まっていません。" },
+      ]);
+      return;
+    }
+
+    const fallbackVisited = visitedPlaceIds.length > 0
+      ? visitedPlaceIds
+      : routes.flatMap((route) => route.places.slice(0, 1).map((item) => item.place.providerPlaceId));
+
+    try {
+      const completed = await completeJourney({
+        userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+        sessionId: activeSessionId,
+        visitedPlaceIds: fallbackVisited,
+        userComment: "Master MVPフロントから完了",
+      });
+      setApiMessages((prev) => [
+        ...prev,
+        { id: completed.journeyId, type: "companion", text: completed.companionMessage },
+      ]);
+      await refreshJourneyMemories();
+      setActiveTab("record");
+    } catch (error) {
+      setApiMessages((prev) => [
+        ...prev,
+        {
+          id: `complete-error-${Date.now()}`,
+          type: "companion",
+          text: error instanceof Error ? error.message : "外出完了に失敗しました。",
+        },
+      ]);
+    }
+  };
+
+  const handleSaveCustomization = async (selectedParts: CharacterPartSelection) => {
+    setCustomizationStatus("saving");
+    setCustomizationError(null);
+    try {
+      const result = await updateCharacterCustomization({
+        userId: TOMOSHIBI_AI_DEFAULT_USER_ID,
+        characterId: selectedCharacterId,
+        selectedParts,
+      });
+      setCustomizationState((prev) =>
+        prev
+          ? {
+              ...prev,
+              customization: result.customization,
+            }
+          : null,
+      );
+      setCustomizationStatus("idle");
+    } catch (error) {
+      setCustomizationStatus("error");
+      setCustomizationError(error instanceof Error ? error.message : "カスタマイズを保存できませんでした。");
+    }
   };
 
   return (
@@ -1004,29 +2172,62 @@ export default function Home() {
           {activeTab === "home" && (
             <div className="absolute inset-0 flex flex-col overflow-hidden">
               <HomeScreen
-                companionName={COMPANION_NAME}
+                companionName={companionName}
+                companionDescription={companionDescription}
+                relationship={relationship}
+                routeSuggestions={routeSuggestions}
+                journeys={journeys}
+                characters={characters}
+                selectedCharacterId={selectedCharacterId}
+                guidePreferences={guidePreferences}
+                integrationStatus={integrationStatus}
+                integrationError={integrationError}
                 onOpenChat={() => setActiveTab("conversation")}
                 onSuggestionTap={handleSuggestionTap}
+                onStartGuide={() => void handleStartGuide()}
+                onSelectCharacter={handleSelectCharacter}
+                onGuidePreferenceChange={setGuidePreferences}
               />
             </div>
           )}
           {activeTab === "conversation" && (
             <div className="absolute inset-0 flex flex-col overflow-hidden">
               <ConversationScreen
-                companionName={COMPANION_NAME}
+                companionName={companionName}
+                messages={apiMessages}
+                hasActiveSession={Boolean(activeSessionId)}
+                isSending={isSendingMessage}
+                onSendToCompanion={handleSendToCompanion}
+                onCompleteJourney={handleCompleteJourney}
                 onSuggestionTap={handleSuggestionTap}
-                onStartOuting={handleGo}
+                onRunAction={handleRunCompanionAction}
               />
             </div>
           )}
           {activeTab === "record" && (
             <div className="absolute inset-0 flex flex-col overflow-hidden">
-              <RecordScreen companionName={COMPANION_NAME} />
+              <RecordScreen companionName={companionName} journeys={journeys} relationship={relationship} />
             </div>
           )}
-          {activeTab !== "home" && activeTab !== "conversation" && activeTab !== "record" && (
+          {activeTab === "map" && (
             <div className="absolute inset-0 flex flex-col overflow-hidden">
-              <PlaceholderScreen tab={activeTab} />
+              <MapScreen routes={routes} />
+            </div>
+          )}
+          {activeTab === "settings" && (
+            <div className="absolute inset-0 flex flex-col overflow-hidden">
+              <SettingsScreen
+                key={`${selectedCharacterId}-${customizationState?.customization.lastUpdatedAt ?? "none"}`}
+                companionName={companionName}
+                characters={characters}
+                selectedCharacterId={selectedCharacterId}
+                relationship={relationship}
+                customizationState={customizationState}
+                status={customizationStatus}
+                error={customizationError}
+                onSelectCharacter={handleSelectCharacter}
+                onSaveCustomization={handleSaveCustomization}
+              />
             </div>
           )}
         </div>
@@ -1066,7 +2267,7 @@ export default function Home() {
         {activeSuggestion && (
           <SuggestionDetailOverlay
             suggestion={activeSuggestion}
-            companionName={COMPANION_NAME}
+            companionName={companionName}
             onClose={handleCloseDetail}
             onGo={handleGo}
           />

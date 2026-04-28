@@ -28,7 +28,9 @@
     "backfill:spots:operational:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run backfill:spots:operational",
     "report:spots:operational-gaps": "npm run build && node lib/scripts/reportSpotOperationalGaps.js",
     "report:spots:operational-gaps:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run report:spots:operational-gaps",
-    "import:spots:xlsx": "npm run build && node lib/scripts/importSpotsFromXlsx.js"
+    "import:spots:xlsx": "npm run build && node lib/scripts/importSpotsFromXlsx.js",
+    "seed:tomoshibi-ai": "npm run build && node lib/scripts/seedTomoshibiAiLocal.js",
+    "seed:tomoshibi-ai:emulator": "FIREBASE_PROJECT_ID=tomoshibi-950e2 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run seed:tomoshibi-ai"
   },
   "engines": {
     "node": "20"

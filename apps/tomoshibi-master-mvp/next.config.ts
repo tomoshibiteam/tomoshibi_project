@@ -13,7 +13,6 @@ const DEV_WATCH_IGNORES = [
 
 const nextConfig: NextConfig = {
   devIndicators: false,
-  output: "export",
   images: {
     unoptimized: true,
   },

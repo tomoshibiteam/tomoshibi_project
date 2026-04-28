@@ -39,3 +39,21 @@ export {
   listTransitCalendars,
   listTransitServices,
 } from "./transit/repository";
+
+export {
+  health as tomoshibiAiHealth,
+  createGuideSession,
+  suggestGuideRoute,
+  respondToCompanion,
+  saveUserFeedback,
+  getActiveGuideSession,
+  getUserCompanionState,
+  getAvailableCharacters,
+  getCharacterCustomization,
+  updateCharacterCustomization,
+  completeJourney,
+  listJourneyMemories,
+  getJourneyMemory,
+  listGuideSessionMessages,
+  trackOutboundClick,
+} from "./aiCompanion";

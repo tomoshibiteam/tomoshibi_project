@@ -13,6 +13,7 @@
     "emulators:start:persistent": "bash ./scripts/start-emulators-persistent.sh",
     "emulators:start": "JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home PATH=/opt/homebrew/opt/openjdk@21/bin:$PATH firebase emulators:start --project tomoshibi-950e2 --only firestore,functions,storage --config firebase.json --import=.firebase/emulator-data --export-on-exit=.firebase/emulator-data",
     "emulators:export": "JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home PATH=/opt/homebrew/opt/openjdk@21/bin:$PATH firebase emulators:export .firebase/emulator-data --project tomoshibi-950e2 --config firebase.json --force",
+    "seed:tomoshibi-ai:emulator": "npm --prefix functions run seed:tomoshibi-ai:emulator",
     "seed:spots:emulator": "npm --prefix functions run seed:spots:emulator",
     "seed:spots:iwami-core:emulator": "npm --prefix functions run seed:spots:iwami-core:emulator",
     "seed:transit:emulator": "npm --prefix functions run seed:transit:emulator",

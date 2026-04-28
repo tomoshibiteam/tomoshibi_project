@@ -1,0 +1,15 @@
+export declare const health: import("firebase-functions/v2/https").HttpsFunction;
+export declare const createGuideSession: import("firebase-functions/v2/https").HttpsFunction;
+export declare const suggestGuideRoute: import("firebase-functions/v2/https").HttpsFunction;
+export declare const respondToCompanion: import("firebase-functions/v2/https").HttpsFunction;
+export declare const saveUserFeedback: import("firebase-functions/v2/https").HttpsFunction;
+export declare const getUserCompanionState: import("firebase-functions/v2/https").HttpsFunction;
+export declare const getActiveGuideSession: import("firebase-functions/v2/https").HttpsFunction;
+export declare const getAvailableCharacters: import("firebase-functions/v2/https").HttpsFunction;
+export declare const getCharacterCustomization: import("firebase-functions/v2/https").HttpsFunction;
+export declare const updateCharacterCustomization: import("firebase-functions/v2/https").HttpsFunction;
+export declare const completeJourney: import("firebase-functions/v2/https").HttpsFunction;
+export declare const listJourneyMemories: import("firebase-functions/v2/https").HttpsFunction;
+export declare const getJourneyMemory: import("firebase-functions/v2/https").HttpsFunction;
+export declare const listGuideSessionMessages: import("firebase-functions/v2/https").HttpsFunction;
+export declare const trackOutboundClick: import("firebase-functions/v2/https").HttpsFunction;

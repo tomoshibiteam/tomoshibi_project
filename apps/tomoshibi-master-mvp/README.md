@@ -112,6 +112,60 @@ npm run seed:spots:emulator
 
 If you use production instead, deploy the callables first.
 
+### TOMOSHIBI AI Companion local integration
+
+The AI companion backend is integrated into this app under `functions/src/aiCompanion`.
+The frontend calls it through the local Next route `/api/tomoshibi-ai/*`, so it does not depend on another app directory at runtime.
+
+1. Start Firestore/Functions emulators:
+
+```bash
+npm run emulators:start
+```
+
+2. In another terminal, seed the AI companion data:
+
+```bash
+npm run seed:tomoshibi-ai:emulator
+```
+
+3. Start the frontend:
+
+```bash
+npm run dev -- --port 8082
+```
+
+Open [http://localhost:8082](http://localhost:8082).
+
+Smoke checks:
+
+```bash
+curl -sS -X POST http://127.0.0.1:8082/api/tomoshibi-ai/getAvailableCharacters \
+  -H 'Content-Type: application/json' \
+  -d '{}'
+
+curl -sS -X POST http://127.0.0.1:8082/api/tomoshibi-ai/listJourneyMemories \
+  -H 'Content-Type: application/json' \
+  -d '{"userId":"local-demo-user","characterId":"tomoshibi","limit":5}'
+```
+
+Mock-removal check:
+
+```bash
+rg "SUGGESTION_|INITIAL_MESSAGES|COMPANION_REPLIES" src
+rg "辰ノ島|一支国博物館|左京鼻|夕暮れの浜辺|ランダム返信" src
+```
+
+Both commands should return no matches in production app code.
+
+Auth mode:
+
+- `TOMOSHIBI_AI_AUTH_MODE=local` keeps the emulator/MVP flow and uses the `userId` in the request body.
+- `TOMOSHIBI_AI_AUTH_MODE=firebase` requires `Authorization: Bearer <Firebase ID token>` on `/api/tomoshibi-ai/*`; the BFF verifies the token and overwrites `userId` with the verified Firebase UID before calling Functions.
+- Direct Functions calls use the same `TOMOSHIBI_AI_AUTH_MODE`; in `firebase` mode Functions also verifies the Bearer token and overwrites `userId`.
+
+See `docs/tomoshibi-ai-deploy-checklist-ja.md` for the full local smoke, auth switch, and deploy checklist.
+
 ### Production deployment (Firestore/Functions)
 
 Use these commands from this app directory:

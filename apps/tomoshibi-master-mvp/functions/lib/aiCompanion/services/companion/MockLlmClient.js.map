@@ -1,0 +1,1 @@
+{"version":3,"file":"MockLlmClient.js","sourceRoot":"","sources":["../../../../src/aiCompanion/services/companion/MockLlmClient.ts"],"names":[],"mappings":";;;AAEA,MAAa,aAAa;IACxB,KAAK,CAAC,YAAY,CAAI,QAAwB;QAC5C,MAAM,IAAI,KAAK,CAAC,yCAAyC,CAAC,CAAC;IAC7D,CAAC;CACF;AAJD,sCAIC"}

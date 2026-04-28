@@ -1,0 +1,1 @@
+{"version":3,"file":"createLlmClient.js","sourceRoot":"","sources":["../../../../src/aiCompanion/services/companion/createLlmClient.ts"],"names":[],"mappings":";;AAKA,0CAEC;AAPD,yCAA0C;AAE1C,uDAAoD;AACpD,mDAAgD;AAEhD,SAAgB,eAAe;IAC7B,OAAO,IAAA,aAAO,EAAC,cAAc,CAAC,KAAK,QAAQ,CAAC,CAAC,CAAC,IAAI,iCAAe,EAAE,CAAC,CAAC,CAAC,IAAI,6BAAa,EAAE,CAAC;AAC5F,CAAC"}
