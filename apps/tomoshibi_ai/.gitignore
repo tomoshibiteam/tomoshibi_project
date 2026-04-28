@@ -1,0 +1,13 @@
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+.DS_Store
+
+# Local env (never commit secrets)
+.env
+.env.*
+.env.local
+functions/.env
+functions/.env.*
+functions/.env.local
