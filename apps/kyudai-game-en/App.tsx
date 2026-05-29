@@ -1112,23 +1112,23 @@ type ReadyTip = {
 const journeySteps: JourneyStep[] = [
   {
     id: "journey-ready",
-    title: "Generate your personalized scenario",
-    body: "Based on your inputs, 6 spots starting from the Center Zone are arranged in a rising-to-resolution arc.",
-    icon: "sparkles-outline",
+    title: "Choose Your Story",
+    body: "Select a campus world and set your exploration style",
+    icon: "book-outline",
     badge: "STEP 1",
   },
   {
     id: "journey-walk",
-    title: "Follow the route in order",
-    body: "Using the map and arrival effects, navigate the 6 locations at a comfortable pace.",
-    icon: "book-outline",
+    title: "Follow the Map",
+    body: "Visit 7 iconic spots on Ito Campus guided by the story",
+    icon: "map-outline",
     badge: "STEP 2",
   },
   {
     id: "journey-story",
-    title: "Trivia transforms into story",
-    body: "Specific information about each spot is turned into a short scenario, all tied together at the final location.",
-    icon: "map-outline",
+    title: "Complete the Quest",
+    body: "Solve mysteries, answer quizzes, and finish the adventure",
+    icon: "trophy-outline",
     badge: "STEP 3",
   },
 ];
@@ -1590,19 +1590,19 @@ export default function App() {
       activeRouteDots,
     };
   }, [activeTargetIndex, routeOrigin, spots]);
-  const effectiveLandingTopTag = adminWorldConfig?.landingTopTag || "Ito Campus Explorer";
-  const effectiveLandingHeroPanelTitle = adminWorldConfig?.landingHeroPanelTitle || "Discover Kyushu University through stories.";
+  const effectiveLandingTopTag = adminWorldConfig?.landingTopTag || "Taiwan × Kyushu University";
+  const effectiveLandingHeroPanelTitle = adminWorldConfig?.landingHeroPanelTitle || "Explore Kyushu University\nthrough stories.";
   const effectiveLandingHeroPanelBody = adminWorldConfig?.landingHeroPanelBody || "The Notebook Aoyagi Left Behind";
-  const effectiveLandingEyebrow = adminWorldConfig?.landingEyebrow || "Kyushu University Ito Campus  |  Pilot Experiment";
-  const effectiveLandingHeroTitleLine1 = adminWorldConfig?.landingHeroTitleLine1 || "Discover Ito for the first time";
-  const effectiveLandingHeroTitleLine2 = adminWorldConfig?.landingHeroTitleLine2 || "through story";
+  const effectiveLandingEyebrow = adminWorldConfig?.landingEyebrow || "Kyushu University Ito Campus  |  Taiwan Exchange Edition";
+  const effectiveLandingHeroTitleLine1 = adminWorldConfig?.landingHeroTitleLine1 || "Experience campus life";
+  const effectiveLandingHeroTitleLine2 = adminWorldConfig?.landingHeroTitleLine2 || "through an interactive story";
   const effectiveLandingHeroDescription =
     adminWorldConfig?.landingHeroDescription ||
-    "This is a pilot experiment set on the Ito Campus of Kyushu University. No movement required — experience each spot on campus through story, right where you are.";
-  const effectiveLandingJourneyTitle = adminWorldConfig?.landingJourneyTitle || "How it works";
-  const effectiveLandingJourneyCaption = adminWorldConfig?.landingJourneyCaption || "A 3-step story experience — no walking needed";
-  const effectiveLandingFeaturesTitle = adminWorldConfig?.landingFeaturesTitle || "What you can do";
-  const effectiveLandingFeaturesCaption = adminWorldConfig?.landingFeaturesCaption || "More ways to enjoy Kyushu University than just walking";
+    "Join the story of Aoyagi exploring Ito Campus — walk through history, solve mysteries, and discover the heart of Kyushu University. Created for international exchange.";
+  const effectiveLandingJourneyTitle = adminWorldConfig?.landingJourneyTitle || "How It Works";
+  const effectiveLandingJourneyCaption = adminWorldConfig?.landingJourneyCaption || "A 3-step story experience on Ito Campus";
+  const effectiveLandingFeaturesTitle = adminWorldConfig?.landingFeaturesTitle || "What You'll Experience";
+  const effectiveLandingFeaturesCaption = adminWorldConfig?.landingFeaturesCaption || "More than just a campus tour";
   const effectiveLandingGoogleStartButton = "Sign in with Google and start your adventure";
   const effectiveLandingGuestStartButton = "Start without signing in";
 
@@ -4603,6 +4603,7 @@ export default function App() {
 
   if (screen === "prologue") {
     return (
+      <Pressable style={{ flex: 1 }} onPress={handlePrologueNarrationPress}>
       <SafeAreaView style={styles.prologueSafeArea}>
         <StatusBar style="light" />
 
@@ -4746,6 +4747,7 @@ export default function App() {
 
         {isMapScenarioTransitioning ? renderFlowTransitionOverlay() : null}
       </SafeAreaView>
+      </Pressable>
     );
   }
 
@@ -5035,6 +5037,7 @@ export default function App() {
       (nextSpot ? `Heading to ${nextSpot.name}. Check the map for your next destination.` : "Proceeding to the next scene.");
 
     return (
+      <Pressable style={{ flex: 1 }} onPress={handleSpotScenarioTextPress}>
       <SafeAreaView style={styles.spotSafeArea}>
         <StatusBar style="light" />
 
@@ -5313,11 +5316,13 @@ export default function App() {
           {isMapScenarioTransitioning ? renderFlowTransitionOverlay() : null}
         </View>
       </SafeAreaView>
+      </Pressable>
     );
   }
 
   if (screen === "epilogue") {
     return (
+      <Pressable style={{ flex: 1 }} onPress={handleEpilogueNarrationPress}>
       <SafeAreaView style={styles.prologueSafeArea}>
         <StatusBar style="light" />
 
@@ -5412,6 +5417,7 @@ export default function App() {
           </Animated.View>
         </View>
       </SafeAreaView>
+      </Pressable>
     );
   }
 
@@ -5968,9 +5974,58 @@ export default function App() {
               onPress={() => Linking.openURL("https://lit.link/en/yutakenouchi")}
             >
               <Ionicons name="person-outline" size={20} color={palette.onBackground} />
-              <Text style={styles.thanksLinkButtonText}>About the Creator</Text>
+              <Text style={styles.thanksLinkButtonText}>About the Creator (Social Media)</Text>
               <Ionicons name="open-outline" size={16} color={palette.onSurfaceVariant} />
             </Pressable>
+
+            <View style={styles.thanksNewProductCard}>
+              <View style={styles.thanksNewProductTitleRow}>
+                <Text style={styles.thanksNewProductTitle}>🏮 TOMOSHIBI</Text>
+                <View style={styles.thanksNewBadge}>
+                  <Text style={styles.thanksNewBadgeText}>COMING SOON</Text>
+                </View>
+              </View>
+              <Text style={styles.thanksNewProductHeadline}>
+                {"The scenery you've been overlooking becomes an adventure — just for the two of you."}
+              </Text>
+              <Text style={styles.thanksNewProductSub}>
+                {"TOMOSHIBI is an AI companion that remembers you — and gently nudges you outside."}
+              </Text>
+              <View style={styles.thanksNewProductFeatures}>
+                <View style={styles.thanksNewProductFeatureItem}>
+                  <Text style={styles.thanksNewProductFeatureIcon}>🧠</Text>
+                  <View style={styles.thanksNewProductFeatureText}>
+                    <Text style={styles.thanksNewProductFeatureTitle}>Remembers you, not just your data</Text>
+                    <Text style={styles.thanksNewProductFeatureDesc}>{"The more you talk, the more TOMOSHIBI understands what moves you."}</Text>
+                  </View>
+                </View>
+                <View style={styles.thanksNewProductFeatureItem}>
+                  <Text style={styles.thanksNewProductFeatureIcon}>🚶</Text>
+                  <View style={styles.thanksNewProductFeatureText}>
+                    <Text style={styles.thanksNewProductFeatureTitle}>Walks with you, not ahead of you</Text>
+                    <Text style={styles.thanksNewProductFeatureDesc}>{"When you arrive somewhere, TOMOSHIBI narrates the moment with you."}</Text>
+                  </View>
+                </View>
+                <View style={styles.thanksNewProductFeatureItem}>
+                  <Text style={styles.thanksNewProductFeatureIcon}>📖</Text>
+                  <View style={styles.thanksNewProductFeatureText}>
+                    <Text style={styles.thanksNewProductFeatureTitle}>Turns small outings into lasting memories</Text>
+                    <Text style={styles.thanksNewProductFeatureDesc}>{"Each trip becomes part of your shared story."}</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.thanksNewProductCtaWrap}>
+                <Text style={styles.thanksNewProductCtaText}>
+                  {"We're building TOMOSHIBI for people like you.\nSee what's coming — and let us know what you think. 🙏"}
+                </Text>
+                <Pressable
+                  style={({ pressed }) => [styles.thanksNewProductButton, pressed && { opacity: 0.7 }]}
+                  onPress={() => Linking.openURL("https://tomoshibi.app")}
+                >
+                  <Text style={styles.thanksNewProductButtonText}>See the Product Page →</Text>
+                </Pressable>
+              </View>
+            </View>
 
             <Text style={styles.thanksCopyright}>© 2026 Yu Takenouchi · TOMOSHIBI Project</Text>
           </View>
@@ -6450,6 +6505,19 @@ export default function App() {
 
         <View style={styles.footerWrap}>
           <View style={[styles.footerInner, { width: contentWidth }]}>
+            <Pressable
+              onPress={() => Linking.openURL("https://tomoshibi.app")}
+              style={({ pressed }) => [styles.footerNewProductBanner, pressed && { opacity: 0.7 }]}
+            >
+              <View style={styles.footerNewProductRow}>
+                <Text style={styles.footerNewProductEmoji}>🏮  </Text>
+                <View style={styles.footerNewProductBadge}>
+                  <Text style={styles.footerNewProductBadgeText}>NEW</Text>
+                </View>
+              </View>
+              <Text style={styles.footerNewProductHeadline}>{"The scenery you've been overlooking becomes an adventure — just for the two of you."}</Text>
+              <Text style={styles.footerNewProductSub}>TOMOSHIBI AI Companion · Coming soon  →</Text>
+            </Pressable>
             <View style={styles.footerLinks}>
               <Pressable onPress={() => setShowPrivacyModal(true)} style={({ pressed }) => [styles.footerLinkPressable, pressed && styles.pressed]}>
                 <Text style={styles.footerLink}>Privacy</Text>
@@ -6458,7 +6526,7 @@ export default function App() {
                 <Text style={styles.footerLink}>Terms</Text>
               </Pressable>
             </View>
-            <Text style={styles.footerCopy}>© 2026 TOMOSHIBI.</Text>
+            <Text style={styles.footerCopy}>© 2026 TOMOSHIBI — Taiwan Exchange Edition</Text>
           </View>
         </View>
       </ScrollView>
@@ -7141,6 +7209,51 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
     textTransform: "uppercase",
     fontWeight: "500",
+  },
+  footerTomoshibiLink: {
+    color: palette.onSurfaceVariant,
+    fontSize: 13,
+    fontWeight: "600",
+    textDecorationLine: "underline",
+    letterSpacing: 0.2,
+  },
+
+  // ── Landing Footer: New product banner ──
+  footerNewProductBanner: {
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+  },
+  footerNewProductRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  footerNewProductEmoji: {
+    color: "#fff",
+    fontSize: 13,
+  },
+  footerNewProductBadge: {
+    backgroundColor: "#F59E0B",
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+  },
+  footerNewProductBadgeText: {
+    fontSize: 10,
+    color: "#000",
+    fontWeight: "bold",
+  },
+  footerNewProductHeadline: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#fff",
+  },
+  footerNewProductSub: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.6)",
+    marginTop: 2,
   },
 
   setupTopBar: {
@@ -8546,10 +8659,10 @@ const styles = StyleSheet.create({
   },
   prologueContent: {
     flex: 1,
-    justifyContent: "flex-start",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 22,
-    paddingTop: 48,
+    paddingTop: 0,
   },
   prologueBottomGradient: {
     ...StyleSheet.absoluteFillObject,
@@ -8559,7 +8672,7 @@ const styles = StyleSheet.create({
   prologueCenterStack: {
     width: "100%",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
   },
   prologueBottomPanel: {
     width: "100%",
@@ -10314,6 +10427,108 @@ const styles = StyleSheet.create({
   thanksCopyright: {
     fontSize: 12,
     color: palette.outlineVariant,
+    textAlign: "center",
+  },
+
+  // ── Thanks: New product card ──
+  thanksNewProductCard: {
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.1)",
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 12,
+    backgroundColor: "#0F172A",
+  },
+  thanksNewProductTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  thanksNewProductTitle: {
+    fontWeight: "bold",
+    fontSize: 15,
+    color: "#fff",
+  },
+  thanksNewBadge: {
+    backgroundColor: "#F59E0B",
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  thanksNewBadgeText: {
+    fontSize: 11,
+    color: "#000",
+    fontWeight: "bold",
+  },
+  thanksNewProductHeadline: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: "#fff",
+    marginTop: 12,
+    lineHeight: 25,
+    letterSpacing: -0.3,
+  },
+  thanksNewProductSub: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.65)",
+    marginTop: 8,
+    lineHeight: 19,
+  },
+  thanksNewProductDesc: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.6)",
+    marginTop: 10,
+    lineHeight: 20,
+  },
+  thanksNewProductFeatures: {
+    marginTop: 16,
+    gap: 12,
+  },
+  thanksNewProductFeatureItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  thanksNewProductFeatureIcon: {
+    fontSize: 18,
+    marginTop: 1,
+  },
+  thanksNewProductFeatureText: {
+    flex: 1,
+  },
+  thanksNewProductFeatureTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#fff",
+    marginBottom: 2,
+  },
+  thanksNewProductFeatureDesc: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.55)",
+    lineHeight: 17,
+  },
+  thanksNewProductCtaWrap: {
+    marginTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.1)",
+    paddingTop: 16,
+    gap: 12,
+  },
+  thanksNewProductCtaText: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.7)",
+    lineHeight: 20,
+  },
+  thanksNewProductButton: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  thanksNewProductButtonText: {
+    color: "#fff",
+    fontWeight: "600",
     textAlign: "center",
   },
 
