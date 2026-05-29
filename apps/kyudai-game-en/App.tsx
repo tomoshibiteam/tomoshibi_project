@@ -48,6 +48,9 @@ const palette = {
   error: "#9f403d",
 };
 
+const BREAKPOINT_TABLET = 640;
+const BREAKPOINT_DESKTOP = 1024;
+
 const heroImage =
   "https://lh3.googleusercontent.com/aida/ADBb0uhxai5hbeKu_CyFAeSLCKP_Bl443z6LMiMlWZGAOeldUMx-pd7w2vg3pl6pU8jmXdd0fwpiXZGCzJsfEU3LjVhHa7CqfjUZ2AAXj7mtGikcQCY5zIchCthsBOytZtJwAc141EcYSw5rGS6r8aWk3eeka1Nqsh7GCmHIZDgu6Xknl1Hxydl7GDSagYVh2yIhL3qcs3tumIgy8FswEwt6yQuF1T9PMZKhrZX2lNttAMgGSGS2LZSuI--77YM";
 
@@ -1221,7 +1224,12 @@ export default function App() {
     Platform.OS !== "web" &&
     (process.env.EXPO_PUBLIC_USE_MOCK_MAP_BACKGROUND ?? "").trim().toLowerCase() === "true";
   const { width, height } = useWindowDimensions();
-  const contentWidth = useMemo(() => Math.max(0, Math.min(width - 32, 520)), [width]);
+  const contentWidth = useMemo(() => Math.max(0, Math.min(width - 32, 680)), [width]);
+  const landingContentWidth = useMemo(() => {
+    if (width >= BREAKPOINT_DESKTOP) return Math.min(width - 80, 1100);
+    if (width >= BREAKPOINT_TABLET) return Math.min(width - 48, 800);
+    return Math.min(width - 32, 520);
+  }, [width]);
   const heroHeight = contentWidth;
   const landingHeroTitleFontSize = useMemo(() => {
     const responsive = Math.floor(contentWidth / 9.2);
@@ -6404,7 +6412,7 @@ export default function App() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View style={[styles.headerInner, { width: contentWidth }]}>
+          <View style={[styles.headerInner, { width: landingContentWidth }]}>
             <View style={styles.headerSideSpacer} />
             <View style={styles.brandRow}>
               <Image source={tomoshibiLogo} style={styles.brandLogo} resizeMode="contain" />
@@ -6413,62 +6421,84 @@ export default function App() {
           </View>
         </View>
 
-        <Animated.View style={[styles.main, { width: contentWidth }, landingHeroAnimatedStyle]}>
-          <View style={[styles.heroWrap, { height: heroHeight }]}>
-            <Image source={landingHeroImage} style={styles.heroImage} resizeMode="cover" />
-            <View style={styles.heroOverlay} />
-            <View style={styles.heroTopTag}>
-              <Ionicons name="walk-outline" size={15} color="#fdfdfd" />
-              <Text style={styles.heroTopTagText}>{effectiveLandingTopTag}</Text>
+        <Animated.View style={[styles.main, { width: landingContentWidth }, landingHeroAnimatedStyle]}>
+          <View style={[
+            styles.landingHeroSection,
+            width >= BREAKPOINT_DESKTOP && styles.landingHeroSectionDesktop,
+          ]}>
+            {/* Hero image wrap */}
+            <View style={[
+              styles.landingHeroImageWrap,
+              { height: width >= BREAKPOINT_DESKTOP ? undefined : heroHeight },
+              width >= BREAKPOINT_DESKTOP && styles.landingHeroImageWrapDesktop,
+            ]}>
+              <Image source={landingHeroImage} style={styles.heroImage} resizeMode="cover" />
+              <View style={styles.heroOverlay} />
+              <View style={styles.heroTopTag}>
+                <Ionicons name="walk-outline" size={15} color="#fdfdfd" />
+                <Text style={styles.heroTopTagText}>{effectiveLandingTopTag}</Text>
+              </View>
+              <View style={styles.heroBottomPanel}>
+                <Text style={styles.heroBottomTitle}>{effectiveLandingHeroPanelTitle}</Text>
+                <Text style={styles.heroBottomBody}>{effectiveLandingHeroPanelBody}</Text>
+              </View>
             </View>
-            <View style={styles.heroBottomPanel}>
-              <Text style={styles.heroBottomTitle}>{effectiveLandingHeroPanelTitle}</Text>
-              <Text style={styles.heroBottomBody}>{effectiveLandingHeroPanelBody}</Text>
-            </View>
-          </View>
 
-          <View style={styles.heroContent}>
-            <Text style={styles.heroEyebrow}>{effectiveLandingEyebrow}</Text>
-            <View style={styles.heroTitleBlock}>
-              <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-                style={[
-                  styles.heroTitle,
-                  { fontSize: landingHeroTitleFontSize, lineHeight: landingHeroTitleLineHeight },
-                ]}
-              >
-                {effectiveLandingHeroTitleLine1}
-              </Text>
-              <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                minimumFontScale={0.72}
-                style={[
-                  styles.heroTitle,
-                  { fontSize: landingHeroTitleFontSize, lineHeight: landingHeroTitleLineHeight },
-                ]}
-              >
-                {effectiveLandingHeroTitleLine2}
-              </Text>
-            </View>
-            <Text style={styles.heroBody}>{effectiveLandingHeroDescription}</Text>
-          </View>
+            {/* Text & action wrap */}
+            <View style={[
+              styles.landingHeroTextWrap,
+              width >= BREAKPOINT_DESKTOP && styles.landingHeroTextWrapDesktop,
+            ]}>
+              <View style={styles.heroContent}>
+                <Text style={styles.heroEyebrow}>{effectiveLandingEyebrow}</Text>
+                <View style={styles.heroTitleBlock}>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.72}
+                    style={[
+                      styles.heroTitle,
+                      { fontSize: landingHeroTitleFontSize, lineHeight: landingHeroTitleLineHeight },
+                    ]}
+                  >
+                    {effectiveLandingHeroTitleLine1}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.72}
+                    style={[
+                      styles.heroTitle,
+                      { fontSize: landingHeroTitleFontSize, lineHeight: landingHeroTitleLineHeight },
+                    ]}
+                  >
+                    {effectiveLandingHeroTitleLine2}
+                  </Text>
+                </View>
+                <Text style={styles.heroBody}>{effectiveLandingHeroDescription}</Text>
+              </View>
 
-          <View style={styles.startArea}>
+              <View style={styles.startArea}>
+              </View>
+            </View>
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.landingJourneySection, { width: contentWidth }, landingCardsAnimatedStyle]}>
+        <Animated.View style={[styles.landingJourneySection, { width: landingContentWidth }, landingCardsAnimatedStyle]}>
           <View style={styles.landingSectionHeader}>
             <Text style={styles.landingSectionTitle}>{effectiveLandingJourneyTitle}</Text>
             <Text style={styles.landingSectionCaption}>{effectiveLandingJourneyCaption}</Text>
           </View>
 
-          <View style={styles.journeyStack}>
+          <View style={[
+            styles.journeyStack,
+            width >= BREAKPOINT_TABLET && styles.journeyStackGrid,
+          ]}>
             {journeySteps.map((step) => (
-              <View key={step.id} style={styles.journeyCard}>
+              <View key={step.id} style={[
+                styles.journeyCard,
+                width >= BREAKPOINT_TABLET && styles.journeyCardGrid,
+              ]}>
                 <View style={styles.journeyCardHead}>
                   <Text style={styles.journeyBadge}>{step.badge}</Text>
                   <View style={styles.journeyIconWrap}>
@@ -6482,15 +6512,21 @@ export default function App() {
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.features, { width: contentWidth }, landingCardsAnimatedStyle]}>
+        <Animated.View style={[styles.features, { width: landingContentWidth }, landingCardsAnimatedStyle]}>
           <View style={styles.landingSectionHeader}>
             <Text style={styles.landingSectionTitle}>{effectiveLandingFeaturesTitle}</Text>
             <Text style={styles.landingSectionCaption}>{effectiveLandingFeaturesCaption}</Text>
           </View>
 
-          <View style={styles.featureStack}>
+          <View style={[
+            styles.featureStack,
+            width >= BREAKPOINT_TABLET && styles.featureStackGrid,
+          ]}>
             {featureCards.map((card) => (
-              <View key={card.id} style={styles.featureCard}>
+              <View key={card.id} style={[
+                styles.featureCard,
+                width >= BREAKPOINT_TABLET && styles.featureCardGrid,
+              ]}>
                 <View style={[styles.featureIconCircle, { backgroundColor: card.iconBg }]}>
                   <Ionicons name={card.icon} size={22} color={card.iconColor} />
                 </View>
@@ -6504,7 +6540,7 @@ export default function App() {
         </Animated.View>
 
         <View style={styles.footerWrap}>
-          <View style={[styles.footerInner, { width: contentWidth }]}>
+          <View style={[styles.footerInner, { width: landingContentWidth }]}>
             <Pressable
               onPress={() => Linking.openURL("https://tomoshibi.app")}
               style={({ pressed }) => [styles.footerNewProductBanner, pressed && { opacity: 0.7 }]}
@@ -6541,7 +6577,12 @@ export default function App() {
           setLandingBottomBarHeight((prev) => (prev === measuredHeight ? prev : measuredHeight));
         }}
       >
-        <View style={[styles.landingAuthActions, { width: contentWidth }]}>
+        <View style={[
+            styles.landingAuthActions,
+            width >= BREAKPOINT_DESKTOP
+              ? { maxWidth: 600, alignSelf: "center", width: "100%" }
+              : { width: contentWidth },
+          ]}>
           {resumeDraft != null ? (
             <Pressable
               style={({ pressed }) => [styles.landingResumeButton, pressed && styles.pressed]}
@@ -6681,7 +6722,7 @@ const styles = StyleSheet.create({
   main: {
     paddingHorizontal: 0,
     marginTop: 32,
-    marginBottom: 18,
+    marginBottom: 0,
   },
   heroWrap: {
     width: "100%",
@@ -6792,6 +6833,63 @@ const styles = StyleSheet.create({
   startArea: {
     marginBottom: 18,
   },
+
+  // ── Landing Hero: responsive layout ──
+  landingHeroSection: {
+    flexDirection: "column",
+    marginBottom: 18,
+  },
+  landingHeroSectionDesktop: {
+    flexDirection: "row",
+    gap: 48,
+    alignItems: "center",
+  },
+  landingHeroImageWrap: {
+    width: "100%",
+    borderRadius: 28,
+    overflow: "hidden",
+    marginBottom: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+  landingHeroImageWrapDesktop: {
+    flex: 1,
+    maxWidth: 500,
+    minHeight: 400,
+    marginBottom: 0,
+  },
+  landingHeroTextWrap: {
+    width: "100%",
+  },
+  landingHeroTextWrapDesktop: {
+    flex: 1,
+  },
+
+  // ── Journey Steps: grid layout for tablet+ ──
+  journeyStackGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  journeyCardGrid: {
+    flex: 1,
+    minWidth: 240,
+  },
+
+  // ── Feature Cards: grid layout for tablet+ ──
+  featureStackGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 14,
+  },
+  featureCardGrid: {
+    flex: 1,
+    minWidth: 240,
+  },
+
   landingBottomBar: {
     position: "absolute",
     left: 0,
