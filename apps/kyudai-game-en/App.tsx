@@ -6028,7 +6028,7 @@ export default function App() {
                 </Text>
                 <Pressable
                   style={({ pressed }) => [styles.thanksNewProductButton, pressed && { opacity: 0.7 }]}
-                  onPress={() => Linking.openURL("https://tomoshibi.app")}
+                  onPress={() => Linking.openURL("https://tomoshibi-lp-632917946317.us-west1.run.app/?lang=en")}
                 >
                   <Text style={styles.thanksNewProductButtonText}>See the Product Page →</Text>
                 </Pressable>
@@ -6542,7 +6542,7 @@ export default function App() {
         <View style={styles.footerWrap}>
           <View style={[styles.footerInner, { width: landingContentWidth }]}>
             <Pressable
-              onPress={() => Linking.openURL("https://tomoshibi.app")}
+              onPress={() => Linking.openURL("https://tomoshibi-lp-632917946317.us-west1.run.app/?lang=en")}
               style={({ pressed }) => [styles.footerNewProductBanner, pressed && { opacity: 0.7 }]}
             >
               <View style={styles.footerNewProductRow}>
@@ -7318,7 +7318,9 @@ const styles = StyleSheet.create({
 
   // ── Landing Footer: New product banner ──
   footerNewProductBanner: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "#1B2B24",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
@@ -7346,11 +7348,11 @@ const styles = StyleSheet.create({
   footerNewProductHeadline: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#fff",
+    color: "#FFFFFF",
   },
   footerNewProductSub: {
     fontSize: 12,
-    color: "rgba(255,255,255,0.6)",
+    color: "rgba(255,255,255,0.85)",
     marginTop: 2,
   },
 
