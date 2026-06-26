@@ -57,22 +57,27 @@ export default function Home() {
           background: '#16110D',
         }}
       >
-        {/* Hero image: background-image on abs div — no height:100% dependency issues */}
-        <div
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/uploads/hero_night.png"
+          alt=""
           aria-hidden
           style={{
+            display: 'block',
             position: 'absolute',
-            inset: 0,
-            backgroundImage: "url('/uploads/hero_night.png')",
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '62% auto',
-            backgroundPosition: 'right center',
+            right: '0px',
+            top: '0px',
+            width: '850px',
+            height: '640px',
+            maxWidth: 'none',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 32%)',
+            maskImage: 'linear-gradient(to right, transparent 0%, black 32%)',
           }}
         />
-        {/* Gradient: left dark for text, fades right to show image */}
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(90deg, #16110D 0%, #16110D 33%, rgba(22,17,13,.85) 50%, rgba(22,17,13,0) 64%)',
+          position: 'absolute',
+          top: 0, right: 0, bottom: 0, left: 0,
+          background: 'linear-gradient(90deg, #16110D 0%, #16110D 35%, rgba(22,17,13,.8) 52%, rgba(22,17,13,0) 65%)',
           pointerEvents: 'none',
           zIndex: 1,
         }} />
