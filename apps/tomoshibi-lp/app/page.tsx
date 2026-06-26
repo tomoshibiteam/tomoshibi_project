@@ -234,7 +234,7 @@ export default function Home() {
             <h2 style={{ fontWeight: 700, fontSize: '30px', letterSpacing: '.04em', color: '#FBF3E8' }}>TOMOSHIBIに興味がありますか？</h2>
             <p style={{ fontSize: '16px', color: '#D9CBBA', marginTop: '14px' }}>30秒で完了するアンケートにご協力ください。</p>
             <a
-              href="#"
+              href="/survey"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: '#E2611C', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: '19px', padding: '18px 46px', borderRadius: '999px', marginTop: '30px', boxShadow: '0 14px 32px rgba(226,97,28,.42)' }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
