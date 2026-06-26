@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #F6F0E7;
+  --primary: #E2611C;
+  --dark: #16110D;
+  --dark2: #1C1612;
+  --text: #3B2E25;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+}
+
+@keyframes tomoGlow {
+  0%, 100% { opacity: .5; transform: scale(1); }
+  50% { opacity: .85; transform: scale(1.07); }
+}
+
+@keyframes tomoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
