@@ -38,20 +38,23 @@ body {
 /* ===== RESPONSIVE ===== */
 
 /* Hero */
-.hero-section { height: 640px; }
+.hero-section { height: 640px; display: flex; flex-direction: column; }
 .hero-img {
   display: block; position: absolute;
-  right: 0; top: 0;
-  width: 850px; height: 640px;
-  max-width: none;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 32%);
-  mask-image: linear-gradient(to right, transparent 0%, black 32%);
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center top;
 }
 .hero-gradient {
-  background: linear-gradient(90deg, #16110D 0%, #16110D 35%, rgba(22,17,13,.8) 52%, rgba(22,17,13,0) 65%);
+  background: linear-gradient(to bottom, rgba(22,17,13,0.12) 0%, rgba(22,17,13,0.48) 55%, rgba(22,17,13,0.86) 100%);
 }
 .hero-h1   { font-size: 52px; line-height: 1.42; }
-.hero-copy { padding: 48px 28px 92px; }
+.hero-copy {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  padding: 0 40px 48px;
+}
 .nav-links { display: flex; gap: 34px; }
 
 /* Sections */
@@ -67,7 +70,7 @@ body {
 /* ── Tablet ≤ 960px ── */
 @media (max-width: 960px) {
   .hero-section    { height: 520px; }
-  .hero-img        { width: 65vw; height: 520px; }
+  .hero-img        { width: 100%; height: 100%; }
   .hero-h1         { font-size: 40px; }
   .empathy-grid    { grid-template-columns: repeat(2, 1fr); }
   .feature-diagram { display: none; }
@@ -87,14 +90,8 @@ body {
   .hero-gradient {
     background: linear-gradient(to top, #16110D 28%, rgba(22,17,13,.85) 55%, rgba(22,17,13,0) 100%);
   }
-  .hero-h1 { font-size: 26px; }
-  .hero-copy {
-    position: absolute !important;
-    bottom: 0; left: 0; right: 0;
-    padding: 0 20px 36px !important;
-    max-width: 100% !important;
-    margin: 0 !important;
-  }
+  .hero-h1   { font-size: 26px; }
+  .hero-copy { padding: 0 20px 28px !important; }
   .hero-sub  { font-size: 15px !important; margin-top: 12px !important; }
   .hero-btn  {
     font-size: 15px !important;

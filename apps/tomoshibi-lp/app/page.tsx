@@ -51,7 +51,7 @@ export default function Home() {
       <section
         id="top"
         className="hero-section"
-        style={{ position: 'relative', overflow: 'hidden', background: '#16110D' }}
+        style={{ position: 'relative', overflow: 'hidden', background: '#16110D', display: 'flex', flexDirection: 'column' }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -77,7 +77,7 @@ export default function Home() {
               { href: '#empathy', text: '共感' },
               { href: '#feature', text: '特徴' },
               { href: '#flow', text: '体験' },
-              { href: '#cta', text: 'アンケート' },
+              { href: '/survey', text: 'アンケート' },
             ].map(({ href, text }) => (
               <a key={href} href={href} style={{ color: '#E7DCCD', textDecoration: 'none', fontSize: '15px', fontWeight: 500 }}>{text}</a>
             ))}
@@ -85,8 +85,8 @@ export default function Home() {
         </header>
 
         {/* Hero copy */}
-        <div className="hero-copy" style={{ position: 'relative', zIndex: 3, maxWidth: '1080px', margin: '0 auto' }}>
-          <h1 className="hero-h1" style={{ fontWeight: 900, letterSpacing: '.04em', color: '#FBF3E8', textShadow: '0 2px 24px rgba(0,0,0,.5)' }}>
+        <div className="hero-copy" style={{ position: 'relative', zIndex: 3 }}>
+          <h1 className="hero-h1" style={{ fontWeight: 900, letterSpacing: '.04em', color: '#FBF3E8', textShadow: '0 2px 28px rgba(0,0,0,.65)' }}>
             見過ごしていた景色が、<br />二人だけの冒険になる。
           </h1>
           <p className="hero-sub" style={{ fontSize: '20px', fontWeight: 500, color: '#E3D6C4', marginTop: '24px', letterSpacing: '.04em', textShadow: '0 2px 16px rgba(0,0,0,.5)' }}>AIの相棒と、外へ出かけよう。</p>
@@ -249,6 +249,36 @@ export default function Home() {
             </a>
             <p style={{ fontSize: '13px', color: '#A99683', marginTop: '18px' }}>回答テストへの参加希望も受け付けています</p>
           </div>
+        </div>
+      </section>
+
+      {/* ===== LINE OPEN CHAT ===== */}
+      <section style={{ background: '#F6F0E7', padding: '0 28px 72px' }}>
+        <div style={{ maxWidth: '540px', margin: '0 auto', background: '#fff', borderRadius: '22px', padding: '44px 36px', boxShadow: '0 10px 32px rgba(0,0,0,0.08)', textAlign: 'center' }}>
+          {/* LINE icon */}
+          <div style={{ width: '64px', height: '64px', background: '#06C755', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
+            <svg viewBox="0 0 48 48" width="38" height="38" fill="white" aria-hidden="true">
+              <path d="M24 4C13 4 4 11.8 4 21.4c0 6.6 4.3 12.4 10.8 15.7L13 44l7.8-4.2c1 .14 2.1.2 3.2.2 11 0 20-7.8 20-17.4S35 4 24 4z" />
+            </svg>
+          </div>
+          <span style={{ display: 'inline-block', background: '#E6F9EC', color: '#06C755', fontWeight: 700, fontSize: '12px', letterSpacing: '.08em', padding: '4px 14px', borderRadius: '20px', marginBottom: '18px' }}>LINE オープンチャット</span>
+          <h2 style={{ fontWeight: 700, fontSize: '18px', color: '#352A20', lineHeight: 1.6, marginBottom: '12px' }}>
+            TOMOSHIBI｜ひとりのおでかけに<br />寄り添うAIフレンド
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6E5D4F', lineHeight: 1.9, marginBottom: '28px' }}>
+            コミュニティに参加して情報交換したり、<br />体験テストにいち早く参加できます。
+          </p>
+          <a
+            href="https://line.me/ti/g2/p6M0U9d5j4yz3Z4geON5u_lK43aY04MPnlajwQ?utm_source=invitation&utm_medium=link_copy&utm_campaign=default"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#06C755', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: '16px', padding: '16px 36px', borderRadius: '999px', boxShadow: '0 8px 22px rgba(6,199,85,0.32)' }}
+          >
+            <svg viewBox="0 0 48 48" width="20" height="20" fill="white" aria-hidden="true">
+              <path d="M24 4C13 4 4 11.8 4 21.4c0 6.6 4.3 12.4 10.8 15.7L13 44l7.8-4.2c1 .14 2.1.2 3.2.2 11 0 20-7.8 20-17.4S35 4 24 4z" />
+            </svg>
+            オープンチャットに参加する
+          </a>
         </div>
       </section>
 
