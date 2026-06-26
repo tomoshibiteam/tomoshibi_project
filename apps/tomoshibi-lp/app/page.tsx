@@ -89,9 +89,10 @@ export default function Home() {
           <h1 className="hero-h1" style={{ fontWeight: 900, letterSpacing: '.04em', color: '#FBF3E8', textShadow: '0 2px 24px rgba(0,0,0,.5)' }}>
             見過ごしていた景色が、<br />二人だけの冒険になる。
           </h1>
-          <p style={{ fontSize: '20px', fontWeight: 500, color: '#E3D6C4', marginTop: '24px', letterSpacing: '.04em', textShadow: '0 2px 16px rgba(0,0,0,.5)' }}>AIの相棒と、外へ出かけよう。</p>
+          <p className="hero-sub" style={{ fontSize: '20px', fontWeight: 500, color: '#E3D6C4', marginTop: '24px', letterSpacing: '.04em', textShadow: '0 2px 16px rgba(0,0,0,.5)' }}>AIの相棒と、外へ出かけよう。</p>
           <a
             href="#empathy"
+            className="hero-btn"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: '#E2611C', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: '19px', padding: '19px 44px', borderRadius: '999px', marginTop: '40px', boxShadow: '0 14px 34px rgba(226,97,28,.4)' }}
           >
             どんなサービスか見てみる
@@ -100,9 +101,9 @@ export default function Home() {
       </section>
 
       {/* ===== EMPATHY ===== */}
-      <section id="empathy" style={{ background: '#F6F0E7', padding: '90px 28px 70px' }}>
+      <section id="empathy" className="empathy-section" style={{ background: '#F6F0E7', padding: '90px 28px 70px' }}>
         <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
-          <h2 data-reveal style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '48px' }}>
+          <h2 data-reveal className="section-h2" style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '48px' }}>
             こんな瞬間、ありませんか？
           </h2>
           <div className="empathy-grid">
@@ -127,8 +128,8 @@ export default function Home() {
       </section>
 
       {/* ===== FEATURE ===== */}
-      <section id="feature" style={{ background: '#F6F0E7', padding: '60px 28px 80px' }}>
-        <h2 data-reveal style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '24px' }}>
+      <section id="feature" className="feature-section" style={{ background: '#F6F0E7', padding: '60px 28px 80px' }}>
+        <h2 data-reveal className="section-h2" style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '24px' }}>
           あなたのことを覚えている、AIの相棒。
         </h2>
 
@@ -141,7 +142,7 @@ export default function Home() {
           </svg>
           <div style={{ position: 'absolute', left: '50%', top: '18px', transform: 'translateX(-50%)', zIndex: 2 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/uploads/15_phone_mock.png" alt="TOMOSHIBIアプリのチャット画面" style={{ width: '300px', height: 'auto', filter: 'drop-shadow(0 22px 40px rgba(143,84,30,.22))' }} />
+            <img src="/uploads/phone-mock.png" alt="TOMOSHIBIアプリのチャット画面" style={{ width: '300px', height: 'auto', filter: 'drop-shadow(0 22px 40px rgba(143,84,30,.22))', mixBlendMode: 'multiply' }} />
           </div>
           <div data-reveal style={{ position: 'absolute', left: 0, top: '70px', width: '240px', textAlign: 'center', zIndex: 2 }}>
             <div style={{ width: '88px', height: '88px', borderRadius: '50%', background: '#F1E7D5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: 'inset 0 2px 8px rgba(143,84,30,.07)' }}>
@@ -191,9 +192,9 @@ export default function Home() {
       </section>
 
       {/* ===== FLOW ===== */}
-      <section id="flow" style={{ background: '#F6F0E7', padding: '40px 28px 84px' }}>
+      <section id="flow" className="flow-section" style={{ background: '#F6F0E7', padding: '40px 28px 84px' }}>
         <div style={{ maxWidth: '1080px', margin: '0 auto' }}>
-          <h2 data-reveal style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '46px' }}>
+          <h2 data-reveal className="section-h2" style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '46px' }}>
             TOMOSHIBIとの1日
           </h2>
           <div className="flow-wrapper">
@@ -222,7 +223,7 @@ export default function Home() {
       </section>
 
       {/* ===== CTA ===== */}
-      <section id="cta" style={{ padding: '0 28px 64px' }}>
+      <section id="cta" className="cta-section" style={{ padding: '0 28px 64px' }}>
         <div style={{ position: 'relative', maxWidth: '1080px', margin: '0 auto', background: 'linear-gradient(110deg,#191310 0%,#241913 60%,#2C1E14 100%)', borderRadius: '22px', overflow: 'hidden' }} className="cta-inner">
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,rgba(25,19,16,.9) 30%,rgba(25,19,16,.45) 70%,rgba(25,19,16,.2) 100%)', pointerEvents: 'none' }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -231,10 +232,11 @@ export default function Home() {
           <img src="/uploads/02_mascot_main.png" alt="" className="cta-mascot" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', width: '140px', height: 'auto', filter: 'drop-shadow(0 0 26px rgba(255,170,80,.45))', animation: 'tomoFloat 5s ease-in-out infinite', zIndex: 2 }} />
 
           <div className="cta-text" style={{ position: 'relative', zIndex: 3, textAlign: 'center' }}>
-            <h2 style={{ fontWeight: 700, fontSize: '30px', letterSpacing: '.04em', color: '#FBF3E8' }}>TOMOSHIBIに興味がありますか？</h2>
-            <p style={{ fontSize: '16px', color: '#D9CBBA', marginTop: '14px' }}>30秒で完了するアンケートにご協力ください。</p>
+            <h2 className="cta-h2" style={{ fontWeight: 700, fontSize: '30px', letterSpacing: '.04em', color: '#FBF3E8' }}>TOMOSHIBIに興味がありますか？</h2>
+            <p className="cta-p" style={{ fontSize: '16px', color: '#D9CBBA', marginTop: '14px' }}>30秒で完了するアンケートにご協力ください。</p>
             <a
               href="/survey"
+              className="cta-btn"
               style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', background: '#E2611C', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: '19px', padding: '18px 46px', borderRadius: '999px', marginTop: '30px', boxShadow: '0 14px 32px rgba(226,97,28,.42)' }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -252,7 +254,7 @@ export default function Home() {
 
       {/* ===== FOOTER ===== */}
       <footer style={{ background: '#1C1612', padding: '26px 28px' }}>
-        <div style={{ maxWidth: '1080px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap' }}>
+        <div className="footer-flex" style={{ maxWidth: '1080px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px', flexWrap: 'wrap' }}>
           <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/uploads/05_mascot_circle.png" alt="" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
