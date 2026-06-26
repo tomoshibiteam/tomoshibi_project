@@ -50,37 +50,20 @@ export default function Home() {
       {/* ===== HERO ===== */}
       <section
         id="top"
-        style={{
-          position: 'relative',
-          height: '640px',
-          overflow: 'hidden',
-          background: '#16110D',
-        }}
+        className="hero-section"
+        style={{ position: 'relative', overflow: 'hidden', background: '#16110D' }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/uploads/hero_night.png"
           alt=""
           aria-hidden
-          style={{
-            display: 'block',
-            position: 'absolute',
-            right: '0px',
-            top: '0px',
-            width: '850px',
-            height: '640px',
-            maxWidth: 'none',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 32%)',
-            maskImage: 'linear-gradient(to right, transparent 0%, black 32%)',
-          }}
+          className="hero-img"
         />
-        <div style={{
-          position: 'absolute',
-          top: 0, right: 0, bottom: 0, left: 0,
-          background: 'linear-gradient(90deg, #16110D 0%, #16110D 35%, rgba(22,17,13,.8) 52%, rgba(22,17,13,0) 65%)',
-          pointerEvents: 'none',
-          zIndex: 1,
-        }} />
+        <div
+          className="hero-gradient"
+          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, pointerEvents: 'none', zIndex: 1 }}
+        />
 
         {/* NAV */}
         <header style={{ position: 'relative', zIndex: 3, maxWidth: '1080px', margin: '0 auto', padding: '26px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
@@ -89,7 +72,7 @@ export default function Home() {
             <img src="/uploads/05_mascot_circle.png" alt="" style={{ width: '40px', height: '40px', borderRadius: '50%', filter: 'drop-shadow(0 0 12px rgba(255,180,90,.55))' }} />
             <span style={{ fontWeight: 700, fontSize: '22px', letterSpacing: '.16em', color: '#FBF3E8' }}>TOMOSHIBI</span>
           </a>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '34px' }}>
+          <nav className="nav-links" style={{ alignItems: 'center' }}>
             {[
               { href: '#empathy', text: '共感' },
               { href: '#feature', text: '特徴' },
@@ -102,8 +85,8 @@ export default function Home() {
         </header>
 
         {/* Hero copy */}
-        <div style={{ position: 'relative', zIndex: 3, maxWidth: '1080px', margin: '0 auto', padding: '48px 28px 92px' }}>
-          <h1 style={{ fontWeight: 900, fontSize: '52px', lineHeight: 1.42, letterSpacing: '.04em', color: '#FBF3E8', textShadow: '0 2px 24px rgba(0,0,0,.5)' }}>
+        <div className="hero-copy" style={{ position: 'relative', zIndex: 3, maxWidth: '1080px', margin: '0 auto' }}>
+          <h1 className="hero-h1" style={{ fontWeight: 900, letterSpacing: '.04em', color: '#FBF3E8', textShadow: '0 2px 24px rgba(0,0,0,.5)' }}>
             見過ごしていた景色が、<br />二人だけの冒険になる。
           </h1>
           <p style={{ fontSize: '20px', fontWeight: 500, color: '#E3D6C4', marginTop: '24px', letterSpacing: '.04em', textShadow: '0 2px 16px rgba(0,0,0,.5)' }}>AIの相棒と、外へ出かけよう。</p>
@@ -122,7 +105,7 @@ export default function Home() {
           <h2 data-reveal style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '48px' }}>
             こんな瞬間、ありませんか？
           </h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '26px' }}>
+          <div className="empathy-grid">
             {[
               { src: '/uploads/09a_scene_cafe.png', alt: 'カフェのシーン', text: 'ふらっと入ったカフェが最高だった。でも、この良さを伝える相手がいない。' },
               { src: '/uploads/09b_scene_travel.png', alt: '旅先のシーン', text: '旅先で見た景色に心が動いた。写真は撮ったけど、SNSに上げるほどでもない。' },
@@ -148,20 +131,18 @@ export default function Home() {
         <h2 data-reveal style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '24px' }}>
           あなたのことを覚えている、AIの相棒。
         </h2>
-        <div style={{ position: 'relative', maxWidth: '1000px', height: '690px', margin: '0 auto' }}>
+
+        {/* Desktop diagram */}
+        <div className="feature-diagram" style={{ position: 'relative', maxWidth: '1000px', height: '690px', margin: '0 auto' }}>
           <svg viewBox="0 0 1000 690" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} aria-hidden="true">
             <path d="M 230 165 C 300 185, 330 195, 352 215" fill="none" stroke="#E2A468" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" />
             <path d="M 270 490 C 320 480, 335 470, 352 455" fill="none" stroke="#E2A468" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" />
             <path d="M 760 320 C 700 320, 680 320, 648 320" fill="none" stroke="#E2A468" strokeWidth="2.5" strokeDasharray="6 8" strokeLinecap="round" />
           </svg>
-
-          {/* Phone center */}
           <div style={{ position: 'absolute', left: '50%', top: '18px', transform: 'translateX(-50%)', zIndex: 2 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/uploads/15_phone_mock.png" alt="TOMOSHIBIアプリのチャット画面" style={{ width: '300px', height: 'auto', filter: 'drop-shadow(0 22px 40px rgba(143,84,30,.22))' }} />
           </div>
-
-          {/* Book node — top left */}
           <div data-reveal style={{ position: 'absolute', left: 0, top: '70px', width: '240px', textAlign: 'center', zIndex: 2 }}>
             <div style={{ width: '88px', height: '88px', borderRadius: '50%', background: '#F1E7D5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: 'inset 0 2px 8px rgba(143,84,30,.07)' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -170,8 +151,6 @@ export default function Home() {
             <h3 style={{ fontWeight: 700, fontSize: '18px', color: '#352A20', marginBottom: '8px' }}>感動をその場で共有できる</h3>
             <p style={{ fontSize: '13.5px', lineHeight: 1.9, color: '#6E5D4F' }}>外出先で心の動いた瞬間に、自分を知っている相棒と分かち合える</p>
           </div>
-
-          {/* Location node — bottom left */}
           <div data-reveal style={{ position: 'absolute', left: '10px', top: '400px', width: '240px', textAlign: 'center', zIndex: 2 }}>
             <div style={{ width: '88px', height: '88px', borderRadius: '50%', background: '#F1E7D5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: 'inset 0 2px 8px rgba(143,84,30,.07)' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -180,8 +159,6 @@ export default function Home() {
             <h3 style={{ fontWeight: 700, fontSize: '18px', color: '#352A20', marginBottom: '8px' }}>あなたの記憶を覚えている</h3>
             <p style={{ fontSize: '13.5px', lineHeight: 1.9, color: '#6E5D4F' }}>過去のやりとりや会話の記憶が積み重なり、関係性が深まる</p>
           </div>
-
-          {/* Lantern node — right */}
           <div data-reveal style={{ position: 'absolute', right: 0, top: '230px', width: '250px', textAlign: 'center', zIndex: 2 }}>
             <div style={{ width: '88px', height: '88px', borderRadius: '50%', background: '#F1E7D5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', boxShadow: 'inset 0 2px 8px rgba(143,84,30,.07)' }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -191,6 +168,26 @@ export default function Home() {
             <p style={{ fontSize: '13.5px', lineHeight: 1.9, color: '#6E5D4F' }}>共有記憶が増えるほど、「また一緒に出かけたい」が生まれる</p>
           </div>
         </div>
+
+        {/* Tablet / Mobile card list */}
+        <div className="feature-mobile">
+          {[
+            { icon: '/uploads/08a_icon_book.png', iconSize: '54px', title: '感動をその場で共有できる', desc: '外出先で心の動いた瞬間に、自分を知っている相棒と分かち合える' },
+            { icon: '/uploads/08b_icon_location.png', iconSize: '48px', title: 'あなたの記憶を覚えている', desc: '過去のやりとりや会話の記憶が積み重なり、関係性が深まる' },
+            { icon: '/uploads/05_mascot_circle.png', iconSize: '78px', title: '次の外出が楽しみになる', desc: '共有記憶が増えるほど、「また一緒に出かけたい」が生まれる' },
+          ].map((item, i) => (
+            <div key={i} data-reveal style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', background: '#FCF8F1', border: '1px solid #EBE0CF', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#F1E7D5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: 'inset 0 2px 8px rgba(143,84,30,.07)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.icon} alt="" style={{ width: item.iconSize, height: item.iconSize, objectFit: 'contain', borderRadius: i === 2 ? '50%' : undefined }} />
+              </div>
+              <div>
+                <h3 style={{ fontWeight: 700, fontSize: '16px', color: '#352A20', marginBottom: '6px' }}>{item.title}</h3>
+                <p style={{ fontSize: '14px', lineHeight: 1.85, color: '#6E5D4F', margin: 0 }}>{item.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ===== FLOW ===== */}
@@ -199,7 +196,7 @@ export default function Home() {
           <h2 data-reveal style={{ textAlign: 'center', fontWeight: 700, fontSize: '31px', letterSpacing: '.05em', color: '#352A20', marginBottom: '46px' }}>
             TOMOSHIBIとの1日
           </h2>
-          <div style={{ display: 'flex', alignItems: 'stretch', justifyContent: 'center', gap: '8px' }}>
+          <div className="flow-wrapper">
             {[
               { n: 1, text: '朝、相棒と軽く会話する', img: '/uploads/10a_flow1.png' },
               { n: 2, text: '日中に気に入った景色やお店について共有する', img: '/uploads/10b_flow2.png' },
@@ -216,7 +213,7 @@ export default function Home() {
                   <img src={step.img} alt="" style={{ width: '100%', height: '130px', objectFit: 'cover', marginTop: 'auto' }} />
                 </div>
                 {idx < 3 && (
-                  <div style={{ alignSelf: 'center', color: '#E2611C', fontSize: '26px', fontWeight: 700, flexShrink: 0 }}>→</div>
+                  <div className="flow-arrow" style={{ color: '#E2611C', fontSize: '26px', fontWeight: 700, flexShrink: 0 }}>→</div>
                 )}
               </div>
             ))}
@@ -226,14 +223,14 @@ export default function Home() {
 
       {/* ===== CTA ===== */}
       <section id="cta" style={{ padding: '0 28px 64px' }}>
-        <div style={{ position: 'relative', maxWidth: '1080px', margin: '0 auto', background: 'linear-gradient(110deg,#191310 0%,#241913 60%,#2C1E14 100%)', borderRadius: '22px', overflow: 'hidden', padding: '64px 56px' }}>
+        <div style={{ position: 'relative', maxWidth: '1080px', margin: '0 auto', background: 'linear-gradient(110deg,#191310 0%,#241913 60%,#2C1E14 100%)', borderRadius: '22px', overflow: 'hidden' }} className="cta-inner">
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,rgba(25,19,16,.9) 30%,rgba(25,19,16,.45) 70%,rgba(25,19,16,.2) 100%)', pointerEvents: 'none' }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/uploads/13c_glow.png" alt="" aria-hidden style={{ position: 'absolute', top: '50%', right: '7%', transform: 'translateY(-50%)', width: '300px', opacity: 0.7, pointerEvents: 'none', animation: 'tomoGlow 6s ease-in-out infinite' }} />
+          <img src="/uploads/13c_glow.png" alt="" aria-hidden className="cta-mascot" style={{ position: 'absolute', top: '50%', right: '7%', transform: 'translateY(-50%)', width: '300px', opacity: 0.7, pointerEvents: 'none', animation: 'tomoGlow 6s ease-in-out infinite' }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/uploads/02_mascot_main.png" alt="" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', width: '140px', height: 'auto', filter: 'drop-shadow(0 0 26px rgba(255,170,80,.45))', animation: 'tomoFloat 5s ease-in-out infinite', zIndex: 2 }} />
+          <img src="/uploads/02_mascot_main.png" alt="" className="cta-mascot" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', width: '140px', height: 'auto', filter: 'drop-shadow(0 0 26px rgba(255,170,80,.45))', animation: 'tomoFloat 5s ease-in-out infinite', zIndex: 2 }} />
 
-          <div style={{ position: 'relative', zIndex: 3, maxWidth: '620px', textAlign: 'center', margin: '0 auto 0 4%' }}>
+          <div className="cta-text" style={{ position: 'relative', zIndex: 3, textAlign: 'center' }}>
             <h2 style={{ fontWeight: 700, fontSize: '30px', letterSpacing: '.04em', color: '#FBF3E8' }}>TOMOSHIBIに興味がありますか？</h2>
             <p style={{ fontSize: '16px', color: '#D9CBBA', marginTop: '14px' }}>30秒で完了するアンケートにご協力ください。</p>
             <a
