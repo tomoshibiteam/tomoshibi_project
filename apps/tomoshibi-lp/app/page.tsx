@@ -156,7 +156,7 @@ export default function Home() {
               <img
                 src="/uploads/phone-mock.png"
                 alt="TOMOSHIBIアプリ画面"
-                style={{ width: '100%', maxWidth: '260px', height: 'auto', mixBlendMode: 'multiply', filter: 'drop-shadow(0 20px 44px rgba(143,84,30,.22))' }}
+                style={{ width: '100%', maxWidth: '260px', height: 'auto', filter: 'drop-shadow(0 20px 44px rgba(143,84,30,.22))' }}
               />
             </div>
             {/* Feature items */}
