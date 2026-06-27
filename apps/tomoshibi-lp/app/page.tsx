@@ -249,9 +249,7 @@ export default function Home() {
         <div style={{ position: 'relative', maxWidth: '1080px', margin: '0 auto', background: 'linear-gradient(110deg,#191310 0%,#241913 60%,#2C1E14 100%)', borderRadius: '22px', overflow: 'hidden' }} className="cta-inner">
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,rgba(25,19,16,.9) 30%,rgba(25,19,16,.45) 70%,rgba(25,19,16,.2) 100%)', pointerEvents: 'none' }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/uploads/13c_glow.png" alt="" aria-hidden className="cta-mascot" style={{ position: 'absolute', top: '50%', right: '7%', transform: 'translateY(-50%)', width: '300px', opacity: 0.7, pointerEvents: 'none', animation: 'tomoGlow 6s ease-in-out infinite' }} />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/uploads/02_mascot_main.png" alt="" className="cta-mascot" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', width: '140px', height: 'auto', filter: 'drop-shadow(0 0 26px rgba(255,170,80,.45))', animation: 'tomoFloat 5s ease-in-out infinite', zIndex: 2 }} />
+          <img src="/uploads/02_mascot_main.png" alt="" className="cta-mascot" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', width: '150px', height: 'auto', filter: 'drop-shadow(0 0 32px rgba(255,170,80,.55))', animation: 'tomoFloat 5s ease-in-out infinite', zIndex: 2 }} />
 
           <div className="cta-text" style={{ position: 'relative', zIndex: 3, textAlign: 'center' }}>
             <h2 className="cta-h2" style={{ fontWeight: 700, fontSize: '30px', letterSpacing: '.04em', color: '#FBF3E8' }}>
