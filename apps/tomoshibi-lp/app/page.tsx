@@ -152,12 +152,14 @@ export default function Home() {
           <div className="feature-grid">
             {/* Phone mockup */}
             <div className="feature-phone" data-reveal>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/uploads/phone-mock.png"
-                alt="TOMOSHIBIアプリ画面"
-                style={{ width: '100%', maxWidth: '260px', height: 'auto', filter: 'drop-shadow(0 20px 44px rgba(143,84,30,.22))' }}
-              />
+              <div style={{ display: 'inline-block', filter: 'drop-shadow(0 20px 44px rgba(143,84,30,.22))' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/uploads/phone-mock.png"
+                  alt="TOMOSHIBIアプリ画面"
+                  style={{ width: '100%', maxWidth: '260px', height: 'auto', display: 'block', background: '#F6F0E7' }}
+                />
+              </div>
             </div>
             {/* Feature items */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '38px' }}>
@@ -249,7 +251,10 @@ export default function Home() {
         <div style={{ position: 'relative', maxWidth: '1080px', margin: '0 auto', background: 'linear-gradient(110deg,#191310 0%,#241913 60%,#2C1E14 100%)', borderRadius: '22px', overflow: 'hidden' }} className="cta-inner">
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,rgba(25,19,16,.9) 30%,rgba(25,19,16,.45) 70%,rgba(25,19,16,.2) 100%)', pointerEvents: 'none' }} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/uploads/02_mascot_main.png" alt="" className="cta-mascot" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', width: '150px', height: 'auto', filter: 'drop-shadow(0 0 32px rgba(255,170,80,.55))', animation: 'tomoFloat 5s ease-in-out infinite', zIndex: 2 }} />
+          <div className="cta-mascot" style={{ position: 'absolute', right: '8%', top: '50%', transform: 'translateY(-50%)', zIndex: 2, filter: 'drop-shadow(0 0 32px rgba(255,170,80,.55))', animation: 'tomoFloat 5s ease-in-out infinite' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/uploads/02_mascot_main.png" alt="" style={{ width: '150px', height: 'auto', display: 'block', background: '#1E1410' }} />
+          </div>
 
           <div className="cta-text" style={{ position: 'relative', zIndex: 3, textAlign: 'center' }}>
             <h2 className="cta-h2" style={{ fontWeight: 700, fontSize: '30px', letterSpacing: '.04em', color: '#FBF3E8' }}>
